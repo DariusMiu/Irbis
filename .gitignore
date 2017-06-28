@@ -1,0 +1,9 @@
+# Visual Studio 2017 user specific files
+.vs/
+
+# Monogame content and asset folders
+irbis/bin
+irbis/content
+irbis/obj
+irbis/icon.bmp
+irbis/icon.ico
