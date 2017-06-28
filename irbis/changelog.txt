@@ -1,0 +1,31 @@
+```
+Build Version: 0.1.1.6
+              |spring cleaning
+```
+
+```Change Log (new changes since 0.1.1.0) ```
+`01.` Ramp system build
+`02.` Continued working on Console x2
+`03.` Improved Drawing to be a tad more efficient
+`04.` Optimizing Player class
+`05.` Fixed wall jump glitch
+`06.` Optimized various things (global DeltaTime)
+`07.` Created Menu class to make Irbis.cs cleaner
+
+```Known Bug List ```
+`01.` Camera will "twitch" when running at a consistent speed with lerp on
+`02.` Enemies clip into the ground and are unable to move sometimes
+
+```Controls ```
+`       A:` Move left
+`       D:` Move right
+`       Q:` Shield
+`       E:` Shockwave (hold&release for stronger shockwave)
+`       G:` End frame-by-frame mode
+`       N:` Enter frame-by-frame mode (and next frame when in frame-by-frame mode)
+`       R:` Reset game state
+`       K:` Spawn some dudes!
+`Left Alt:` Roll
+`   Enter:` Attack
+`  Tilde~:` Open developer console
+`  Escape:` Quits to previous menu (exits the game on main menu)
