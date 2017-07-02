@@ -50,6 +50,7 @@ public class Square : ICollisionObject
     //bool pressed;
     public Square(Texture2D t, Point initialPos, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
         pos = initialPos;
@@ -61,6 +62,7 @@ public class Square : ICollisionObject
     }
     public Square(Texture2D t, Point initialPos, bool exactCoords, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
         pos = initialPos;
@@ -80,6 +82,7 @@ public class Square : ICollisionObject
     }
     public Square(Texture2D t, Point initialPos, int scale, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
         pos = initialPos;
@@ -89,6 +92,7 @@ public class Square : ICollisionObject
     }
     public Square(Texture2D t, Point initialPos, int scale, bool hascollider, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
         pos = initialPos;
@@ -100,6 +104,7 @@ public class Square : ICollisionObject
     }
     public Square(Texture2D t, Color drawColor, Point initialPos, int width, int height, bool hascollider, bool useExactPixels, bool AlwaysDraw, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
         pos = initialPos;
@@ -119,6 +124,7 @@ public class Square : ICollisionObject
     }
     public Square(Texture2D t, Point drawPos, Point colliderPos, int drawWidth, int drawHeight, int colliderWidth, int colliderHeight, bool useExactPixels, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
         pos = drawPos;
@@ -138,6 +144,7 @@ public class Square : ICollisionObject
 
     public void Draw(SpriteBatch sb)
     {
+        ////if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Draw"); }
         if (alwaysDraw || Irbis.Irbis.IsTouching(drawRect, Irbis.Irbis.screenspace))
         {
             sb.Draw(tex, drawRect, null, color, 0f, Vector2.Zero, SpriteEffects.None, depth);

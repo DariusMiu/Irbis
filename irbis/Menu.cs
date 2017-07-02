@@ -20,11 +20,13 @@ public class Menu
     private bool exists;
     public Menu ()
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Menu.Menu"); }
         exists = true;
     }
 
     public void Create(int scene)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Menu.Create"); }
         Point tempLP;
         Point tempDP;
         switch (scene)
@@ -187,7 +189,7 @@ public class Menu
                 op42at.Update("x");
                 Irbis.Irbis.printList.Add(op42at);
                 Print op43t = new Print(100, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - (tempLP.X + 000), Irbis.Irbis.resolution.Y - (tempLP.Y - 144)), Direction.forward, 0.5f);
-                op43t.Update("Irbis.Irbis.resolution");
+                op43t.Update("Resolution");
                 Irbis.Irbis.printList.Add(op43t);
                 Print op43at = new Print(100, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - (tempLP.X + 52), Irbis.Irbis.resolution.Y - (tempLP.Y - 162)), Direction.forward, 0.5f);
                 op43at.Update("X:");
@@ -406,14 +408,16 @@ public class Menu
         }
 
     }
+
     public void Update(Irbis.Irbis game)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Menu.Update"); }
         switch (Irbis.Irbis.scene)
         {
             case 0:     //main menu
                 for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
                 {
-                    if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                    if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                     {
                         Irbis.Irbis.menuSelection = i;
                         //Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].highlightStatement.ToUpper());
@@ -430,13 +434,11 @@ public class Menu
                         Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].originalStatement);
                     }
                 }
-                if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.downKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.rightKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altDownKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altRightKey)))
+                if ((Irbis.Irbis.GetDownKeyDown) || (Irbis.Irbis.GetRightKeyDown))
                 {
                     Irbis.Irbis.menuSelection++;
                 }
-                if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.upKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.leftKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altUpKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altLeftKey)))
+                if ((Irbis.Irbis.GetUpKeyDown) || (Irbis.Irbis.GetLeftKeyDown))
                 {
                     Irbis.Irbis.menuSelection--;
                 }
@@ -449,7 +451,7 @@ public class Menu
                     Irbis.Irbis.menuSelection = Irbis.Irbis.buttonList.Count - 1;
                 }
                 //game DECIDES WHAT EACH BUTTON DOES
-                if (Irbis.Irbis.Use() || Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.mouseState, Irbis.Irbis.previousMouseState))
+                if (Irbis.Irbis.Use() || Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState))
                 {
                     switch (Irbis.Irbis.menuSelection)
                     {
@@ -465,7 +467,7 @@ public class Menu
                             if (Irbis.Irbis.geralt == null) { Irbis.Irbis.levelEditor = true; return; }
                             if (Irbis.Irbis.levelLoaded > 0)        ///game MEANS A /TRUE/ LEVEL (one not loaded exclusively for the titlescreen) HAS ALREADY BEEN LOADED
                             {
-                                if (!Irbis.Irbis.debug) { game.IsMouseVisible = false; }
+                                if (Irbis.Irbis.debug <= 0) { game.IsMouseVisible = false; }
                             }
                             else
                             {
@@ -478,9 +480,9 @@ public class Menu
                             Irbis.Irbis.WriteLine("    Options");
                             game.LoadMenu(1, 0, false);
                             break;
-                        case 3:                         //3 == game.Quit
+                        case 3:                         //3 == Quit
                             Irbis.Irbis.buttonList.Clear();
-                            Irbis.Irbis.WriteLine("    game.Quit();");
+                            Irbis.Irbis.WriteLine("    Quit();");
                             game.Quit();
                             break;
                         default:
@@ -488,14 +490,14 @@ public class Menu
                             break;
                     }
                 }
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                 {
                     if (Irbis.Irbis.levelLoaded > 0)
                     {
                         Irbis.Irbis.buttonList.Clear();
                         Irbis.Irbis.WriteLine("    Continue");
                         Irbis.Irbis.sceneIsMenu = false;
-                        if (!Irbis.Irbis.debug) { game.IsMouseVisible = false; }
+                        if (Irbis.Irbis.debug <= 0) { game.IsMouseVisible = false; }
                     }
                     else
                     {
@@ -506,7 +508,7 @@ public class Menu
             case 1:     //options
                 for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
                 {
-                    if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                    if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                     {
                         Irbis.Irbis.menuSelection = i;
                         //Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].highlightStatement.ToUpper());
@@ -523,13 +525,11 @@ public class Menu
                         Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].originalStatement);
                     }
                 }
-                if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.downKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.rightKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altDownKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altRightKey)))
+                if ((Irbis.Irbis.GetDownKeyDown) || (Irbis.Irbis.GetRightKeyDown))
                 {
                     Irbis.Irbis.menuSelection++;
                 }
-                if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.upKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.leftKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altUpKey)) || (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altLeftKey)))
+                if ((Irbis.Irbis.GetUpKeyDown) || (Irbis.Irbis.GetLeftKeyDown))
                 {
                     Irbis.Irbis.menuSelection--;
                 }
@@ -542,7 +542,7 @@ public class Menu
                     Irbis.Irbis.menuSelection = Irbis.Irbis.buttonList.Count - 1;
                 }
                 //game DECIDES WHAT EACH BUTTON DOES
-                if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.mouseState, Irbis.Irbis.previousMouseState) || Irbis.Irbis.Use())
+                if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState) || Irbis.Irbis.Use())
                 {
                     switch (Irbis.Irbis.menuSelection)
                     {
@@ -581,7 +581,7 @@ public class Menu
                             break;
                     }
                 }
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                 {
                     game.LoadMenu(0, 2, false);
                 }
@@ -590,80 +590,80 @@ public class Menu
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update("_");
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                     }
-                    else if (Irbis.Irbis.keyboardState.GetPressedKeys().Length > 0 && Irbis.Irbis.previousKeyboardState.GetPressedKeys().Length <= 0)
+                    else if (Irbis.Irbis.GetKeyboardState.GetPressedKeys().Length > 0 && Irbis.Irbis.GetPreviousKeyboardState.GetPressedKeys().Length <= 0)
                     {
                         switch (Irbis.Irbis.menuSelection)
                         {
                             case 0:                         //0 == Attack
-                                Irbis.Irbis.attackKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.attackKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 1:                         //1 == Jump
-                                Irbis.Irbis.jumpKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.jumpKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 2:                         //2 == Roll
-                                Irbis.Irbis.rollKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.rollKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 3:                         //3 == Potion
-                                Irbis.Irbis.potionKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.potionKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 4:                         //4 == Shield
-                                Irbis.Irbis.shieldKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.shieldKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 5:                         //5 == Shockwave
-                                Irbis.Irbis.shockwaveKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.shockwaveKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 6:                         //6 == Up
-                                Irbis.Irbis.upKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.upKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 7:                         //7 == Down
-                                Irbis.Irbis.downKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.downKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 8:                         //8 == Left
-                                Irbis.Irbis.leftKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.leftKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 9:                         //9 == Right
-                                Irbis.Irbis.rightKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.rightKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             // ALTS FROM HERE DOWN
                             case 10:                         //0 == Attack
-                                Irbis.Irbis.altAttackKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altAttackKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 11:                         //1 == Jump
-                                Irbis.Irbis.altJumpKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altJumpKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 12:                         //2 == Roll
-                                Irbis.Irbis.altRollKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altRollKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 13:                         //3 == Potion
-                                Irbis.Irbis.altPotionKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altPotionKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 14:                         //4 == Shield
-                                Irbis.Irbis.altShieldKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altShieldKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 15:                         //5 == Shockwave
-                                Irbis.Irbis.altShockwaveKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altShockwaveKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 16:                         //6 == Up
-                                Irbis.Irbis.altUpKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altUpKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 17:                         //7 == Down
-                                Irbis.Irbis.altDownKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altDownKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 18:                         //8 == Left
-                                Irbis.Irbis.altLeftKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altLeftKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             case 19:                         //9 == Right
-                                Irbis.Irbis.altRightKey = Irbis.Irbis.keyboardState.GetPressedKeys()[0];
+                                Irbis.Irbis.altRightKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             default:
                                 Irbis.Irbis.WriteLine("Error. Menu item " + Irbis.Irbis.menuSelection + " does not exist.");
                                 break;
                         }
-                        Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.keyboardState.GetPressedKeys()[0].ToString();
+                        Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0].ToString();
                         Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement + "<";
 
                         Irbis.Irbis.listenForNewKeybind = false;
@@ -673,7 +673,7 @@ public class Menu
                 {
                     for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
                     {
-                        if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                        if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                         {
                             Irbis.Irbis.menuSelection = i;
                             //Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].highlightStatement.ToUpper());
@@ -687,8 +687,7 @@ public class Menu
                             Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].originalStatement);
                         }
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.downKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altDownKey)))
+                    if ((Irbis.Irbis.GetDownKeyDown))
                     {
                         if (Irbis.Irbis.menuSelection == 9)
                         {
@@ -696,8 +695,7 @@ public class Menu
                         }
                         Irbis.Irbis.menuSelection++;
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.rightKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altRightKey)))
+                    if ((Irbis.Irbis.GetRightKeyDown))
                     {
                         if (Irbis.Irbis.menuSelection < 10)
                         {
@@ -713,13 +711,11 @@ public class Menu
                         }
                     }
 
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.upKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altUpKey)))
+                    if ((Irbis.Irbis.GetUpKeyDown))
                     {
                         Irbis.Irbis.menuSelection--;
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.leftKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altLeftKey)))
+                    if ((Irbis.Irbis.GetLeftKeyDown))
                     {
                         if (Irbis.Irbis.menuSelection < 10)
                         {
@@ -744,7 +740,7 @@ public class Menu
                         Irbis.Irbis.menuSelection = Irbis.Irbis.buttonList.Count - 1;
                     }
                     //game DECIDES WHAT EACH BUTTON DOES
-                    if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.mouseState, Irbis.Irbis.previousMouseState) || Irbis.Irbis.Use())
+                    if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState) || Irbis.Irbis.Use())
                     {
                         switch (Irbis.Irbis.menuSelection)
                         {
@@ -761,7 +757,7 @@ public class Menu
                         }
                     }
 
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
                         game.LoadMenu(1, 0, false);
@@ -771,7 +767,7 @@ public class Menu
             case 3:     //options - camera
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                         Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
@@ -799,7 +795,7 @@ public class Menu
                         }
                     }
 
-                    if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || (Irbis.Irbis.GetKeyDown(Keys.Enter)))
+                    if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || (Irbis.Irbis.GetEnterKeyDown))
                     {
                         Irbis.Irbis.acceptTextInput = false;
                         Irbis.Irbis.listenForNewKeybind = false;
@@ -890,7 +886,7 @@ public class Menu
                 {
                     for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
                     {
-                        if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                        if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                         {
                             Irbis.Irbis.menuSelection = i;
                             //Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].highlightStatement.ToUpper());
@@ -907,8 +903,7 @@ public class Menu
                             Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].originalStatement);
                         }
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.downKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altDownKey)))
+                    if ((Irbis.Irbis.GetDownKeyDown))
                     {
                         if (Irbis.Irbis.menuSelection >= 0 && Irbis.Irbis.menuSelection <= 2)
                         {
@@ -919,14 +914,12 @@ public class Menu
                             Irbis.Irbis.menuSelection++;
                         }
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.rightKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altRightKey)))
+                    if ((Irbis.Irbis.GetRightKeyDown))
                     {
                         Irbis.Irbis.menuSelection++;
                     }
 
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.upKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altUpKey)))
+                    if ((Irbis.Irbis.GetUpKeyDown))
                     {
                         if (Irbis.Irbis.menuSelection >= 1 && Irbis.Irbis.menuSelection <= 3)
                         {
@@ -937,8 +930,7 @@ public class Menu
                             Irbis.Irbis.menuSelection--;
                         }
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.leftKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altLeftKey)))
+                    if ((Irbis.Irbis.GetLeftKeyDown))
                     {
                         Irbis.Irbis.menuSelection--;
                     }
@@ -952,7 +944,7 @@ public class Menu
                         Irbis.Irbis.menuSelection = Irbis.Irbis.buttonList.Count - 1;
                     }
                     //game DECIDES WHAT EACH BUTTON DOES
-                    if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.mouseState, Irbis.Irbis.previousMouseState) || Irbis.Irbis.Use())
+                    if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState) || Irbis.Irbis.Use())
                     {
                         switch (Irbis.Irbis.menuSelection)
                         {
@@ -1007,7 +999,7 @@ public class Menu
 
                     }
 
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
                         game.LoadMenu(1, 1, false);
@@ -1017,7 +1009,7 @@ public class Menu
             case 4:     //options - video
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                         Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
@@ -1045,7 +1037,7 @@ public class Menu
                         }
                     }
 
-                    if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || (Irbis.Irbis.GetKeyDown(Keys.Enter)))
+                    if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || (Irbis.Irbis.GetEnterKeyDown))
                     {
                         Irbis.Irbis.acceptTextInput = false;
                         Irbis.Irbis.listenForNewKeybind = false;
@@ -1114,14 +1106,14 @@ public class Menu
                 }
                 else
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
                         game.LoadMenu(1, 2, false);
                     }
                     for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
                     {
-                        if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                        if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                         {
                             Irbis.Irbis.menuSelection = i;
                             //Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].highlightStatement.ToUpper());
@@ -1138,8 +1130,7 @@ public class Menu
                             Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].originalStatement);
                         }
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.downKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altDownKey)))
+                    if ((Irbis.Irbis.GetDownKeyDown))
                     {
                         if (Irbis.Irbis.menuSelection == 0)//Irbis.Irbis.menuSelection <= 1)
                         {
@@ -1166,14 +1157,12 @@ public class Menu
                             Irbis.Irbis.menuSelection++;
                         }
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.rightKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altRightKey)))
+                    if ((Irbis.Irbis.GetRightKeyDown))
                     {
                         Irbis.Irbis.menuSelection++;
                     }
 
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.upKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altUpKey)))
+                    if ((Irbis.Irbis.GetUpKeyDown))
                     {
                         if (Irbis.Irbis.menuSelection >= 2 && Irbis.Irbis.menuSelection <= 4)
                         {
@@ -1196,8 +1185,7 @@ public class Menu
                             Irbis.Irbis.menuSelection--;
                         }
                     }
-                    if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.leftKey)) ||
-                        (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altLeftKey)))
+                    if ((Irbis.Irbis.GetLeftKeyDown))
                     {
                         Irbis.Irbis.menuSelection--;
                     }
@@ -1211,7 +1199,7 @@ public class Menu
                         Irbis.Irbis.menuSelection = Irbis.Irbis.buttonList.Count - 1;
                     }
                     //game DECIDES WHAT EACH BUTTON DOES
-                    if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.mouseState, Irbis.Irbis.previousMouseState) || Irbis.Irbis.Use())
+                    if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState) || Irbis.Irbis.Use())
                     {
                         switch (Irbis.Irbis.menuSelection)
                         {
@@ -1312,7 +1300,7 @@ public class Menu
             case 5:     //options - audio
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                         Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
@@ -1340,7 +1328,7 @@ public class Menu
                         }
                     }
 
-                    if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || (Irbis.Irbis.GetKeyDown(Keys.Enter)))
+                    if (GamePad.GetState(PlayerIndex.One).Buttons.Start == ButtonState.Pressed || (Irbis.Irbis.GetEnterKeyDown))
                     {
                         Irbis.Irbis.acceptTextInput = false;
                         Irbis.Irbis.listenForNewKeybind = false;
@@ -1436,7 +1424,7 @@ public class Menu
                 }
                 else
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         Irbis.Irbis.sliderList.Clear();
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
@@ -1444,13 +1432,13 @@ public class Menu
                     }
                     for (int i = 0; i < Irbis.Irbis.sliderList.Count; i++)
                     {
-                        if (Irbis.Irbis.sliderList[i].Pressed(Irbis.Irbis.mouseState) && Irbis.Irbis.sliderPressed < 0)
+                        if (Irbis.Irbis.sliderList[i].Pressed(Irbis.Irbis.GetMouseState) && Irbis.Irbis.sliderPressed < 0)
                         {
                             Irbis.Irbis.sliderPressed = i;
                         }
                     }
 
-                    if (Irbis.Irbis.mouseState.LeftButton != ButtonState.Pressed)
+                    if (Irbis.Irbis.GetMouseState.LeftButton != ButtonState.Pressed)
                     {
                         Irbis.Irbis.sliderPressed = -1;
                     }
@@ -1463,7 +1451,7 @@ public class Menu
                     switch (Irbis.Irbis.sliderPressed)
                     {
                         case 0:
-                            Irbis.Irbis.masterAudioLevel = ((float)(Irbis.Irbis.mouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
+                            Irbis.Irbis.masterAudioLevel = ((float)(Irbis.Irbis.GetMouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
                             if (Irbis.Irbis.masterAudioLevel >= 100f)
                             {
                                 Irbis.Irbis.masterAudioLevel = 100f;
@@ -1478,7 +1466,7 @@ public class Menu
                             Irbis.Irbis.sliderList[Irbis.Irbis.sliderPressed].UpdateValue(Irbis.Irbis.masterAudioLevel);
                             break;
                         case 1:
-                            Irbis.Irbis.musicLevel = ((float)(Irbis.Irbis.mouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
+                            Irbis.Irbis.musicLevel = ((float)(Irbis.Irbis.GetMouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
                             if (Irbis.Irbis.musicLevel >= 100f)
                             {
                                 Irbis.Irbis.musicLevel = 100f;
@@ -1493,7 +1481,7 @@ public class Menu
                             Irbis.Irbis.sliderList[Irbis.Irbis.sliderPressed].UpdateValue(Irbis.Irbis.musicLevel);
                             break;
                         case 2:
-                            Irbis.Irbis.soundEffectsLevel = ((float)(Irbis.Irbis.mouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
+                            Irbis.Irbis.soundEffectsLevel = ((float)(Irbis.Irbis.GetMouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
                             if (Irbis.Irbis.soundEffectsLevel >= 100f)
                             {
                                 Irbis.Irbis.soundEffectsLevel = 100f;
@@ -1510,25 +1498,23 @@ public class Menu
                         default:
                             for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
                             {
-                                if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                                if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                                 {
                                     Irbis.Irbis.menuSelection = i;
                                 }
                                 if (i < Irbis.Irbis.sliderList.Count)
                                 {
-                                    if (Irbis.Irbis.sliderList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                                    if (Irbis.Irbis.sliderList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                                     {
                                         Irbis.Irbis.menuSelection = i;
                                     }
                                 }
                             }
-                            if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.downKey)) ||
-                                (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altDownKey)))
+                            if ((Irbis.Irbis.GetDownKeyDown))
                             {
                                 Irbis.Irbis.menuSelection++;
                             }
-                            if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.rightKey)) ||
-                                (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altRightKey)))
+                            if ((Irbis.Irbis.GetRightKeyDown))
                             {
                                 switch (Irbis.Irbis.menuSelection)
                                 {
@@ -1565,13 +1551,11 @@ public class Menu
                                 }
                             }
 
-                            if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.upKey)) ||
-                                (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altUpKey)))
+                            if ((Irbis.Irbis.GetUpKeyDown))
                             {
                                 Irbis.Irbis.menuSelection--;
                             }
-                            if ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.leftKey)) ||
-                                (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altLeftKey)))
+                            if ((Irbis.Irbis.GetLeftKeyDown))
                             {
                                 switch (Irbis.Irbis.menuSelection)
                                 {
@@ -1629,7 +1613,7 @@ public class Menu
                             }
 
                             //game DECIDES WHAT EACH BUTTON DOES
-                            if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.mouseState, Irbis.Irbis.previousMouseState) || Irbis.Irbis.Use())
+                            if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState) || Irbis.Irbis.Use())
                             {
                                 switch (Irbis.Irbis.menuSelection)
                                 {
@@ -1669,7 +1653,7 @@ public class Menu
                 }
                 break;
             case 6:     //options - misc
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                 {
                     game.LoadMenu(1, 4, false);
                 }
@@ -1677,7 +1661,7 @@ public class Menu
             case 7:     //new game level select
                 for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
                 {
-                    if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.mouseState) && Irbis.Irbis.mouseState != Irbis.Irbis.previousMouseState)
+                    if (Irbis.Irbis.buttonList[i].Contains(Irbis.Irbis.GetMouseState) && Irbis.Irbis.GetMouseState != Irbis.Irbis.GetPreviousMouseState)
                     {
                         Irbis.Irbis.menuSelection = i;
                         //Irbis.Irbis.buttonList[i].Update(Irbis.Irbis.buttonList[i].highlightStatement.ToUpper());
@@ -1695,19 +1679,16 @@ public class Menu
                     }
                 }
                 if (Irbis.Irbis.menuSelection < Irbis.Irbis.levelList.Length &&
-                    ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.downKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altDownKey))))
+                    (Irbis.Irbis.GetDownKeyDown))
                 {
                     Irbis.Irbis.menuSelection++;
                 }
                 if (Irbis.Irbis.menuSelection > 1 &&
-                    ((Irbis.Irbis.GetKeyDown(Irbis.Irbis.upKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altUpKey))))
+                    (Irbis.Irbis.GetUpKeyDown))
                 {
                     Irbis.Irbis.menuSelection--;
                 }
-                if (((Irbis.Irbis.GetKeyDown(Irbis.Irbis.rightKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altRightKey))))
+                if (Irbis.Irbis.GetRightKeyDown)
                 {
                     if (Irbis.Irbis.menuSelection == 0)
                     {
@@ -1718,8 +1699,7 @@ public class Menu
                         Irbis.Irbis.menuSelection = 0;
                     }
                 }
-                if (((Irbis.Irbis.GetKeyDown(Irbis.Irbis.leftKey)) ||
-                    (Irbis.Irbis.GetKeyDown(Irbis.Irbis.altLeftKey))))
+                if (Irbis.Irbis.GetLeftKeyDown)
                 {
                     if (Irbis.Irbis.menuSelection == 0)
                     {
@@ -1761,7 +1741,7 @@ public class Menu
                         Irbis.Irbis.menuSelection = Irbis.Irbis.maxButtonsOnScreen - 1;
                     }
 
-                    if (Irbis.Irbis.mouseState.ScrollWheelValue > Irbis.Irbis.previousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[1].originalStatement != Irbis.Irbis.levelList[0])      //scroll up
+                    if (Irbis.Irbis.GetMouseState.ScrollWheelValue > Irbis.Irbis.GetPreviousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[1].originalStatement != Irbis.Irbis.levelList[0])      //scroll up
                     {
                         Irbis.Irbis.levelListCounter--;
                         for (int i = Irbis.Irbis.buttonList.Count - 1; i > 0; i--)
@@ -1772,7 +1752,7 @@ public class Menu
                         Irbis.Irbis.buttonList[1].originalStatement = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
                         Irbis.Irbis.buttonList[1].highlightStatement = ">" + Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
                     }
-                    if (Irbis.Irbis.mouseState.ScrollWheelValue < Irbis.Irbis.previousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement != Irbis.Irbis.levelList[Irbis.Irbis.levelList.Length - 1])      //scroll down
+                    if (Irbis.Irbis.GetMouseState.ScrollWheelValue < Irbis.Irbis.GetPreviousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement != Irbis.Irbis.levelList[Irbis.Irbis.levelList.Length - 1])      //scroll down
                     {
                         Irbis.Irbis.levelListCounter++;
                         for (int i = 1; i < Irbis.Irbis.buttonList.Count - 1; i++)
@@ -1793,7 +1773,7 @@ public class Menu
                     Irbis.Irbis.menuSelection = Irbis.Irbis.buttonList.Count - 1;
                 }
                 //game DECIDES WHAT EACH BUTTON DOES
-                if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.mouseState, Irbis.Irbis.previousMouseState) || Irbis.Irbis.Use())
+                if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState) || Irbis.Irbis.Use())
                 {
                     if (Irbis.Irbis.menuSelection == 0)
                     {
@@ -1804,7 +1784,7 @@ public class Menu
                         game.LoadLevel(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
                     }
                 }
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetKeyDown(Keys.Escape))
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                 {
                     game.LoadMenu(0, 0, false);
                 }

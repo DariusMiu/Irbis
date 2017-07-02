@@ -1,11 +1,11 @@
-﻿class SmoothFramerate
+﻿struct SmoothFramerate
 {
     int samples;
     int currentFrame;
     double[] frametimes;
     double currentFrametimes;
 
-    public double framerate
+    public double Framerate
     {
         get
         {
@@ -18,6 +18,7 @@
         samples = Samples;
         currentFrame = 0;
         frametimes = new double[samples];
+        currentFrametimes = 0d;
     }
 
     public void Update(double timeSinceLastFrame)

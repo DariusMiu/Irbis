@@ -65,6 +65,7 @@
     <Compile Include="Button.cs" />
     <Compile Include="Enchant.cs" />
     <Compile Include="Line.cs" />
+    <Compile Include="OldLevel.cs" />
     <Compile Include="OnslaughtSpawner.cs" />
     <Compile Include="Enemy.cs" />
     <Compile Include="Font.cs" />
@@ -82,8 +83,10 @@
     <Compile Include="SmartFramerate.cs" />
     <Compile Include="SmoothFramerate.cs" />
     <Compile Include="Square.cs" />
+    <Compile Include="TotalMeanFramerate.cs" />
     <Compile Include="UIElementDiscreteSlider.cs" />
     <Compile Include="UIElementSlider.cs" />
+    <Compile Include="VendingMachine.cs" />
     <Compile Include="Wall.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -141,21 +144,26 @@
     </None>
     <None Include="app.manifest" />
     <None Include="levels\c0b0.lvl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="levels\c0o0.lvl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="content\Audio title.png" />
+    <Content Include="content\blood enchant icon.png" />
     <Content Include="content\Camera title.png" />
     <Content Include="content\centerTexture.png" />
+    <Content Include="content\console texture.png" />
     <Content Include="content\defaultTex.png" />
     <Content Include="content\enemy0.png" />
+    <Content Include="content\fire enchant icon.png" />
     <Content Include="content\font.png" />
     <Content Include="content\font2.png" />
+    <Content Include="content\frost enchant icon.png" />
     <Content Include="content\Keybinds title.png" />
+    <Content Include="content\knockback enchant icon.png" />
     <Content Include="content\Level Select title.png" />
     <Content Include="content\Main Menu title.png" />
     <Content Include="content\Misc title.png" />
@@ -163,8 +171,11 @@
     <Content Include="content\Options title.png" />
     <Content Include="content\originTexture.png" />
     <Content Include="content\player.png" />
+    <Content Include="content\poison enchant icon.png" />
+    <Content Include="content\sharpness enchant icon.png" />
     <Content Include="content\shield.png" />
     <Content Include="content\shieldbar.png" />
+    <Content Include="content\stun enchant icon.png" />
     <Content Include="content\Video title.png" />
     <Content Include="icon.bmp" />
     <Content Include="icon.ico" />

@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 [Serializable]
-public class PlayerSettings
+public struct PlayerSettings
 {   //start at line 11 to make it easier to count, just subtract 10 from final line
     public int XcolliderOffset;
     public int YcolliderOffset;
@@ -79,14 +79,15 @@ public class PlayerSettings
     public Keys altRollKey;
     public Keys potionKey;
     public Keys altPotionKey;
-    public bool debug;
     public int characterHeight;
+    public int debug;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
     static int numberOfVariables = 73;
 
     public PlayerSettings(bool useDefaults)
 	{
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.PlayerSettings"); }
         if (useDefaults)
         {
             //lines beginning with ; are ignored
@@ -100,11 +101,11 @@ public class PlayerSettings
             attackKey = Keys.Enter;
             altAttackKey = Keys.Enter;
             shockwaveKey = Keys.E;
-            altShockwaveKey = Keys.LeftShift;
+            altShockwaveKey = Keys.E;
             shieldKey = Keys.Q;
-            altShieldKey = Keys.LeftControl;
+            altShieldKey = Keys.Q;
             jumpKey = Keys.Space;
-            altJumpKey = Keys.RightAlt;
+            altJumpKey = Keys.Space;
             upKey = Keys.W;
             altUpKey = Keys.Up;
             downKey = Keys.S;
@@ -113,10 +114,10 @@ public class PlayerSettings
             altLeftKey = Keys.Left;
             rightKey = Keys.D;
             altRightKey = Keys.Right;
-            rollKey = Keys.LeftAlt;
-            altRollKey = Keys.RightShift;
+            rollKey = Keys.LeftShift;
+            altRollKey = Keys.LeftShift;
             potionKey = Keys.F;
-            altPotionKey = Keys.NumPad0;
+            altPotionKey = Keys.F;
 
             //CAMERA SETTINGS
             //The camera will move when the player leaves this area on the screen
@@ -368,24 +369,24 @@ public class PlayerSettings
             initialPosition = new Vector2(64f, 64f);
 
             //DEBUG MODE
-            debug = false;
+            debug = 0;
         }
         else
         {
             //lines beginning with ; are ignored
             //delete this file and relaunch to return everything to defaults
-            
+
             //KEY BINDS
             //a list of all available keys can be found here:
             // https://msdn.microsoft.com/en-us/library/microsoft.xna.framework.input.keys.aspx
             attackKey = Keys.Enter;
             altAttackKey = Keys.Enter;
             shockwaveKey = Keys.E;
-            altShockwaveKey = Keys.LeftShift;
+            altShockwaveKey = Keys.E;
             shieldKey = Keys.Q;
-            altShieldKey = Keys.LeftControl;
+            altShieldKey = Keys.Q;
             jumpKey = Keys.Space;
-            altJumpKey = Keys.RightAlt;
+            altJumpKey = Keys.Space;
             upKey = Keys.W;
             altUpKey = Keys.Up;
             downKey = Keys.S;
@@ -394,10 +395,10 @@ public class PlayerSettings
             altLeftKey = Keys.Left;
             rightKey = Keys.D;
             altRightKey = Keys.Right;
-            rollKey = Keys.LeftAlt;
-            altRollKey = Keys.RightShift;
+            rollKey = Keys.LeftShift;
+            altRollKey = Keys.LeftShift;
             potionKey = Keys.F;
-            altPotionKey = Keys.NumPad0;
+            altPotionKey = Keys.F;
 
             //CAMERA SETTINGS
             //The camera will move when the player leaves this area on the screen
@@ -564,15 +565,16 @@ public class PlayerSettings
             initialPosition = new Vector2(0f, 0f);
 
             //DEBUG MODE
-            debug = true;
+            debug = 1;
         }
     }
 
     public PlayerSettings(PlayerSettings settings)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.PlayerSettings"); }
         //lines beginning with ; are ignored
         //delete this file and relaunch to return everything to defaults
-        
+
         //key binds
         //a list of all available keys can be found here:
         // https://msdn.microsoft.com/en-us/library/microsoft.xna.framework.input.keys.aspx
@@ -750,6 +752,7 @@ public class PlayerSettings
 
     public static void Save(PlayerSettings settings, string filename)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Save"); }
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         StreamWriter writer = new StreamWriter(filename);
 
@@ -995,6 +998,7 @@ public class PlayerSettings
 
     public static void Save(Irbis.Irbis game, string filename)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Save"); }
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         StreamWriter writer = new StreamWriter(filename);
 
@@ -1095,7 +1099,7 @@ public class PlayerSettings
 
         writer.WriteLine(";MISC SETTINGS");
         writer.WriteLine(";How accurate is the timer (digits after the seconds' decimal)");
-        writer.WriteLine("timerAccuracy=" + (game.timerAccuracy.Length - 3));
+        writer.WriteLine("timerAccuracy=" + (Irbis.Irbis.timerAccuracy.Length - 3));
         writer.WriteLine("");
         writer.WriteLine(";How long before the player is considered idle (seconds)");
         writer.WriteLine("idleTimeMax=" + Irbis.Irbis.geralt.idleTimeMax);
@@ -1109,7 +1113,7 @@ public class PlayerSettings
         writer.WriteLine("walljumpHoldtime=" + Irbis.Irbis.geralt.walljumpHoldtime);
         writer.WriteLine("");
         writer.WriteLine(";Minimum distance(squared) for an enemy health bar to appear(bosses override this)");
-        writer.WriteLine("minSqrDetectDistance=" + game.minSqrDetectDistance);
+        writer.WriteLine("minSqrDetectDistance=" + Irbis.Irbis.minSqrDetectDistance);
         writer.WriteLine("");
         writer.WriteLine("");
 
@@ -1222,7 +1226,7 @@ public class PlayerSettings
         writer.WriteLine(";ETC SETTINGS");
         writer.WriteLine(";player starting position (world space)");
         writer.WriteLine(";only used when one isn't given by the fight");
-        writer.WriteLine("initialPosition=" + game.initialPos);
+        writer.WriteLine("initialPosition=" + Irbis.Irbis.initialPos);
         writer.WriteLine("");
 
         writer.WriteLine(";DEBUG MODE");
@@ -1240,6 +1244,7 @@ public class PlayerSettings
 
     public static PlayerSettings Load(string filename)                                          //CHANGE THIS BEFORE SHIPPING 
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Load"); }
         Irbis.Irbis.WriteLine("loading " + filename + "...");
 
         List<bool> checker = new List<bool>();
@@ -2229,9 +2234,9 @@ public class PlayerSettings
 
 
                         case "debug":                                                                     //place new bools above
-                            if (bool.TryParse(value, out boolResult))
+                            if (int.TryParse(value, out intResult))
                             {
-                                playerSettings.debug = boolResult;
+                                playerSettings.debug = intResult;
                             }
                             else
                             {
@@ -2302,6 +2307,7 @@ public class PlayerSettings
 
     private static Vector2 Vector2Parser(string value)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Vector2Parser"); }
         string Xval = string.Empty;
         string Yval = string.Empty;
         //value = {X:000Y:000}
@@ -2353,6 +2359,7 @@ public class PlayerSettings
 
     private static Point PointParser(string value)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.PointParser"); }
         string Xval = string.Empty;
         string Yval = string.Empty;
         //value = {X:000Y:000}
@@ -2406,6 +2413,7 @@ public class PlayerSettings
 
     private static Rectangle RectangleParser(string value)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.RectangleParser"); }
         string Xval = string.Empty;
         string Yval = string.Empty;
         string widthVal = string.Empty;

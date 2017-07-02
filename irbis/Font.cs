@@ -1,13 +1,6 @@
-﻿using Irbis;
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-public class Font
+﻿using Microsoft.Xna.Framework.Graphics;
+
+public struct Font
 {
     public Texture2D tex;
     public int charHeight;
@@ -15,6 +8,7 @@ public class Font
 
 	public Font(Texture2D fontTexture, int characterHeight, int[] characterWidth, bool monospace)
 	{
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Font.Font"); }
         if (monospace)
         {
             tex = fontTexture;
@@ -39,6 +33,7 @@ public class Font
     /// </summary>
     public Font(Texture2D fontTexture, int characterHeight)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Font.Font"); }
         tex = fontTexture;
         charHeight = characterHeight;
         charWidth = new int[100];

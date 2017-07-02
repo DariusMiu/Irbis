@@ -132,6 +132,7 @@ public struct Line
 
     public Line(int X, int Y, int Length, bool Vertical)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Line"); }
         positionX = X;
         positionY = Y;
         length = Length;
@@ -140,6 +141,7 @@ public struct Line
 
     public Line(Point Location, int Length, bool Vertical)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Line"); }
         positionX = Location.X;
         positionY = Location.Y;
         length = Length;

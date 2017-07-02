@@ -1,6 +1,6 @@
 ```
-Build Version: 0.1.1.6
-              |spring cleaning
+Build Version: 0.1.1.7
+              |glitch fix
 ```
 
 ```Change Log (new changes since 0.1.1.0) ```
@@ -9,8 +9,11 @@ Build Version: 0.1.1.6
 `03.` Improved Drawing to be a tad more efficient
 `04.` Optimizing Player class
 `05.` Fixed wall jump glitch
-`06.` Optimized various things (global DeltaTime)
+`06.` Fixed wrong level being loaded as background on startup
 `07.` Created Menu class to make Irbis.cs cleaner
+`08.` Optimized various things (global DeltaTime, made some things structs instead of classes)
+`09.` 
+`10.` 
 
 ```Known Bug List ```
 `01.` Camera will "twitch" when running at a consistent speed with lerp on

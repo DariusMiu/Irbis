@@ -45,7 +45,7 @@
         }
     }
 
-    public Wall Zero
+    public static Wall Zero
     {
         get
         {
@@ -97,5 +97,4 @@
     {
         return "{Top:" + this.t + " Bottom:" + this.b + " Left:" + this.l + " Right:" + this.r + "}";
     }
-
 }

@@ -38,6 +38,7 @@ public class Print
 
     public Print(int mW, Font font, Color colorForFont, bool monospace, bool scrollUp, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Print"); }
         bool debug = false;
         align = Direction.left;
         origin = Point.Zero;
@@ -74,6 +75,7 @@ public class Print
 
     public Print(int mW, Font font, Color colorForFont, bool monospace, Point location, Direction alignSide, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Print"); }
         bool debug = false;
         align = alignSide;
         depth = drawDepth;
@@ -118,6 +120,7 @@ public class Print
 
     public Print(Font CONSOLE)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Print"); }
         konsole = new StringBuilder();
         align = Direction.left;
         depth = 1f;
@@ -151,6 +154,7 @@ public class Print
 
     public void Clear()
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Clear"); }
         statement = printStatement = string.Empty;
         if (konsole != null)
         {
@@ -161,6 +165,7 @@ public class Print
 
     public void Update(string input, bool clear)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         //fontSourceRect.Clear();
         if (clear)
         {
@@ -174,17 +179,20 @@ public class Print
 
     public void Update(string input)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         //fontSourceRect.Clear();
         statement += input;
     }
 
     public void Update(Point location)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         origin = location;
     }
 
     public void Update(int MaxWidth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         maxWidth = MaxWidth;
     }
 
@@ -491,6 +499,7 @@ public class Print
 
     public string GetLine(int index)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.GetLine"); }
         int occurrences = 0;
         int lastOccurrence = 0;
         string returnString = Konsole;
@@ -517,6 +526,7 @@ public class Print
 
     public void Write(string line)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Write"); }
         for (int i = 0; i < line.Length; i++)
         {
             if (line[i].Equals('\n'))
@@ -531,6 +541,7 @@ public class Print
 
     public void WriteLine(string line)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.WriteLine"); }
         foreach (char c in line)
         {
             if (c.Equals('\n'))
@@ -547,6 +558,7 @@ public class Print
 
     public void WriteLine()
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.WriteLine"); }
         konsole.Append("\n");
         printStatement = string.Join(string.Empty, new string[] { printStatement, "\n" });
         lines++;
@@ -555,6 +567,7 @@ public class Print
 
     public void DeleteLine()
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.DeleteLine"); }
         statement = statement.Substring(statement.IndexOf("\n") + 1);
         //timer = 0f;
         lines--;
@@ -562,6 +575,7 @@ public class Print
 
     public void Draw(SpriteBatch sb)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Draw"); }
         //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||MONOSPACE
         if (monoSpace)
         {

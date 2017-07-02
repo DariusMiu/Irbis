@@ -29,6 +29,7 @@ public class UIElementDiscreteSlider
 
     public UIElementDiscreteSlider(Direction align, Rectangle areaForSlider, Texture2D bordertex, Texture2D overlaytex, Texture2D filltex, Color fillcolor, Color overlaycolor, Color bordercolor, int numberofelements, int negativeSpace, float drawDepth)
 	{
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.UIElementDiscreteSlider"); }
         sliderArea = areaForSlider;
 
         borderTex = bordertex;
@@ -64,11 +65,13 @@ public class UIElementDiscreteSlider
 
     public void Update(int updateValue)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.Update"); }
         value = updateValue - 1;
     }
 
     public void Draw(SpriteBatch sb)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.Draw"); }
         for (int i = bounds.Length - 1; i >= 0; i--)
         {
             if (value >= i) { sb.Draw(overlayTex, bounds[i], sliderArea, overlayColor, 0f, Vector2.Zero, SpriteEffects.None, depth + 0.01f); }

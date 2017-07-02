@@ -47,6 +47,7 @@ public class UIElementSlider
     public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC,
         Color fillC, Texture2D fillT, Texture2D borderT, Texture2D shieldBarTex, Font font, float drawDepth)
 	{
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
         fernt = font;
         printText = true;
         drawOverlay = true;
@@ -94,6 +95,7 @@ public class UIElementSlider
     public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC,
         Color fillC, Texture2D fillT, Texture2D borderT, Texture2D shieldBarTex, Font font, bool overlayDraw, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
         fernt = font;
         printText = true;
         drawOverlay = overlayDraw;
@@ -141,6 +143,7 @@ public class UIElementSlider
     public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC, Color fillC, Texture2D fillT,
         Texture2D borderT, Texture2D shieldBarTex, Font font, bool overlayDraw, float drawOverlayDepth, float drawBorderDepth, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
         printText = true;
         fernt = font;
         overlayDepth = drawOverlayDepth;
@@ -184,6 +187,7 @@ public class UIElementSlider
     public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC, Color fillC, Texture2D fillT,
        Texture2D borderT, Texture2D shieldBarTex, Font font, bool overlayDraw, bool printtext, float drawOverlayDepth, float drawBorderDepth, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
         printText = printtext;
         fernt = font;
         overlayDepth = drawOverlayDepth;
@@ -227,6 +231,7 @@ public class UIElementSlider
 
     public void Update(float v)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
         if (timeSinceLastFrame >= overlayAnimationSpeed)
         {
@@ -267,6 +272,7 @@ public class UIElementSlider
 
     public void UpdateValue(float v)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UpdateValue"); }
         value = v;
         if (align == Direction.right)
         {
@@ -291,6 +297,7 @@ public class UIElementSlider
 
     public void Update(bool overlayDraw, float v)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
         drawOverlay = overlayDraw;
 
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
@@ -332,6 +339,7 @@ public class UIElementSlider
 
     public void Update(Color borderC, Color fillC, float v)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
         borderColor = borderC;
         fillColor = fillC;
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
@@ -374,11 +382,13 @@ public class UIElementSlider
 
     public bool Contains(MouseState mouseState)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Contains"); }
         return bounds.Contains(mouseState.Position.X, mouseState.Position.Y);
     }
 
     public bool Pressed(MouseState mouseState)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Pressed"); }
         if (bounds.Contains(mouseState.Position.X, mouseState.Position.Y) && mouseState.LeftButton == ButtonState.Pressed)
         {
             return true;
@@ -388,6 +398,7 @@ public class UIElementSlider
 
     public bool Pressed(MouseState mouseState, MouseState previousMouseState)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Pressed"); }
         if (bounds.Contains(mouseState.Position.X, mouseState.Position.Y) && mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton != ButtonState.Pressed)
         {
             return true;
@@ -398,6 +409,7 @@ public class UIElementSlider
 
     public void Draw(SpriteBatch sb)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Draw"); }
         if (drawOverlay) { sb.Draw(overlayTex, bounds, overlaySourceRect, Color.White, 0f, Vector2.Zero, SpriteEffects.None, overlayDepth); }
         //sb.Draw(overlayTex, new Vector2(32,32), overlaySourceRect, Color.White, 0, Vector2.Zero, 1f, SpriteEffects.None, 0.905f);
         sb.Draw(fillTex, valueRect, bounds, fillColor, 0f, Vector2.Zero, SpriteEffects.None, depth);

@@ -1,10 +1,10 @@
-﻿class SmartFramerate
+﻿struct SmartFramerate
 {
     double currentFrametimes;
     double weight;
     int numerator;
 
-    public double framerate
+    public double Framerate
     {
         get
         {
@@ -16,6 +16,7 @@
     {
         numerator = oldFrameWeight;
         weight = (double)oldFrameWeight / ((double)oldFrameWeight - 1d);
+        currentFrametimes = 0d;
     }
 
     public void Update(double timeSinceLastFrame)

@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-public class RectangleBorder
+public struct RectangleBorder
 {
 
     public Rectangle leftBorder;
@@ -19,6 +19,7 @@ public class RectangleBorder
 
     public RectangleBorder(Rectangle refrect, Color bColor, float borderDepth)
 	{
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.RectangleBorder"); }
         color = bColor;
         leftBorder = new Rectangle(refrect.Left, refrect.Top, 1, refrect.Height);
         rightBorder = new Rectangle(refrect.Right - 1, refrect.Top, 1, refrect.Height);
@@ -29,6 +30,7 @@ public class RectangleBorder
 
     public RectangleBorder(Rectangle refrect, Color bColor)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.RectangleBorder"); }
         color = bColor;
         leftBorder = new Rectangle(refrect.Left, refrect.Top, 1, refrect.Height);
         rightBorder = new Rectangle(refrect.Right - 1, refrect.Top, 1, refrect.Height);
@@ -39,6 +41,7 @@ public class RectangleBorder
 
     public void Update(Rectangle refrect, Color bColor)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Update"); }
         color = bColor;
         //depth = borderDepth;
         //leftBorder = new Rectangle(refrect.Left, refrect.Top, 1, refrect.Height);
@@ -61,6 +64,7 @@ public class RectangleBorder
 
     public void Update(Rectangle refrect, Color bColor, float borderDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Update"); }
         color = bColor;
         depth = borderDepth;
         //leftBorder = new Rectangle(refrect.Left, refrect.Top, 1, refrect.Height);
@@ -83,6 +87,7 @@ public class RectangleBorder
 
     public void Draw(SpriteBatch sb, Texture2D tex)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Draw"); }
         sb.Draw(tex, leftBorder, null, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
         sb.Draw(tex, rightBorder, null, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
         sb.Draw(tex, topBorder, null, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
@@ -91,6 +96,7 @@ public class RectangleBorder
 
     public void Draw(SpriteBatch sb, Texture2D tex, Rectangle refrect)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Draw"); }
         //leftBorder = new Rectangle(refrect.Left, refrect.Top, 1, refrect.Height);
         leftBorder.X = refrect.Left;
         leftBorder.Y = refrect.Top;
@@ -115,6 +121,7 @@ public class RectangleBorder
 
     public void Draw(SpriteBatch sb, Texture2D tex, float borderDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Draw"); }
         //depth = borderDepth;
         sb.Draw(tex, leftBorder, null, color, 0f, Vector2.Zero, SpriteEffects.None, borderDepth);
         sb.Draw(tex, rightBorder, null, color, 0f, Vector2.Zero, SpriteEffects.None, borderDepth);
@@ -124,6 +131,7 @@ public class RectangleBorder
 
     public void Draw(SpriteBatch sb, Texture2D tex, Rectangle refrect, float borderDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Draw"); }
         //leftBorder = new Rectangle(refrect.Left, refrect.Top, 1, refrect.Height);
         leftBorder.X = refrect.Left;
         leftBorder.Y = refrect.Top;

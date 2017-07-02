@@ -33,6 +33,7 @@ public class Button
 
     public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, float drawDepth)
 	{
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Irbis.Button"); }
         bounds = buttonBounds;
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
@@ -55,6 +56,7 @@ public class Button
 
     public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, bool dBorder, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Irbis.Button"); }
         bounds = buttonBounds;
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
@@ -81,6 +83,7 @@ public class Button
 
     public Button(Rectangle buttonBounds, Direction align, Side side, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, bool dBorder, float drawDepth)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Button"); }
         bounds = buttonBounds;
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
@@ -122,6 +125,7 @@ public class Button
 
     public bool Pressed(MouseState mouseState)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Pressed"); }
         if (bounds.Contains(mouseState.Position.X, mouseState.Position.Y) && mouseState.LeftButton == ButtonState.Pressed)
         {
             return true;
@@ -131,6 +135,7 @@ public class Button
 
     public bool Pressed(MouseState mouseState, MouseState previousMouseState)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Pressed"); }
         if (bounds.Contains(mouseState.Position.X, mouseState.Position.Y) && mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton != ButtonState.Pressed)
         {
             return true;
@@ -140,12 +145,14 @@ public class Button
 
     public void Update(string statement)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Update"); }
         buttonStatement = statement;
         text.Update(statement, true);
     }
 
     public void Update(string statement, bool clear)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Update"); }
         if (clear)
         {
             buttonStatement = statement;
@@ -159,11 +166,13 @@ public class Button
 
     public bool Contains(MouseState mouseState)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Contains"); }
         return bounds.Contains(mouseState.Position.X, mouseState.Position.Y);
     }
 
     public void Draw(SpriteBatch sb)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Draw"); }
         text.Draw(sb);
         if (drawBorder) { border.Draw(sb, borderTex); }
     }

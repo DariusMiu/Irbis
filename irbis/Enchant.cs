@@ -16,6 +16,7 @@ public class Enchant
 
     public Enchant(EnchantType Type, int Strength)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.Enchant"); }
         enchantType = Type;
         strength = Strength;
         CalculateStrength();
@@ -23,6 +24,7 @@ public class Enchant
 
     public Enchant(Enchant enchant)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.Enchant"); }
         enchantType = enchant.enchantType;
         effectValue = enchant.effectValue;
         effectDuration = enchant.effectDuration;
@@ -31,18 +33,21 @@ public class Enchant
 
     public void Upgrade()
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.Upgrade"); }
         strength++;
         CalculateStrength();
     }
 
     public void Downgrade()
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.Downgrade"); }
         strength--;
         CalculateStrength();
     }
 
     public void CalculateStrength()
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.CalculateStrength"); }
         switch (enchantType)
         {
             case EnchantType.bleed:
@@ -85,6 +90,7 @@ public class Enchant
     /// </summary>
     public bool ApplyEffect(IEnemy enemy)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.ApplyEffect"); }
         switch (enchantType)
         {
             case EnchantType.bleed:
@@ -117,8 +123,9 @@ public class Enchant
     /// <summary>
     /// AddEffect adds the effect to the enemy's activeEffects list or just applies the effect if it is on hit
     /// </summary>
-    public void AddEffect(Player player, IEnemy enemy)
+    public void AddEffect(IEnemy enemy)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.AddEffect"); }
         int enchantIndex;
         switch (enchantType)
         {
@@ -157,7 +164,7 @@ public class Enchant
                 }
                 break;
             case EnchantType.knockback:
-                enemy.Knockback(player, effectValue);
+                enemy.Knockback(Irbis.Irbis.geralt.direction, effectValue);
                 break;
             case EnchantType.poison:
                 if (uses > 0)
@@ -188,6 +195,7 @@ public class Enchant
 
     public Enchant CloneOf(Enchant enchant)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.CloneOf"); }
         return new Enchant(enchant);
     }
 
@@ -197,6 +205,7 @@ public class Enchant
     /// </summary>
     public int Contains(List<Enchant> EnchantList, EnchantType Type)
     {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.Contains"); }
         for (int i = 0; i < EnchantList.Count; i++)
         {
             if (EnchantList[i].enchantType == Type)
