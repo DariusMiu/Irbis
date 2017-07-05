@@ -106,6 +106,7 @@ public class Enemy : ICollisionObject, IEnemy
     //public Vector2 previousPos;
     public Vector2 velocity;
 
+    float depth;
 
     public float stunned;
     float wanderSpeed;
@@ -180,17 +181,17 @@ public class Enemy : ICollisionObject, IEnemy
         
     public List<ICollisionObject> collided;
     List<Side> sideCollided;
-    Irbis.Irbis game;
 
-    public Enemy(Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, Irbis.Irbis masterGame)
+    public Enemy(Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, float drawDepth)
 	{
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Enemy"); }
-        game = masterGame;
 
         tex = t;
         colliderDrawer = new RectangleBorder(collider, Color.Magenta, 0.19f);
 
         AIenabled = true;
+
+        depth = drawDepth;
 
         climbablePixels = 3;
 
@@ -904,7 +905,7 @@ public class Enemy : ICollisionObject, IEnemy
                 position.Y -= climbamount;
                 //position.X -= 1;
                 amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine("on ramp, moved " + climbamount + " pixels");
+                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels");
             }
         }
         if (rightWalled == 1 && input.X > 0)
@@ -915,7 +916,7 @@ public class Enemy : ICollisionObject, IEnemy
                 position.Y -= climbamount;
                 //position.X += 1;
                 amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine("on ramp, moved " + climbamount + " pixels");
+                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels");
             }
         }
 
@@ -1206,7 +1207,7 @@ public class Enemy : ICollisionObject, IEnemy
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Draw"); }
         if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.screenspace))
         {
-            sb.Draw(tex, displayRect, animationSourceRect, Color.White);
+            sb.Draw(tex, displayRect, animationSourceRect, Color.White, 0f, Vector2.Zero, SpriteEffects.None, depth);
         }
     }
 }

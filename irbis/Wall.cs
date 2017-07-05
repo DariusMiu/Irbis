@@ -1,4 +1,4 @@
-﻿public struct Wall
+﻿public class Wall
 {
     public int Top
     {

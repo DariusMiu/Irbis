@@ -181,6 +181,7 @@ public class Enchant
                     {
                         enemy.AddEffect(CloneOf(this));
                     }
+
                     uses--;
                 }
                 break;

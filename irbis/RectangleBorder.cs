@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-public struct RectangleBorder
+public class RectangleBorder
 {
 
     public Rectangle leftBorder;

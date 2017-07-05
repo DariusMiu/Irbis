@@ -65,12 +65,21 @@ namespace Irbis
     }
     public enum VendingType
     {
-        Enchants = 0,
+        Enchant = 0,
         Health = 1,
         Energy = 2,
         Shield = 3,
-        Potions = 4,
+        Potion = 4,
         Life = 5,
+    }
+
+    public interface IDrawableObject : System.IComparable
+    {
+        float Depth
+        {
+            get;
+        }
+        void Draw(SpriteBatch sb);
     }
 
     public interface ICollisionObject
@@ -166,7 +175,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.1.11";
+        static string versionNo = "0.1.2.0";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
@@ -478,16 +487,16 @@ namespace Irbis
         public static bool cameraLerp;
         public static float cameraLerpSpeed;
         public static bool cameraShakeSetting;
-        float cameraShakeDuration;
-        float cameraShakeMagnitude;
-        float cameraSwingDuration;
-        float cameraSwingMaxDuration;
-        float cameraSwingMagnitude;
-        public float swingDuration;
-        public float swingMagnitude;
-        Vector2 cameraSwingHeading;
+        static float cameraShakeDuration;
+        static float cameraShakeMagnitude;
+        static float cameraSwingDuration;
+        static float cameraSwingMaxDuration;
+        static float cameraSwingMagnitude;
+        public static float swingDuration;
+        public static float swingMagnitude;
+        static Vector2 cameraSwingHeading;
         public static bool cameraSwingSetting;
-        bool cameraSwing;
+        static bool cameraSwing;
 
                                                                                                     //menu
         public static Menu menu;
@@ -509,17 +518,18 @@ namespace Irbis
 
                                                                                                     //UI
         public static Font font;
-        public UIElementSlider healthBar;
-        public UIElementSlider shieldBar;
-        public UIElementSlider energyBar;
-        public UIElementDiscreteSlider potionBar;
-        public UIElementSlider enemyHealthBar;
+        public static UIElementSlider healthBar;
+        public static UIElementSlider shieldBar;
+        public static UIElementSlider energyBar;
+        public static UIElementDiscreteSlider potionBar;
+        public static UIElementSlider enemyHealthBar;
         public static Print timerDisplay;
         public static string timerAccuracy;
         public static float minSqrDetectDistance;
         public static bool displayEnemyHealth;
         public static SpriteFont spriteFont;
         public static SpriteFont spriteFont2;
+        public static int vendingMenu;
 
                                                                                                     //settings vars
         public static int screenScale;
@@ -580,6 +590,9 @@ namespace Irbis
         private static int lastRandomInt;
         public static Texture2D nullTex;
         public static Game game;
+
+        public static BinaryTree<float> testTree;
+        //public static BinaryTree<IDrawableObject> drawtree;
 
 
         public Irbis()
@@ -677,6 +690,9 @@ namespace Irbis
             PrintVersion();
             WriteLine();
 
+            testTree = new BinaryTree<float>();
+            vendingMenu = -1;
+
             //if (ConvertOldLevelFilesToNew())
             //{
             //    Console.WriteLine("conversion success");
@@ -715,7 +731,7 @@ namespace Irbis
             Texture2D playerTex = Content.Load<Texture2D>("player");
             Texture2D shieldTex = Content.Load<Texture2D>("shield");
 
-            geralt = new Player(playerTex, shieldTex, playerSettings, this);
+            geralt = new Player(playerTex, shieldTex, playerSettings, 0.5f);
             geralt.Respawn(new Vector2(-1000f, -1000f));
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -876,20 +892,6 @@ namespace Irbis
                 potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle(184, 54, 96, 15), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
                 enemyHealthBar = new UIElementSlider(Direction.right, new Point(resolution.X - 32, 32), 500, 20, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, shieldBarTex, font, false, 0.5f);
 
-                if (onslaughtMode)
-                {
-                    onslaughtSpawner = new OnslaughtSpawner();
-                    onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
-                    onslaughtDisplay.Update("Onslaught Wave " + onslaughtSpawner.wave, true);
-                    timerDisplay = null;
-                }
-                else
-                {
-                    timerDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
-                    onslaughtDisplay = null;
-                    onslaughtSpawner = null;
-                }
-
                 if (geralt != null)
                 {
                     geralt.Respawn(initialPos);
@@ -901,6 +903,29 @@ namespace Irbis
                 {
                     geralt.Respawn(new Vector2(-1000f, -1000f));
                 }
+            }
+
+            if (onslaughtMode)
+            {
+                onslaughtSpawner = new OnslaughtSpawner();
+
+                Point[] vendingMachineLocations = thisLevel.VendingMachineLocations;
+                VendingType[] vendingMachineTypes = thisLevel.VendingMachineTypes;
+                string[] vendingMachineTextures = thisLevel.VendingMachineTextures;
+                for (int i = 0; i < vendingMachineTextures.Length; i++)
+                {
+                    onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i], new Point(64, 64)), Content.Load<Texture2D>(vendingMachineTextures[i]), 0.35f));
+                }
+
+                onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
+                onslaughtDisplay.Update("Onslaught Wave " + onslaughtSpawner.wave, true);
+                timerDisplay = null;
+            }
+            else
+            {
+                timerDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
+                onslaughtDisplay = null;
+                onslaughtSpawner = null;
             }
 
             for (int i = 0; i < thisLevel.squareTextures.Count; i++)
@@ -1010,12 +1035,6 @@ namespace Irbis
             if (!sceneIsMenu && !acceptTextInput)
             {
                 LevelUpdate(gameTime);
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||*/
-                    (GetKeyDown(Keys.Escape) || (GetKeyDown(Keys.Pause))))
-                {
-                    framebyframe = false;
-                    LoadMenu(0, 0, false);
-                }
             }
             else
             {
@@ -1089,7 +1108,7 @@ namespace Irbis
                 minFPStime = Timer;
             }
 
-            if ((keyboardState.IsKeyDown(Keys.R) && !acceptTextInput) || geralt.health <= 0)                            //RESPAWN
+            if ((keyboardState.IsKeyDown(Keys.T) && !acceptTextInput) || geralt.health <= 0)                            //RESPAWN
             {
                 geralt.Respawn(initialPos);
 
@@ -1207,6 +1226,68 @@ namespace Irbis
                 {
                     onslaughtDisplay.Update("Onslaught Wave " + onslaughtSpawner.wave, true);
                 }
+
+                if (GetUseKeyDown)
+                {
+                    for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
+                    {
+                        if (geralt.collider.Intersects(onslaughtSpawner.vendingMachineList[i].displayRect)) //add collider to vending machine
+                        {
+                            onslaughtSpawner.vendingMachineList[i].LoadMenu();
+                            geralt.inputEnabled = !onslaughtSpawner.vendingMachineList[i].drawMenu;
+                            if (!geralt.inputEnabled)
+                            {
+                                vendingMenu = i;
+                                WriteLine("vending machine menu open");
+                            }
+                            else
+                            {
+                                vendingMenu = -1;
+                                WriteLine("vending machine menu close");
+                            }
+                        }
+                    }
+                }
+
+                if (vendingMenu >= 0)
+                {
+                    if (geralt.inputEnabled)
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].drawMenu = !geralt.inputEnabled;
+                        vendingMenu = -1;
+                        WriteLine("vending machine menu close");
+                    }
+                    if (GetLeftKeyDown)
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].Update(onslaughtSpawner.vendingMachineList[vendingMenu].selection - 1);
+                    }
+                    if (GetRightKeyDown)
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].Update(onslaughtSpawner.vendingMachineList[vendingMenu].selection + 1);
+                    }
+
+                    if (Use())
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].Purchase(onslaughtSpawner.vendingMachineList[vendingMenu].selection);
+                    }
+                }
+            }
+
+            if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||*/
+                (GetKeyDown(Keys.Escape) || (GetKeyDown(Keys.Pause))))
+            {
+                if (vendingMenu >= 0)
+                {
+                    onslaughtSpawner.vendingMachineList[vendingMenu].LoadMenu();
+                    geralt.inputEnabled = true;
+                    vendingMenu = -1;
+                    WriteLine("vending machine menu close");
+                }
+                else
+                {
+                    framebyframe = false;
+                    LoadMenu(0, 0, false);
+                }
             }
 
             if (keyboardState.IsKeyDown(Keys.K) && !previousKeyboardState.IsKeyDown(Keys.K) && !acceptTextInput)
@@ -1258,7 +1339,7 @@ namespace Irbis
             }
         }
 
-        public void Camera()
+        private void Camera()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Camera"); }
             screenSpacePlayerPos.X = geralt.collider.Center.X + (int)foreground.M41;
@@ -1314,7 +1395,7 @@ namespace Irbis
             if (cameraSwingSetting && cameraSwingDuration > 0) { CameraSwing(); }
         }
 
-        public void CameraSwing()
+        private static void CameraSwing()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraSwing"); }
             cameraSwingDuration -= DeltaTime;
@@ -1337,7 +1418,7 @@ namespace Irbis
             }
         }
 
-        public void CameraSwing(float duration, float magnitude, Vector2 heading)
+        public static void CameraSwing(float duration, float magnitude, Vector2 heading)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraSwing"); }
             cameraSwingDuration = cameraSwingMaxDuration = duration;
@@ -1347,7 +1428,7 @@ namespace Irbis
             cameraSwing = true;
         }
 
-        public void CameraShake()
+        private static void CameraShake()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraShake"); }
             cameraShakeDuration -= DeltaTime;
@@ -1357,7 +1438,7 @@ namespace Irbis
             background.M32 = foreground.M42 = background.M32 + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //Y
         }
 
-        public void CameraShake(float duration, float magnitude)
+        public static void CameraShake(float duration, float magnitude)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraShake"); }
             //cameraTimePerShake = 0f;
@@ -1373,32 +1454,47 @@ namespace Irbis
             //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelEditor"); }
             debug = 3;
             this.IsMouseVisible = sceneIsMenu = true;
-            PrintDebugInfo();
+            //PrintDebugInfo();
             if (!acceptTextInput)
             {
-                if (keyboardState.IsKeyDown(upKey))
+                if (GetKey(Keys.LeftShift))
                 {
-                    camera.Y -= 1;
+                    if (keyboardState.IsKeyDown(upKey))
+                    {
+                        camera.Y -= 10f * DeltaTime;
+                    }
+                    if (keyboardState.IsKeyDown(downKey))
+                    {
+                        camera.Y += 10f * DeltaTime;
+                    }
+                    if (keyboardState.IsKeyDown(leftKey))
+                    {
+                        camera.X -= 10f * DeltaTime;
+                    }
+                    if (keyboardState.IsKeyDown(rightKey))
+                    {
+                        camera.X += 10f * DeltaTime;
+                    }
                 }
-                if (keyboardState.IsKeyDown(downKey))
+                else
                 {
-                    camera.Y += 1;
+                    if (keyboardState.IsKeyDown(upKey))
+                    {
+                        camera.Y -= 1000f * DeltaTime;
+                    }
+                    if (keyboardState.IsKeyDown(downKey))
+                    {
+                        camera.Y += 1000f * DeltaTime;
+                    }
+                    if (keyboardState.IsKeyDown(leftKey))
+                    {
+                        camera.X -= 1000f * DeltaTime;
+                    }
+                    if (keyboardState.IsKeyDown(rightKey))
+                    {
+                        camera.X += 1000f * DeltaTime;
+                    }
                 }
-                if (keyboardState.IsKeyDown(leftKey))
-                {
-                    camera.X -= 1;
-                }
-                if (keyboardState.IsKeyDown(rightKey))
-                {
-                    camera.X += 1;
-                }
-            }
-            if (GetKeyDown(Keys.Enter))
-            {
-                acceptTextInput = !acceptTextInput;
-                consoleWriteline.Update(string.Empty, true);
-                ConsoleParser(textInputBuffer);
-                textInputBuffer = string.Empty;
             }
 
             background.M31 = foreground.M41 = halfResolution.X - camera.X;
@@ -1496,7 +1592,7 @@ namespace Irbis
                 Level lvl = new Level(true);
                 Console.WriteLine("attempting load on: " + s);
                 lvl.Load(s);
-                lvl.Debug(true);
+                Console.WriteLine(lvl.ToString());
                 OldLevel.Save(OldLevel.LevelConverter(lvl), s);
                 OldLevel testlvl = new OldLevel(true);
                 testlvl.Load(s);
@@ -1536,6 +1632,35 @@ namespace Irbis
             thisLevel.BackgroundSquares = BackgroundSquares;
             thisLevel.backgroundTextures = backgroundTextures;
             thisLevel.backgroundSquareDepths = backgroundSquareDepths;
+            thisLevel.levelName = currentLevel;
+
+            if (onslaughtSpawner != null)
+            {
+                List<Point> vendingMachineLocations = new List<Point>();
+                List<VendingType> vendingMachineTypes = new List<VendingType>();
+                List<string> vendingMachineTextures = new List<string>();
+
+                foreach (VendingMachine v in onslaughtSpawner.vendingMachineList)
+                {
+                    vendingMachineTextures.Add(v.vendingTex.ToString());
+                    vendingMachineLocations.Add(v.displayRect.Location);
+                    vendingMachineTypes.Add(v.type);
+                }
+
+                thisLevel.VendingMachineLocations = vendingMachineLocations.ToArray();
+                thisLevel.VendingMachineTextures = vendingMachineTextures.ToArray();
+                thisLevel.VendingMachineTypes = vendingMachineTypes.ToArray();
+
+                WriteLine("vendingMachineLocations count: " + vendingMachineLocations.Count);
+                WriteLine("vendingMachineTextures count: " + vendingMachineTextures.Count);
+                WriteLine("vendingMachineTypes count: " + vendingMachineTypes.Count);
+            }
+            else
+            {
+                thisLevel.VendingMachineLocations = new Point[0];
+                thisLevel.VendingMachineTextures = new string[0];
+                thisLevel.VendingMachineTypes = new VendingType[0];
+            }
 
             thisLevel.isOnslaught = onslaughtMode;
             thisLevel.PlayerSpawn = initialPos;
@@ -1707,6 +1832,28 @@ namespace Irbis
             return randomInt;
         }
 
+        public static void AddPlayerEnchant(EnchantType enchant)
+        {
+            int hasEnchant = -1;
+            for (int i = 0; i < geralt.enchantList.Count; i++)
+            {
+                if (geralt.enchantList[i].enchantType == enchant)
+                {
+                    hasEnchant = i;
+                }
+            }
+            if (hasEnchant >= 0)
+            {
+                geralt.enchantList[hasEnchant].Upgrade();
+                WriteLine(geralt.enchantList[hasEnchant].enchantType + " upgraded");
+            }
+            else
+            {
+                geralt.enchantList.Add(new Enchant(enchant, 1));
+                WriteLine(enchant + " added");
+            }
+        }
+
         public static bool IsTouching(Rectangle rect1, Rectangle rect2)
         {
             ////if (debug > 4) { methodLogger.AppendLine("Irbis.IsTouching"); }
@@ -1825,10 +1972,12 @@ namespace Irbis
             //if (debug > 4) { methodLogger.AppendLine("Irbis.SummonGenericEnemy"); }
             if (enemySpawnPoints.Count > 0)
             {
-                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[(int)(RAND.NextDouble() * enemySpawnPoints.Count)], 100f, 10f, 300f, this);
+                int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
+                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], 100f, 10f, 300f, 0.4f);
                 eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
+                WriteLine("enemy spawned at " + enemySpawnPoints[spawnpoint] + ". health:100 damage:10 speed:300. timer:" + Timer);
             }
             else
             {
@@ -1841,14 +1990,16 @@ namespace Irbis
             //if (debug > 4) { methodLogger.AppendLine("Irbis.SummonGenericEnemy"); }
             if (enemySpawnPoints.Count > 0)
             {
-                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[(int)(RAND.NextDouble() * enemySpawnPoints.Count)], health, damage, speed, this);
+                int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
+                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], health, damage, speed, 0.4f);
                 eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
+                WriteLine("enemy spawned at " + enemySpawnPoints[spawnpoint] + ". health:" + health + " damage:" + damage + " speed:" + speed + ". timer:" + Timer);
             }
             else
             {
-                Console.WriteLine("Error, no spawn points");
+                WriteLine("Error, no spawn points");
             }
         }
 
@@ -1877,6 +2028,8 @@ namespace Irbis
             altRollKey = playerSettings.altRollKey;
             potionKey = playerSettings.potionKey;
             altPotionKey = playerSettings.altPotionKey;
+            useKey = playerSettings.useKey;
+            altUseKey = playerSettings.altUseKey;
 
             cameraLerp = playerSettings.cameraLerp;
             cameraLerpSpeed = playerSettings.cameraLerpSpeed;
@@ -2096,7 +2249,7 @@ namespace Irbis
             }
 
 
-            if ((keyboardState.IsKeyDown(Keys.Enter) && !previousKeyboardState.IsKeyDown(Keys.Enter)) && !levelEditor)
+            if ((keyboardState.IsKeyDown(Keys.Enter) && !previousKeyboardState.IsKeyDown(Keys.Enter)))
             {
                 consoleWriteline.Update(string.Empty, true);
                 ConsoleParser(textInputBuffer);
@@ -2112,10 +2265,12 @@ namespace Irbis
 
         public static void KillEnemy(int enemyIndex)
         {
+            WriteLine("removing enemy. position:" + eList[enemyIndex].Position + " health:" + eList[enemyIndex].Health + ". timer:" + Timer);
             //collisionObjects.Remove(eList[i]);
             enemyList.Remove(eList[enemyIndex]);
             eList.Remove(eList[enemyIndex]);
             if (onslaughtMode) { onslaughtSpawner.EnemyKilled(); }
+            WriteLine("success.");
         }
 
         public void ExportConsole()
@@ -2291,6 +2446,67 @@ quit  ---------------  exits
             }
 
             return returnhelp;
+        }
+
+        public string Invocation()
+        {
+            string invocation =
+@"Don't call it a comb-back; I'll have hair for years.
+I’M SCARED.
+I’m scared that my abilities are gone.
+I’m scared that I’m going to fuck this up.
+And I’m scared of you.
+I don't want to start, but I will.
+This is an invocation for anyone who hasn't begun, who's stuck in a terrible place between zero and one.
+Let me realize that my past failures at follow-through are no indication of my future performance. They're
+just healthy little fires that are going to warm up my ass.
+If my F.I.L.D.I. is strong, let me keep him in a velvet box until I really, really need him. If my F.I.L.D.I.
+is weak, let me feed him oranges and not let him gorge himself on ego and arrogance.
+Let me not hit up my Facebook like it's a crack pipe, keep the browser closed.
+If I catch myself wearing a too-too (too fat, too late, too old) let me shake it off like a donkey would
+shake off something it doesn't like.
+And when I get that feeling in my stomach, you know the feeling when all of a sudden you get a ball of energy
+and it shoots down into your legs and up into your arms and tells you to get up and stand up and go to the
+refrigerator and get a cheese sandwich? That's my cheese monster talking. And my cheese monster will never be
+satisfied by cheddar, only the cheese of accomplishment.
+Let me think about the people who I care about the most, and how when they fail or disappoint me... I still
+love them, I still give them chances, and I still see the best in them. Let me extend that generosity to myself.
+Let me find and use metaphors to help me understand the world around me and give me the strength to get rid of
+them when it's apparent they no longer work.
+Let me thank the parts of me that I don't understand or are outside of my rational control like my creativity
+and my courage. And let me remember that my courage is a wild dog. It won't just come when I call it, I have to
+chase it down and hold on as tight as I can.
+Let me not be so vain to think that I'm the sole author of my victories and a victim of my defeats.
+Let me remember that the unintended meaning that people project onto what I do is neither my fault or something
+I can take credit for.
+Perfectionism may look good in his shiny shoes but he's a little bit of an asshole and no one invites him to
+their pool parties.
+Let me remember that the impact of criticism is often not the intent of the critic, but when the intent is evil,
+that's what the block button's for.
+And when I eat my critique, let me be able to separate out the good advice from the bitter herbs.
+(There are few people who won't be disarmed by a genuine smile.)
+(A big impact on a few can be worth more than a small impact.)
+Let me not think of my work only as a stepping stone to something else, and if it is, let me become fascinated
+with the shape of the stone.
+Let me take the idea that has gotten me this far and put it to bed. What I am about to do will not be that, but
+it will be something.
+There is no need to sharpen my pencils anymore, my pencils are sharp enough.
+Even the dull ones will make a mark.
+Warts and all, let's start this shit up.
+And god let me enjoy this. Life isn't just a sequence of waiting for things to be done.
+
+Thank you, Ze Frank, for the inspiration.";
+
+            string returninvocation = string.Empty;
+            foreach (char c in invocation)
+            {
+                if (!c.Equals('\u000D'))
+                {
+                    returninvocation += c;
+                }
+            }
+
+            return returninvocation;
         }
 
         public void Quit()
@@ -3198,6 +3414,9 @@ quit  ---------------  exits
                             e.AIenabled = AIenabled;
                         }
                         break;
+                    case "noclip":
+                        geralt.Noclip();
+                        break;
                     case "killall":
                         eList.Clear();
                         enemyList.Clear();
@@ -3332,31 +3551,58 @@ quit  ---------------  exits
                         }
                         break;
                     case "addenchant":
-                        if (Enum.TryParse(value, out enchantResult) && geralt != null)
+                        if (string.IsNullOrWhiteSpace(value))
                         {
-                            int hasEnchant = -1;
-                            for (int i = 0; i < geralt.enchantList.Count; i++)
-                            {
-                                if (geralt.enchantList[i].enchantType == enchantResult)
-                                {
-                                    hasEnchant = i;
-                                }
-                            }
-                            if (hasEnchant >= 0)
-                            {
-                                geralt.enchantList[hasEnchant].Upgrade();
-                                WriteLine(geralt.enchantList[hasEnchant].enchantType + " upgraded");
-                            }
-                            else
-                            {
-                                geralt.enchantList.Add(new Enchant(enchantResult, 1));
-                                WriteLine(enchantResult + " added");
-                            }
+                            WriteLine("addenchant=Type  -------  add enchant to active enchants");
+                            WriteLine("(bleed, fire, frost, knockback, poison, sharpness, stun)");
+                            WriteLine("add the same enchant multiple times to upgrade its strength");
                         }
                         else
                         {
-                            WriteLine("error: enchant \"" + value + "\" could not be parsed");
-
+                            if (Enum.TryParse(value, out enchantResult) && geralt != null)
+                            {
+                                AddPlayerEnchant(enchantResult);
+                            }
+                            else
+                            {
+                                WriteLine("error: enchant \"" + value + "\" could not be parsed");
+                            }
+                        }
+                        break;
+                    case "purchaseenchant":
+                        if (string.IsNullOrWhiteSpace(value))
+                        {
+                            WriteLine("purchase enchant=Type  -------  add enchant to active enchants");
+                            WriteLine("(bleed, fire, frost, knockback, poison, sharpness, stun)");
+                            WriteLine("purchase the same enchant multiple times to upgrade its strength");
+                        }
+                        else
+                        {
+                            if (Enum.TryParse(value, out enchantResult) && geralt != null)
+                            {
+                                int vendingmachine = -1;
+                                for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
+                                {
+                                    if (onslaughtSpawner.vendingMachineList[i].type == VendingType.Enchant)
+                                    {
+                                        vendingmachine = i;
+                                    }
+                                }
+                                if (vendingmachine >= 0)
+                                {
+                                    onslaughtSpawner.vendingMachineList[vendingmachine].Purchase((int)enchantResult);
+                                    WriteLine("purchased " + enchantResult);
+                                }
+                                else
+                                {
+                                    WriteLine("vendingmachine=" + vendingmachine);
+                                    WriteLine("failed");
+                                }
+                            }
+                            else
+                            {
+                                WriteLine("error: enchant \"" + value + "\" could not be parsed");
+                            }
                         }
                         break;
                     case "disenchant":
@@ -3397,6 +3643,15 @@ quit  ---------------  exits
                         break;
                     case "timer":
                         WriteLine("timer: " + Timer);
+                        WriteLine();
+                        break;
+                    case "debuglevel":
+                        if (true)
+                        {
+                            Level thislevel = new Level();
+                            thislevel.Load(".\\levels\\" + currentLevel + ".lvl");
+                            WriteLine(thislevel.ToString());
+                        }
                         WriteLine();
                         break;
                     case "moveme":
@@ -3457,6 +3712,141 @@ quit  ---------------  exits
                                 }
                             }
                         }
+                        break;
+                    case "spawnvending":
+                        if (true)
+                        {
+                            if (string.IsNullOrWhiteSpace(value))
+                            {
+                                WriteLine("spawning enchant vending machine at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
+                                VendingMachine tempvend = new VendingMachine(200, VendingType.Enchant, new Rectangle(new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), new Point(64, 64)), Content.Load<Texture2D>("enchant vending machine"), 0.35f);
+                                onslaughtSpawner.vendingMachineList.Add(tempvend);
+
+                            }
+                            else
+                            {
+                                VendingType vendtype;
+                                if (Enum.TryParse(value, out vendtype))
+                                {
+                                    WriteLine("spawning " + value + " vending machine at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
+                                    VendingMachine tempvend = new VendingMachine(200, vendtype, new Rectangle(new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), new Point(64, 64)), Content.Load<Texture2D>("enchant vending machine"), 0.35f);
+                                    onslaughtSpawner.vendingMachineList.Add(tempvend);
+                                }
+                                else
+                                {
+                                    WriteLine("error: vending machine \"" + value + "\" could not be parsed");
+                                }
+                            }
+                        }
+                        break;
+                    case "spawnvendingmachine":
+                        goto case "spawnvending";
+                    case "debugvending":
+                        goto case "debugonslaught";
+                    case "debugvendingmachine":
+                        goto case "debugvending";
+                    case "invocation":
+                        WriteLine(Invocation());
+                        break;
+                    case "addtotree":
+                        if (float.TryParse(value, out floatResult))
+                        {
+                            testTree.Add(floatResult);
+                            WriteLine("added " + floatResult);
+                        }
+                        else
+                        {
+                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                        }
+                        break;
+                    case "filltree":
+                        if (int.TryParse(value, out intResult))
+                        {
+                            WriteLine("filling...");
+                            for (int i = 0; i < intResult; i++)
+                            {
+                                float randomfloat = RandomFloat() * 100f;
+                                Write(randomfloat + " ");
+                                testTree.Add(randomfloat);
+                            }
+                            WriteLine();
+                        }
+                        else
+                        {
+                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                        }
+                        break;
+                    case "printtree":
+                        WriteLine();
+                        foreach (float f in testTree)
+                        {
+                            Write(f + " ");
+                        }
+                        WriteLine();
+                        break;
+                    case "printtreeleftmost":
+                        WriteLine("" + testTree.GetLeftmost(testTree));
+                        WriteLine();
+                        break;
+                    case "debugtree":
+                        if (testTree != null)
+                        {
+                            WriteLine(" root: " + testTree);
+                            if (testTree.Left == null)
+                            {
+                                WriteLine(" left: null");
+                            }
+                            else
+                            {
+                                WriteLine(" left: " + testTree.Left);
+                            }
+                            if (testTree.Right != null)
+                            {
+                                WriteLine("right: " + testTree.Right);
+                            }
+                            else
+                            {
+                                WriteLine("right: null");
+                            }
+                        }
+                        else
+                        {
+                            WriteLine(" root: null");
+                        }
+                        break;
+                    case "vendings":
+                        for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
+                        {
+                            WriteLine("VendingMachine[" + i + "]: " + onslaughtSpawner.vendingMachineList[i]);
+                        }
+                        WriteLine();
+                        break;
+                    case "vendingmachines":
+                        goto case "vendings";
+                    case "removevending":
+                        if (int.TryParse(value, out intResult))
+                        {
+                            onslaughtSpawner.vendingMachineList.RemoveAt(intResult);
+                            WriteLine("removed vending machine [" + intResult + "]");
+                        }
+                        else
+                        {
+                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                        }
+                        WriteLine();
+                        break;
+                    case "removevendingmachine":
+                        goto case "removevending";
+                    case "player":
+                        WriteLine(geralt.ToString());
+                        WriteLine();
+                        break;
+                    case "debugonslaught":
+                        if (onslaughtSpawner != null)
+                        {
+                            WriteLine(onslaughtSpawner.ToString());
+                        }
+                        WriteLine();
                         break;
 
 
@@ -3562,7 +3952,7 @@ quit  ---------------  exits
             }
         }
 
-        protected override void Draw(GameTime gameTime)                                                                         //DRAW
+        protected override void Draw(GameTime gameTime)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Draw"); }
             GraphicsDevice.SetRenderTarget(renderTarget);
@@ -3583,13 +3973,13 @@ quit  ---------------  exits
 
             //standard spritebatch, draw level and player and enemies here
             spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, foreground);
-            foreach (Enemy e in eList)
-            {
-                e.Draw(spriteBatch);
-            }
             foreach (Square s in squareList)
             {
                 s.Draw(spriteBatch);
+            }
+            foreach (Enemy e in eList)
+            {
+                e.Draw(spriteBatch);
             }
             if (geralt != null) { geralt.Draw(spriteBatch); }
             if (debug > 1)
@@ -3604,11 +3994,17 @@ quit  ---------------  exits
                         tempSquare.Draw(spriteBatch);
                     }
                 }
-
+            }
+            if (onslaughtSpawner != null)
+            {
+                foreach (VendingMachine v in onslaughtSpawner.vendingMachineList)
+                {
+                    v.Draw(spriteBatch);
+                }
             }
             spriteBatch.End();
 
-            //spritebatch for static elements (like UI and menus, etc)
+            //spritebatch for static elements (like UI, etc)
             spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
             if (healthBar != null) { healthBar.Draw(spriteBatch); }
             if (shieldBar != null) { shieldBar.Draw(spriteBatch); }

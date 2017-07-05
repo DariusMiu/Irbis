@@ -10,14 +10,18 @@ using Microsoft.Xna.Framework.Input;
 
 public class OnslaughtSpawner
 {
-    public int Points
+    public long Points
     {
         get
         {
             return points;
         }
+        set
+        {
+            points = value;
+        }
     }
-    protected int points;
+    private long points;
     private float timer;
     public float timeUntilNextSpawn;
     public int maxEnemies;
@@ -32,7 +36,7 @@ public class OnslaughtSpawner
     public int pointsPerKill;
     public int pointsPerWave;
 
-    List<VendingMachine> vendingMachineList;
+    public List<VendingMachine> vendingMachineList;
 
     public OnslaughtSpawner()
     {
@@ -88,6 +92,34 @@ public class OnslaughtSpawner
     {
         points += pointsPerKill;
         enemiesKilled++;
+    }
+
+    public override string ToString()
+    {
+        string debugstring = string.Empty;
+
+        debugstring += "\npoints: " + points;
+        debugstring += "\ntimer: " + timer;
+        debugstring += "\ntimeUntilNextSpawn: " + timeUntilNextSpawn;
+        debugstring += "\nmaxEnemies: " + maxEnemies;
+        debugstring += "\nwave: " + wave;
+        debugstring += "\nenemiesLeftThisWave: " + enemiesLeftThisWave;
+        debugstring += "\nenemiesThisWave: " + enemiesThisWave;
+        debugstring += "\nenemyHealth: " + enemyHealth;
+        debugstring += "\nenemyDamage: " + enemyDamage;
+        debugstring += "\nenemySpeed: " + enemySpeed;
+        debugstring += "\nwaveStarted: " + waveStarted;
+        debugstring += "\nenemiesKilled: " + enemiesKilled;
+        debugstring += "\npointsPerKill: " + pointsPerKill;
+        debugstring += "\npointsPerWave: " + pointsPerWave;
+        debugstring += "\nvendingMachines: " + vendingMachineList.Count;
+
+        foreach (VendingMachine v in vendingMachineList)
+        {
+            debugstring += "\nvendingMachine: " + v.ToString();
+        }
+
+        return debugstring;
     }
 
     public bool EnemySpawnTimer()

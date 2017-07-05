@@ -1,6 +1,6 @@
 ```
-Build Version: 0.1.1.7
-              |glitch fix
+Build Version: 0.1.2.0
+              |ENCHANTS
 ```
 
 ```Change Log (new changes since 0.1.1.0) ```
@@ -12,8 +12,8 @@ Build Version: 0.1.1.7
 `06.` Fixed wrong level being loaded as background on startup
 `07.` Created Menu class to make Irbis.cs cleaner
 `08.` Optimized various things (global DeltaTime, made some things structs instead of classes)
-`09.` 
-`10.` 
+`09.` Added enchants
+`10.` Added vending machines
 
 ```Known Bug List ```
 `01.` Camera will "twitch" when running at a consistent speed with lerp on
@@ -26,7 +26,7 @@ Build Version: 0.1.1.7
 `       E:` Shockwave (hold&release for stronger shockwave)
 `       G:` End frame-by-frame mode
 `       N:` Enter frame-by-frame mode (and next frame when in frame-by-frame mode)
-`       R:` Reset game state
+`       R:` Use vending machine
 `       K:` Spawn some dudes!
 `Left Alt:` Roll
 `   Enter:` Attack

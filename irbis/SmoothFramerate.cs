@@ -1,4 +1,4 @@
-﻿struct SmoothFramerate
+﻿class SmoothFramerate
 {
     int samples;
     int currentFrame;

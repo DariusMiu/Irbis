@@ -58,9 +58,9 @@ public class Menu
                 tempDP = new Point(100, 24);
                 Irbis.Irbis.listenForNewKeybind = false;
 
-                for (int i = 0; i < 9; i++)
+                for (int i = 0; i < 10; i++)
                 {
-                    if (i < 10)
+                    if (i < 11)
                     {
                         Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 41), Irbis.Irbis.resolution.Y - (tempLP.Y - 3 - (24 * i))), 280, 1, false, true, true, 0.5f));
                         Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(27, 28, 32), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 42), Irbis.Irbis.resolution.Y - (tempLP.Y - 4 - (24 * i))), 280, 1, false, true, true, 0.5f));
@@ -103,6 +103,9 @@ public class Menu
                 Print op210t = new Print(100, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - (tempLP.X - 030), Irbis.Irbis.resolution.Y - (tempLP.Y - 208)), Direction.right, 0.5f);
                 op210t.Update("Right");
                 Irbis.Irbis.printList.Add(op210t);
+                Print op211t = new Print(100, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - (tempLP.X - 030), Irbis.Irbis.resolution.Y - (tempLP.Y - 232)), Direction.right, 0.5f);
+                op211t.Update("Use");
+                Irbis.Irbis.printList.Add(op211t);
 
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 95), Irbis.Irbis.resolution.Y - (tempLP.Y + 20), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.attackKey.ToString(), ">" + Irbis.Irbis.attackKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 95), Irbis.Irbis.resolution.Y - (tempLP.Y - 4), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.jumpKey.ToString(), ">" + Irbis.Irbis.jumpKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
@@ -114,6 +117,7 @@ public class Menu
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 95), Irbis.Irbis.resolution.Y - (tempLP.Y - 148), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.downKey.ToString(), ">" + Irbis.Irbis.downKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 95), Irbis.Irbis.resolution.Y - (tempLP.Y - 172), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.leftKey.ToString(), ">" + Irbis.Irbis.leftKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 95), Irbis.Irbis.resolution.Y - (tempLP.Y - 196), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.rightKey.ToString(), ">" + Irbis.Irbis.rightKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 95), Irbis.Irbis.resolution.Y - (tempLP.Y - 220), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.useKey.ToString(), ">" + Irbis.Irbis.useKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 195), Irbis.Irbis.resolution.Y - (tempLP.Y + 20), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.altAttackKey.ToString(), ">" + Irbis.Irbis.altAttackKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 195), Irbis.Irbis.resolution.Y - (tempLP.Y - 4), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.altJumpKey.ToString(), ">" + Irbis.Irbis.altJumpKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 195), Irbis.Irbis.resolution.Y - (tempLP.Y - 28), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.altRollKey.ToString(), ">" + Irbis.Irbis.altRollKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
@@ -124,6 +128,7 @@ public class Menu
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 195), Irbis.Irbis.resolution.Y - (tempLP.Y - 148), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.altDownKey.ToString(), ">" + Irbis.Irbis.altDownKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 195), Irbis.Irbis.resolution.Y - (tempLP.Y - 172), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.altLeftKey.ToString(), ">" + Irbis.Irbis.altLeftKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 195), Irbis.Irbis.resolution.Y - (tempLP.Y - 196), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.altRightKey.ToString(), ">" + Irbis.Irbis.altRightKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.resolution.X - (tempLP.X - 195), Irbis.Irbis.resolution.Y - (tempLP.Y - 220), tempDP.X, tempDP.Y), Direction.forward, Irbis.Irbis.altUseKey.ToString(), ">" + Irbis.Irbis.altUseKey.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(32, Irbis.Irbis.resolution.Y - 32, 50, 20), Direction.left, Side.left, "\u001bSave", "<\u001bSave", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(100, Irbis.Irbis.resolution.Y - 32, 100, 20), Direction.left, Side.left, "\u001bCancel", "<\u001bCancel", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 break;
@@ -628,36 +633,42 @@ public class Menu
                             case 9:                         //9 == Right
                                 Irbis.Irbis.rightKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
+                            case 10:                         //9 == Right
+                                Irbis.Irbis.useKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
+                                break;
                             // ALTS FROM HERE DOWN
-                            case 10:                         //0 == Attack
+                            case 11:                         //0 == Attack
                                 Irbis.Irbis.altAttackKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 11:                         //1 == Jump
+                            case 12:                         //1 == Jump
                                 Irbis.Irbis.altJumpKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 12:                         //2 == Roll
+                            case 13:                         //2 == Roll
                                 Irbis.Irbis.altRollKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 13:                         //3 == Potion
+                            case 14:                         //3 == Potion
                                 Irbis.Irbis.altPotionKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 14:                         //4 == Shield
+                            case 15:                         //4 == Shield
                                 Irbis.Irbis.altShieldKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 15:                         //5 == Shockwave
+                            case 16:                         //5 == Shockwave
                                 Irbis.Irbis.altShockwaveKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 16:                         //6 == Up
+                            case 17:                         //6 == Up
                                 Irbis.Irbis.altUpKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 17:                         //7 == Down
+                            case 18:                         //7 == Down
                                 Irbis.Irbis.altDownKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 18:                         //8 == Left
+                            case 19:                         //8 == Left
                                 Irbis.Irbis.altLeftKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
-                            case 19:                         //9 == Right
+                            case 20:                         //9 == Right
                                 Irbis.Irbis.altRightKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
+                                break;
+                            case 21:                         //9 == Use
+                                Irbis.Irbis.altUseKey = Irbis.Irbis.GetKeyboardState.GetPressedKeys()[0];
                                 break;
                             default:
                                 Irbis.Irbis.WriteLine("Error. Menu item " + Irbis.Irbis.menuSelection + " does not exist.");
@@ -689,21 +700,21 @@ public class Menu
                     }
                     if ((Irbis.Irbis.GetDownKeyDown))
                     {
-                        if (Irbis.Irbis.menuSelection == 9)
+                        if (Irbis.Irbis.menuSelection == 10)
                         {
-                            Irbis.Irbis.menuSelection += 10;
+                            Irbis.Irbis.menuSelection += 11;
                         }
                         Irbis.Irbis.menuSelection++;
                     }
                     if ((Irbis.Irbis.GetRightKeyDown))
                     {
-                        if (Irbis.Irbis.menuSelection < 10)
+                        if (Irbis.Irbis.menuSelection < 11)
                         {
-                            Irbis.Irbis.menuSelection += 10;
+                            Irbis.Irbis.menuSelection += 11;
                         }
-                        else if (Irbis.Irbis.menuSelection < 20)
+                        else if (Irbis.Irbis.menuSelection < 22)
                         {
-                            Irbis.Irbis.menuSelection -= 10;
+                            Irbis.Irbis.menuSelection -= 11;
                         }
                         else
                         {
@@ -717,13 +728,13 @@ public class Menu
                     }
                     if ((Irbis.Irbis.GetLeftKeyDown))
                     {
-                        if (Irbis.Irbis.menuSelection < 10)
+                        if (Irbis.Irbis.menuSelection < 11)
                         {
-                            Irbis.Irbis.menuSelection += 10;
+                            Irbis.Irbis.menuSelection += 11;
                         }
-                        else if (Irbis.Irbis.menuSelection < 20)
+                        else if (Irbis.Irbis.menuSelection < 22)
                         {
-                            Irbis.Irbis.menuSelection -= 10;
+                            Irbis.Irbis.menuSelection -= 11;
                         }
                         else
                         {

@@ -31,7 +31,57 @@ public struct Level
     private float bossSpawnX;
     private float bossSpawnY;
 
-    List<VendingMachine> vendingMachineList;
+    private string[] vendingMachineTextures;
+    private VendingType[] vendingMachineTypes;
+    private int[] vendingMachineLocationsX;
+    private int[] vendingMachineLocationsY;
+
+    public Point[] VendingMachineLocations
+    {
+        get
+        {
+            Point[] vendingMachines = new Point[vendingMachineLocationsX.Length];
+            for (int i = 0; i < vendingMachineLocationsX.Length; i ++)
+            {
+                vendingMachines[i] = new Point(vendingMachineLocationsX[i], vendingMachineLocationsY[i]);
+            }
+            return vendingMachines;
+        }
+        set
+        {
+            vendingMachineLocationsX = new int[value.Length];
+            vendingMachineLocationsY = new int[value.Length];
+            for (int i = 0; i < value.Length; i++)
+            {
+                vendingMachineLocationsX[i] = value[i].X;
+                vendingMachineLocationsY[i] = value[i].Y;
+            }
+        }
+    }
+
+    public string[] VendingMachineTextures
+    {
+        get
+        {
+            return vendingMachineTextures;
+        }
+        set
+        {
+            vendingMachineTextures = value;
+        }
+    }
+
+    public VendingType[] VendingMachineTypes
+    {
+        get
+        {
+            return vendingMachineTypes;
+        }
+        set
+        {
+            vendingMachineTypes = value;
+        }
+    }
 
     public List<Point> SquareSpawnPoints
     {
@@ -150,7 +200,11 @@ public struct Level
         bossSpawnX = 0;
         bossSpawnY = 0;
 
-        vendingMachineList = new List<VendingMachine>();
+        vendingMachineTextures = new string[0];
+        vendingMachineLocationsX = new int[0];
+        vendingMachineLocationsY = new int[0];
+        vendingMachineTypes = new VendingType[0];
+
     }
 
     public void Load(string filename)
@@ -210,55 +264,67 @@ public struct Level
         squareSpawnPointsY = level.squareSpawnPointsY;
         squareTextures = level.squareTextures;
         squareDepth = level.squareDepth;
-        Irbis.Irbis.WriteLine("           squares: " + squareTextures.Count);
+        Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
         backgroundSquaresX = level.backgroundSquaresX;
         backgroundSquaresY = level.backgroundSquaresY;
         backgroundTextures = level.backgroundTextures;
         backgroundSquareDepths = level.backgroundSquareDepths;
-        Irbis.Irbis.WriteLine("background squares: " + backgroundSquareDepths.Count);
+        Irbis.Irbis.WriteLine("       background squares: " + backgroundSquareDepths.Count);
         levelName = level.levelName;
-        Irbis.Irbis.WriteLine("        level name: " + levelName);
+        Irbis.Irbis.WriteLine("               level name: " + levelName);
         enemySpawnPointsX = level.enemySpawnPointsX;
         enemySpawnPointsY = level.enemySpawnPointsY;
-        Irbis.Irbis.WriteLine("enemy spawn points: " + EnemySpawnPoints.Count);
+        Irbis.Irbis.WriteLine("       enemy spawn points: " + EnemySpawnPoints.Count);
         isOnslaught = level.isOnslaught;
-        Irbis.Irbis.WriteLine("       isOnslaught: " + isOnslaught);
+        Irbis.Irbis.WriteLine("              isOnslaught: " + isOnslaught);
         playerSpawnX = level.playerSpawnX;
         playerSpawnY = level.playerSpawnY;
-        Irbis.Irbis.WriteLine("      player spawn: " + PlayerSpawn);
+        Irbis.Irbis.WriteLine("             player spawn: " + PlayerSpawn);
         bossSpawnX = level.bossSpawnX;
         bossSpawnY = level.bossSpawnY;
-        Irbis.Irbis.WriteLine("        boss spawn: " + BossSpawn);
+        Irbis.Irbis.WriteLine("               boss spawn: " + BossSpawn);
+        vendingMachineTextures = level.vendingMachineTextures;
+        vendingMachineTypes = level.vendingMachineTypes;
+        vendingMachineLocationsX = level.vendingMachineLocationsX;
+        vendingMachineLocationsY = level.vendingMachineLocationsY;
+        if (vendingMachineTextures.Length == vendingMachineTypes.Length && vendingMachineTextures.Length == vendingMachineLocationsX.Length && vendingMachineTextures.Length == vendingMachineLocationsY.Length)
+        {
+            Irbis.Irbis.WriteLine("         vending Machines: " + vendingMachineTextures.Length);
+        }
+        else
+        {
+            Irbis.Irbis.WriteLine("error loading vending machines, improper array lengths");
+        }
     }
 
-    public void Debug()
+    public override string ToString()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Debug"); }
-        Irbis.Irbis.WriteLine("           squares: " + squareTextures.Count);
+        string returnstring = "squares: " + squareTextures.Count;
         for (int i = 0; i < squareTextures.Count; i++)
         {
-            Irbis.Irbis.WriteLine("square[" + i + "] tex: " + squareTextures[i]);
-            Irbis.Irbis.WriteLine("square[" + i + "] pos: {X:" + squareSpawnPointsX[i] + " Y:" + squareSpawnPointsY[i] + "}");
+            returnstring += "\nsquare[" + i + "] tex: " + squareTextures[i];
+            returnstring += "\nsquare[" + i + "] pos: {X:" + squareSpawnPointsX[i] + " Y:" + squareSpawnPointsY[i] + "}";
         }
+        returnstring += "\nEnemy Spawn Points: " + EnemySpawnPoints.Count;
         for (int i = 0; i < EnemySpawnPoints.Count; i++)
         {
-            Irbis.Irbis.WriteLine("enemy[" + i + "] pos: " + EnemySpawnPoints[i]);
+            returnstring += "\nenemy[" + i + "] pos: " + EnemySpawnPoints[i];
         }
-    }
-
-    public void Debug(bool butts)
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Debug"); }
-        Console.WriteLine("           squares: " + squareTextures.Count);
-        for (int i = 0; i < squareTextures.Count; i++)
+        returnstring += "\nVending Machine Locations: " + VendingMachineLocations.Length;
+        for (int i = 0; i < VendingMachineLocations.Length; i++)
         {
-            Console.WriteLine("square[" + i + "] tex: " + squareTextures[i]);
-            Console.WriteLine("square[" + i + "] pos: {X:" + squareSpawnPointsX[i] + " Y:" + squareSpawnPointsY[i] + "}");
+            returnstring += "\nvendingMachineLocations[" + i + "]: " + VendingMachineLocations[i];
         }
-        for (int i = 0; i < EnemySpawnPoints.Count; i++)
+        returnstring += "\nVending Machine Textures: " + VendingMachineTextures.Length;
+        for (int i = 0; i < VendingMachineTextures.Length; i++)
         {
-            Console.WriteLine("enemy[" + i + "] pos: " + EnemySpawnPoints[i]);
+            returnstring += "\nVendingMachineTextures[" + i + "]: " + VendingMachineTextures[i];
         }
+        returnstring += "\nVending Machine Types: " + VendingMachineTypes.Length;
+        for (int i = 0; i < VendingMachineTypes.Length; i++)
+        {
+            returnstring += "\nVendingMachineTypes[" + i + "]: " + VendingMachineTypes[i];
+        }
+        return returnstring;
     }
-
 }

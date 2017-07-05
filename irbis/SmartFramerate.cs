@@ -1,4 +1,4 @@
-﻿struct SmartFramerate
+﻿class SmartFramerate
 {
     double currentFrametimes;
     double weight;

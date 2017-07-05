@@ -79,11 +79,13 @@ public struct PlayerSettings
     public Keys altRollKey;
     public Keys potionKey;
     public Keys altPotionKey;
+    public Keys useKey;
+    public Keys altUseKey;
     public int characterHeight;
     public int debug;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
-    static int numberOfVariables = 73;
+    static int numberOfVariables = 75;
 
     public PlayerSettings(bool useDefaults)
 	{
@@ -118,6 +120,8 @@ public struct PlayerSettings
             altRollKey = Keys.LeftShift;
             potionKey = Keys.F;
             altPotionKey = Keys.F;
+            useKey = Keys.R;
+            altUseKey = Keys.R;
 
             //CAMERA SETTINGS
             //The camera will move when the player leaves this area on the screen
@@ -399,6 +403,8 @@ public struct PlayerSettings
             altRollKey = Keys.LeftShift;
             potionKey = Keys.F;
             altPotionKey = Keys.F;
+            useKey = Keys.R;
+            altUseKey = Keys.R;
 
             //CAMERA SETTINGS
             //The camera will move when the player leaves this area on the screen
@@ -598,6 +604,8 @@ public struct PlayerSettings
         altRollKey = settings.altRollKey;
         potionKey = settings.potionKey;
         altPotionKey = settings.altPotionKey;
+        useKey = settings.useKey;
+        altUseKey = settings.altUseKey;
 
         //SETTINGS
         //CAMERA SETTINGS
@@ -797,6 +805,9 @@ public struct PlayerSettings
         writer.WriteLine("");
         writer.WriteLine("potionKey=" + settings.potionKey);
         writer.WriteLine("altPotionKey=" + settings.altPotionKey);
+        writer.WriteLine("");
+        writer.WriteLine("useKey=" + settings.useKey);
+        writer.WriteLine("altUseKey=" + settings.altUseKey);
         writer.WriteLine("");
         writer.WriteLine("");
 
@@ -1044,6 +1055,9 @@ public struct PlayerSettings
         writer.WriteLine("potionKey=" + Irbis.Irbis.potionKey);
         writer.WriteLine("altPotionKey=" + Irbis.Irbis.altPotionKey);
         writer.WriteLine("");
+        writer.WriteLine("useKey=" + Irbis.Irbis.useKey);
+        writer.WriteLine("altUseKey=" + Irbis.Irbis.altUseKey);
+        writer.WriteLine("");
         writer.WriteLine("");
 
         writer.WriteLine(";CAMERA SETTINGS");
@@ -1062,11 +1076,11 @@ public struct PlayerSettings
         writer.WriteLine("cameraSwingSetting=" + Irbis.Irbis.cameraSwingSetting);
         writer.WriteLine("");
         writer.WriteLine(";How far should the camera swing? (pixels)");
-        writer.WriteLine("swingMagnitude=" + game.swingMagnitude);
+        writer.WriteLine("swingMagnitude=" + Irbis.Irbis.swingMagnitude);
         writer.WriteLine("");
         writer.WriteLine(";How long should that swing take (this is the time it takes to travel the above pixels,");
         writer.WriteLine(";the time it takes to return to the normal camera position is double this number) (seconds)");
-        writer.WriteLine("swingDuration=" + game.swingDuration);
+        writer.WriteLine("swingDuration=" + Irbis.Irbis.swingDuration);
         writer.WriteLine("");
         writer.WriteLine(";Turn off camera shake");
         writer.WriteLine("cameraShakeSetting=" + Irbis.Irbis.cameraShakeSetting);
@@ -2097,6 +2111,28 @@ public struct PlayerSettings
                             if (Enum.TryParse(value, out keyResult))
                             {
                                 playerSettings.altPotionKey = keyResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker.Add(true); break;
+                        case "usekey":
+                            if (Enum.TryParse(value, out keyResult))
+                            {
+                                playerSettings.useKey = keyResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker.Add(true); break;
+                        case "altusekey":
+                            if (Enum.TryParse(value, out keyResult))
+                            {
+                                playerSettings.altUseKey = keyResult;
                             }
                             else
                             {

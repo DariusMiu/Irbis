@@ -61,10 +61,12 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BinaryTree.cs" />
     <Compile Include="Boss.cs" />
     <Compile Include="Button.cs" />
     <Compile Include="Enchant.cs" />
     <Compile Include="Line.cs" />
+    <Compile Include="Node.cs" />
     <Compile Include="OldLevel.cs" />
     <Compile Include="OnslaughtSpawner.cs" />
     <Compile Include="Enemy.cs" />
@@ -144,10 +146,10 @@
     </None>
     <None Include="app.manifest" />
     <None Include="levels\c0b0.lvl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="levels\c0o0.lvl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +159,7 @@
     <Content Include="content\centerTexture.png" />
     <Content Include="content\console texture.png" />
     <Content Include="content\defaultTex.png" />
+    <Content Include="content\enchant vending machine.png" />
     <Content Include="content\enemy0.png" />
     <Content Include="content\fire enchant icon.png" />
     <Content Include="content\font.png" />
