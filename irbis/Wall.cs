@@ -1,4 +1,4 @@
-﻿public class Wall
+﻿public struct Wall
 {
     public int Top
     {
@@ -45,6 +45,39 @@
         }
     }
 
+    /// <summary>
+    /// Returns true if Left or Right is greater than zero
+    /// </summary>
+    public bool Horizontal
+    {
+        get
+        {
+            if (l > 0 || r > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Returns true if Top or Bottom is greater than zero
+    /// </summary>
+    public bool Vertical
+    {
+        get
+        {
+            if (b > 0 || t > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Static constant equalling Wall(0, 0, 0, 0)
+    /// </summary>
     public static Wall Zero
     {
         get
@@ -52,7 +85,7 @@
             return zero;
         }
     }
-    private static Wall zero = new Wall(0,0,0,0);
+    private static Wall zero = new Wall(0, 0, 0, 0);
 
     private int t;
     private int b;
@@ -95,6 +128,6 @@
 
     public override string ToString()
     {
-        return "{Top:" + this.t + " Bottom:" + this.b + " Left:" + this.l + " Right:" + this.r + "}";
+        return "{Top:" + t + " Bottom:" + b + " Left:" + l + " Right:" + r + "}";
     }
 }

@@ -100,8 +100,6 @@ public class Enemy : ICollisionObject, IEnemy
     public int colliderWidth;
     public int colliderHeight;
 
-    public RectangleBorder colliderDrawer;
-
     //public Rectangle edgeCollider;
     //public Vector2 previousPos;
     public Vector2 velocity;
@@ -187,7 +185,6 @@ public class Enemy : ICollisionObject, IEnemy
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Enemy"); }
 
         tex = t;
-        colliderDrawer = new RectangleBorder(collider, Color.Magenta, 0.19f);
 
         AIenabled = true;
 
@@ -296,7 +293,7 @@ public class Enemy : ICollisionObject, IEnemy
                 jumpTime -= Irbis.Irbis.DeltaTime;
                 if (jumpTime <= 0) { jumpTime = 0; }
             }
-            distanceToPlayerSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.geralt.collider.Center, this.Collider.Center);
+            distanceToPlayerSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.geralt.Collider.Center, this.Collider.Center);
             if (distanceToPlayerSqr <= combatCheckDistanceSqr)
             {
                 AIactivity = AI.combat;
@@ -452,7 +449,7 @@ public class Enemy : ICollisionObject, IEnemy
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Persue"); }
         input = Point.Zero;
 
-        player.heading = (player.collider.Center - collider.Center).ToVector2();
+        player.heading = (player.Collider.Center - collider.Center).ToVector2();
         //player.heading.Normalize();
 
         if (player.heading.X > 0)
@@ -510,7 +507,7 @@ public class Enemy : ICollisionObject, IEnemy
         if (attacking != Attacking.no)
         {
             Hitbox();
-            if (attackCollider.Intersects(player.collider))
+            if (attackCollider.Intersects(player.Collider))
             {
                 player.Hurt(attackDamage);
             }
@@ -775,7 +772,7 @@ public class Enemy : ICollisionObject, IEnemy
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.PlayerCollision"); }
         if (player.invulnerableTime <= 0)
         {
-            if (enemy.collider != Rectangle.Empty && player.collider.Intersects(enemy.collider))
+            if (enemy.collider != Rectangle.Empty && player.Collider.Intersects(enemy.collider))
             {
                 if (!player.shielded)
                 {
@@ -806,7 +803,7 @@ public class Enemy : ICollisionObject, IEnemy
                 Irbis.Irbis.geralt.attackHit = true;
                 Hurt(Irbis.Irbis.geralt.attackDamage);
                 Stun(0.75f);
-                float distanceSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.geralt.collider.Center, Collider.Center);
+                float distanceSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.geralt.Collider.Center, Collider.Center);
 
                 if (Irbis.Irbis.geralt.direction == Direction.left)
                 {
@@ -1205,9 +1202,9 @@ public class Enemy : ICollisionObject, IEnemy
     public void Draw(SpriteBatch sb)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Draw"); }
-        if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.screenspace))
+        //if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.screenspace))
         {
-            sb.Draw(tex, displayRect, animationSourceRect, Color.White, 0f, Vector2.Zero, SpriteEffects.None, depth);
+            sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale * 2, SpriteEffects.None, depth);
         }
     }
 }

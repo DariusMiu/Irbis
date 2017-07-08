@@ -11,10 +11,11 @@ public class UIElementSlider
 {
     public Rectangle bounds;
     Rectangle valueRect;
-    RectangleBorder border;
+    Vector2 valueLocation;
+    Vector2 origin;
 
     Texture2D borderTex;
-    Texture2D overlayTex;
+    public Texture2D overlayTex;
     Texture2D fillTex;
 
     public float overlayAnimationSpeed;
@@ -41,11 +42,12 @@ public class UIElementSlider
     bool drawOverlay;
 
     Print printValue;
+    public Vector2 printLocation;
     Font fernt;
     bool printText;
 
-    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC,
-        Color fillC, Texture2D fillT, Texture2D borderT, Texture2D shieldBarTex, Font font, float drawDepth)
+    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxVal, Color border_color, Color fill_color, Texture2D fillTexture,
+        Texture2D borderTexture, Texture2D overlayTexture, Font font, float drawDepth)
 	{
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
         fernt = font;
@@ -55,59 +57,65 @@ public class UIElementSlider
 
         overlayDepth = depth + 0.005f;
         borderDepth = valueDepth = depth + 0.05f;
-        value = maxValue = maxV;
+        value = maxValue = maxVal;
         halfMaxValue = maxValue / 2;
         align = alignSide;
-        overlayTex = shieldBarTex;
-        borderTex = borderT;
-        fillTex = fillT;
-        borderColor = borderC;
-        fillColor = fillC;
+        overlayTex = overlayTexture;
+        borderTex = borderTexture;
+        fillTex = fillTexture;
+        borderColor = border_color;
+        fillColor = fill_color;
 
         if (align == Direction.right)
         {
             bounds = new Rectangle(location.X - maxWidth, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Right - (font.charHeight / 2), bounds.Center.Y), Direction.right, valueDepth);
+            printLocation = new Vector2(bounds.Right - (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
         else if (align == Direction.forward)
         {
             bounds = new Rectangle(location.X - (maxWidth / 2), location.Y, maxWidth, height);
             halfWidth = bounds.Width / 2;
-            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, bounds.Center, Direction.forward, valueDepth);
+            printLocation = bounds.Center.ToVector2();
+            printValue.Update(value.ToString());
         }
         else
         {
             bounds = new Rectangle(location.X, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Left + (font.charHeight / 2), bounds.Center.Y), Direction.left, valueDepth);
+            printLocation = new Vector2(bounds.Left + (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
-        border = new RectangleBorder(bounds, borderColor, depth + 0.01f);
-        
 
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
         overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        origin = bounds.Location.ToVector2();
+        valueLocation = origin * Irbis.Irbis.screenScale;
     }
 
-    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC,
-        Color fillC, Texture2D fillT, Texture2D borderT, Texture2D shieldBarTex, Font font, bool overlayDraw, float drawDepth)
+    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxVal, Color border_color, Color fill_color, Texture2D fillTexture,
+        Texture2D borderTexture, Texture2D overlayTexture, Font font, bool overlayDraw, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
         fernt = font;
         printText = true;
         drawOverlay = overlayDraw;
         depth = drawDepth;
-        value = maxValue = maxV;
+        value = maxValue = maxVal;
         halfMaxValue = maxValue / 2;
         align = alignSide;
-        overlayTex = shieldBarTex;
-        borderTex = borderT;
-        fillTex = fillT;
-        borderColor = borderC;
-        fillColor = fillC;
+        overlayTex = overlayTexture;
+        borderTex = borderTexture;
+        fillTex = fillTexture;
+        borderColor = border_color;
+        fillColor = fill_color;
 
         overlayDepth = depth + 0.005f;
         borderDepth = valueDepth = depth + 0.05f;
@@ -115,77 +123,93 @@ public class UIElementSlider
         if (align == Direction.right)
         {
             bounds = new Rectangle(location.X - maxWidth, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Right - (font.charHeight / 2), bounds.Center.Y), Direction.right, valueDepth);
+            printLocation = new Vector2(bounds.Right - (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
         else if (align == Direction.forward)
         {
             bounds = new Rectangle(location.X - (maxWidth / 2), location.Y, maxWidth, height);
             halfWidth = bounds.Width / 2;
-            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, bounds.Center, Direction.forward, valueDepth);
+            printLocation = bounds.Center.ToVector2();
+            printValue.Update(value.ToString());
         }
         else
         {
             bounds = new Rectangle(location.X, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Left + (font.charHeight / 2), bounds.Center.Y), Direction.left, valueDepth);
+            printLocation = new Vector2(bounds.Left + (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
-        border = new RectangleBorder(bounds, borderColor, depth + 0.01f);
-
 
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
         overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        origin = bounds.Location.ToVector2();
+        valueLocation = origin * Irbis.Irbis.screenScale;
     }
 
-    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC, Color fillC, Texture2D fillT,
-        Texture2D borderT, Texture2D shieldBarTex, Font font, bool overlayDraw, float drawOverlayDepth, float drawBorderDepth, float drawDepth)
+    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxVal, Color border_color, Color fill_color, Texture2D fillTexture,
+        Texture2D borderTexture, Texture2D overlayTexture, Font font, bool overlayDraw, float drawOverlayDepth, float drawBorderDepth, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
-        printText = true;
         fernt = font;
-        overlayDepth = drawOverlayDepth;
-        borderDepth = valueDepth = drawBorderDepth;
+        printText = true;
         drawOverlay = overlayDraw;
         depth = drawDepth;
-        value = maxValue = maxV;
+        value = maxValue = maxVal;
         halfMaxValue = maxValue / 2;
         align = alignSide;
-        overlayTex = shieldBarTex;
-        borderTex = borderT;
-        fillTex = fillT;
-        borderColor = borderC;
-        fillColor = fillC;
+        overlayTex = overlayTexture;
+        borderTex = borderTexture;
+        fillTex = fillTexture;
+        borderColor = border_color;
+        fillColor = fill_color;
+
+        overlayDepth = drawOverlayDepth;
+        borderDepth = valueDepth = drawBorderDepth;
+
         if (align == Direction.right)
         {
             bounds = new Rectangle(location.X - maxWidth, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Right - (font.charHeight / 2), bounds.Center.Y), Direction.right, valueDepth);
+            printLocation = new Vector2(bounds.Right - (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
         else if (align == Direction.forward)
         {
             bounds = new Rectangle(location.X - (maxWidth / 2), location.Y, maxWidth, height);
             halfWidth = bounds.Width / 2;
-            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, bounds.Center, Direction.forward, valueDepth);
+            printLocation = bounds.Center.ToVector2();
+            printValue.Update(value.ToString());
         }
         else
         {
             bounds = new Rectangle(location.X, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Left + (font.charHeight / 2), bounds.Center.Y), Direction.left, valueDepth);
+            printLocation = new Vector2(bounds.Left + (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
-        border = new RectangleBorder(bounds, borderColor, depth + 0.01f);
+
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
         overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        origin = bounds.Location.ToVector2();
+        valueLocation = origin * Irbis.Irbis.screenScale;
     }
 
-    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxV, Color borderC, Color fillC, Texture2D fillT,
-       Texture2D borderT, Texture2D shieldBarTex, Font font, bool overlayDraw, bool printtext, float drawOverlayDepth, float drawBorderDepth, float drawDepth)
+    public UIElementSlider(Direction alignSide, Point location, int maxWidth, int height, float maxVal, Color border_color, Color fill_color, Texture2D fillTexture,
+       Texture2D borderTexture, Texture2D overlayTexture, Font font, bool overlayDraw, bool printtext, float drawOverlayDepth, float drawBorderDepth, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.UIElementSlider"); }
         printText = printtext;
@@ -194,40 +218,48 @@ public class UIElementSlider
         borderDepth = valueDepth = drawBorderDepth;
         drawOverlay = overlayDraw;
         depth = drawDepth;
-        value = maxValue = maxV;
+        value = maxValue = maxVal;
         halfMaxValue = maxValue / 2;
         align = alignSide;
-        overlayTex = shieldBarTex;
-        borderTex = borderT;
-        fillTex = fillT;
-        borderColor = borderC;
-        fillColor = fillC;
+        overlayTex = overlayTexture;
+        borderTex = borderTexture;
+        fillTex = fillTexture;
+        borderColor = border_color;
+        fillColor = fill_color;
+
         if (align == Direction.right)
         {
             bounds = new Rectangle(location.X - maxWidth, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Right - (font.charHeight / 2), bounds.Center.Y), Direction.right, valueDepth);
+            printLocation = new Vector2(bounds.Right - (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
         else if (align == Direction.forward)
         {
             bounds = new Rectangle(location.X - (maxWidth / 2), location.Y, maxWidth, height);
             halfWidth = bounds.Width / 2;
-            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, bounds.Center, Direction.forward, valueDepth);
+            printLocation = bounds.Center.ToVector2();
+            printValue.Update(value.ToString());
         }
         else
         {
             bounds = new Rectangle(location.X, location.Y, maxWidth, height);
-            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
             printValue = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Left + (font.charHeight / 2), bounds.Center.Y), Direction.left, valueDepth);
+            printLocation = new Vector2(bounds.Left + (font.charHeight / 2), bounds.Center.Y);
+            printValue.Update(value.ToString());
         }
-        border = new RectangleBorder(bounds, borderColor, depth + 0.01f);
+
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
         overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        origin = bounds.Location.ToVector2();
+        valueLocation = origin * Irbis.Irbis.screenScale;
     }
-
 
     public void Update(float v)
     {
@@ -276,26 +308,17 @@ public class UIElementSlider
         value = v;
         if (align == Direction.right)
         {
-            //valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Right - (int)((value / maxValue) * bounds.Width);
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+            valueLocation.X = (bounds.Right - (value / maxValue) * bounds.Width) * Irbis.Irbis.screenScale;
         }
         else if (align == Direction.forward)
         {
-            //valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+            valueLocation.X = (bounds.Left + halfWidth - ((value / maxValue) * halfWidth)) * Irbis.Irbis.screenScale;
         }
-        else
-        {
-            //valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            //valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
+        valueRect.Width = (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale);
         printValue.Update(value.ToString("0"), true);
     }
 
-    public void Update(bool overlayDraw, float v)
+    public void UpdateValue(bool overlayDraw, float v)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
         drawOverlay = overlayDraw;
@@ -310,38 +333,27 @@ public class UIElementSlider
         {
             currentOverlayFrame = 0;
         }
-        //overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
         overlaySourceRect.X = currentOverlayFrame * 32;
-        //timeSinceLastFrame = 0;
 
 
         value = v;
         if (align == Direction.right)
         {
-            //valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Right - (int)((value / maxValue) * bounds.Width);
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+            valueLocation.X = (bounds.Right - (value / maxValue) * bounds.Width) * Irbis.Irbis.screenScale;
         }
         else if (align == Direction.forward)
         {
-            //valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+            valueLocation.X = (bounds.Left + halfWidth - ((value / maxValue) * halfWidth)) * Irbis.Irbis.screenScale;
         }
-        else
-        {
-            //valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            //valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
+        valueRect.Width = (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale);
         printValue.Update(value.ToString("0"), true);
     }
 
-    public void Update(Color borderC, Color fillC, float v)
+    public void Update(Color border_color, Color fill_color, float v)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
-        borderColor = borderC;
-        fillColor = fillC;
+        borderColor = border_color;
+        fillColor = fill_color;
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
         if (timeSinceLastFrame >= overlayAnimationSpeed)
         {
@@ -410,11 +422,9 @@ public class UIElementSlider
     public void Draw(SpriteBatch sb)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Draw"); }
-        if (drawOverlay) { sb.Draw(overlayTex, bounds, overlaySourceRect, Color.White, 0f, Vector2.Zero, SpriteEffects.None, overlayDepth); }
-        //sb.Draw(overlayTex, new Vector2(32,32), overlaySourceRect, Color.White, 0, Vector2.Zero, 1f, SpriteEffects.None, 0.905f);
-        sb.Draw(fillTex, valueRect, bounds, fillColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
-        if (printText) { printValue.Draw(sb); }
-        border.Draw(sb, borderTex);
-
+        if (drawOverlay) { sb.Draw(overlayTex, origin * Irbis.Irbis.screenScale, overlaySourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, overlayDepth); }
+        sb.Draw(fillTex, valueLocation, valueRect, fillColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, depth);
+        if (printText) { printValue.Draw(sb, (printLocation * Irbis.Irbis.screenScale).ToPoint()); }
+        RectangleBorder.Draw(sb, bounds, borderColor, true);
     }
 }

@@ -16,10 +16,19 @@ public class Player
     {
         get
         {
-            return new Wall(walled.Top, walled.Bottom, walled.Left, walled.Right);
+            return walled;
         }
     }
     private Wall walled;
+
+    public Rectangle Collider
+    {
+        get
+        {
+            return collider;
+        }
+    }
+    private Rectangle collider;
 
     Texture2D tex;
     Texture2D shieldTex;
@@ -27,18 +36,13 @@ public class Player
     public Rectangle displayRect;
     public Rectangle shieldSourceRect;
     public Rectangle animationSourceRect;
-    public Rectangle collider;
     public Rectangle testCollider;
-    public RectangleBorder colliderDrawer;
-    public RectangleBorder attackColliderDrawer;
     public int XcolliderOffset;
     public int YcolliderOffset;
     public int colliderWidth;
     public int colliderHeight;
 
-    //public Rectangle edgeCollider;
     public Vector2 position;
-    //public Vector2 previousPos;
     public Vector2 velocity;
     public float terminalVelocity;
 
@@ -149,10 +153,12 @@ public class Player
     public int attackColliderWidth;
     public int attackColliderHeight;
 
-    public float walledInputChange;
+    public float wallJumpTimer;
 
     public bool attackImmediately;
     public bool interruptAttack;
+
+    public float debugspeed;
 
     //public bool attackKeyIsDown;
     public static float movementLerpBuildup = 10f;
@@ -183,7 +189,6 @@ public class Player
         Load(playerSettings);
 
         stunTime = 0f;
-        //enableInput = 0f;
         isRunning = false;
 
         walled = Wall.Zero;
@@ -249,9 +254,6 @@ public class Player
 
         shieldtimeSinceLastFrame = 0f;
 
-        colliderDrawer = new RectangleBorder(collider, Color.Magenta, 0.19f);
-        attackColliderDrawer = new RectangleBorder(attackCollider, Color.Magenta, 0.195f);
-
         collision = true;
         noclip = false;
 
@@ -275,17 +277,16 @@ public class Player
 
         if (inputEnabled)
         {
+            if (Irbis.Irbis.GetLeftKeyDown || Irbis.Irbis.GetRightKeyDown)
+            {
+                wallJumpTimer = 0f;
+            }
             if (Irbis.Irbis.GetLeftKey)
                 //left
             {
-                if (walledInputChange > 0)
+                if (walled.Horizontal && walled.Bottom <= 0 && wallJumpTimer < walljumpHoldtime)
                 {
-                    walledInputChange = 0;
-                }
-
-                if (walled.Right > 0 && walled.Bottom <= 0 && walled.Left <= 0 && -walledInputChange < walljumpHoldtime)
-                {
-                    walledInputChange -= Irbis.Irbis.DeltaTime;
+                    wallJumpTimer += Irbis.Irbis.DeltaTime;
                 }
                 else
                 {
@@ -293,36 +294,17 @@ public class Player
                     direction = Direction.left;
                 }
             }
-            else
-            {
-                if (walledInputChange < 0)
-                {
-                    walledInputChange = 0;
-                }
-            }
             if (Irbis.Irbis.GetRightKey)
                 //right
             {
-                if (walledInputChange < 0)
+                if (walled.Horizontal && walled.Bottom <= 0 && wallJumpTimer < walljumpHoldtime)
                 {
-                    walledInputChange = 0;
-                }
-
-                if (walled.Left > 0 && walled.Bottom <= 0 && walled.Right <= 0 && walledInputChange < walljumpHoldtime)
-                {
-                    walledInputChange += Irbis.Irbis.DeltaTime;
+                    wallJumpTimer += Irbis.Irbis.DeltaTime;
                 }
                 else
                 {
                     input.X++;
                     direction = Direction.right;
-                }
-            }
-            else
-            {
-                if (walledInputChange > 0)
-                {
-                    walledInputChange = 0;
                 }
             }
 
@@ -397,27 +379,27 @@ public class Player
                 else if ((walled.Left > 0 || walled.Right > 0) && walled.Top <= 0 && ((Irbis.Irbis.GetJumpKeyDown)))
                 //walljump
                 {
-                    if (Math.Abs(walledInputChange) <= walljumpHoldtime &&
+                    if (wallJumpTimer <= walljumpHoldtime &&
                         ((Irbis.Irbis.GetRightKey) || Irbis.Irbis.GetLeftKey))
                     //horizontal input
                     {
-                        if (walled.Left > 0 && walledInputChange > 0)
+                        if (walled.Left > 0)
                         {
                             velocity.X = speed;
                             position.X = position.X + 1;
                             direction = Direction.right;
                             input.X = prevInput.X = 1;
-                            walledInputChange = 0f;
+                            wallJumpTimer = 1f;
                             jumpTime += Irbis.Irbis.DeltaTime;
                             isRunning = true;
                         }
-                        else if (walled.Right > 0 && walledInputChange < 0)
+                        else if (walled.Right > 0)
                         {
                             velocity.X = -speed;
                             position.X = position.X - 1;
                             direction = Direction.left;
                             input.X = prevInput.X = -1;
-                            walledInputChange = 0f;
+                            wallJumpTimer = 1f;
                             jumpTime += Irbis.Irbis.DeltaTime;
                             isRunning = true;
                         }
@@ -474,11 +456,6 @@ public class Player
         if (input != prevInput && input != Point.Zero)
         {
             interruptAttack = true;
-        }
-
-        if (!(walled.Left > 0 || walled.Right > 0))
-        {
-            walledInputChange = 0f;
         }
 
         if (interruptAttack)
@@ -571,13 +548,6 @@ public class Player
                 }
             }
         }
-
-        if (Irbis.Irbis.debug > 1)
-        {
-            colliderDrawer.Update(collider, Color.Magenta);
-            attackColliderDrawer.Update(attackCollider, Color.Magenta);
-        }
-
     }
 
     public void Respawn(Vector2 initialPos)
@@ -608,6 +578,7 @@ public class Player
             {
                 velocity.X = Irbis.Irbis.Lerp(velocity.X, -rollSpeed, movementLerpAir * Irbis.Irbis.DeltaTime);
             }
+            debugspeed = rollSpeed;
 
             rollTime -= Irbis.Irbis.DeltaTime;
             if (rollTime <= 0)
@@ -631,14 +602,17 @@ public class Player
                 {
                     velocity.X = Irbis.Irbis.Lerp(velocity.X, -attackMovementSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
                 }
+                debugspeed = attackMovementSpeed;
             }
             else if (walled.Bottom <= 0)
             {
                 velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * attackMovementSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
+                debugspeed = attackMovementSpeed;
             }
             else
             {
                 velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
+                debugspeed = 0f;
             }
         }
         else
@@ -659,11 +633,13 @@ public class Player
                     {
                         velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * airSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
                     }
+                    debugspeed = airSpeed;
                 }
 
                 if (isRunning && input.X == prevInput.X)
                 {
                     velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * speed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
+                    debugspeed = speed;
                 }
                 else
                 {
@@ -679,10 +655,12 @@ public class Player
                 if (walled.Bottom > 0)                                                                   //movement
                 {
                     velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * speed, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
+                    debugspeed = speed;
                 }
                 else if (Math.Abs(velocity.X) < airSpeed)
                 {
                     velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * airSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
+                    debugspeed = airSpeed;
                 }
                 isRunning = false;
             }
@@ -756,7 +734,7 @@ public class Player
         Irbis.Irbis.WriteLine("       walljumped " + butt);
         Irbis.Irbis.WriteLine("         velocity: " + velocity);
         Irbis.Irbis.WriteLine("        direction: " + direction);
-        Irbis.Irbis.WriteLine("walledInputChange: " + walledInputChange);
+        Irbis.Irbis.WriteLine("wallJumpTimer: " + wallJumpTimer);
         Irbis.Irbis.WriteLine("            input: " + input);
         Irbis.Irbis.WriteLine("        prevInput: " + prevInput);
         Irbis.Irbis.WriteLine("           Walled: " + Walled);
@@ -772,8 +750,8 @@ public class Player
         displayRect.X = (int)position.X;
         displayRect.Y = (int)position.Y;
         //collider = new Rectangle((int)position.X + XcolliderOffset, (int)position.Y + YcolliderOffset, colliderWidth, colliderHeight);
-        collider.X = (int)position.X + XcolliderOffset;
-        collider.Y = (int)position.Y + YcolliderOffset;
+        collider.X = (int)Math.Round((decimal)position.X) + XcolliderOffset;
+        collider.Y = (int)Math.Round((decimal)position.Y) + YcolliderOffset;
         collider.Width = colliderWidth;
         collider.Height = colliderHeight;
     }
@@ -1101,7 +1079,7 @@ public class Player
                 position.Y -= climbamount;
                 //position.X -= 1;
                 amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels");
+                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels. Timer:" + Irbis.Irbis.Timer);
             }
         }
         if (walled.Right == 1 && input.X > 0)
@@ -1112,7 +1090,7 @@ public class Player
                 position.Y -= climbamount;
                 //position.X += 1;
                 amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels");
+                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels. Timer:" + Irbis.Irbis.Timer);
             }
         }
 
@@ -1258,31 +1236,35 @@ public class Player
             Irbis.Irbis.WriteLine("    velocity: " + velocity);
         }
 
-        if (amountToMove.X > 0 && velocity.X < 0)
-        {
-            velocity.X = 0;
-        }
-        if (amountToMove.X < 0 && velocity.X > 0)
-        {
-            velocity.X = 0;
-        }
-        if (amountToMove.Y > 0 && velocity.Y < 0)
-        {
-            velocity.Y = 0;
-        }
-        if (amountToMove.Y < 0 && velocity.Y > 0)
-        {
-            velocity.Y = 0;
-        }
-        
-        if (amountToMove.X != 0)
-        {
-            position.X = (int)position.X;
-        }
-        if (amountToMove.Y != 0)
-        {
-            position.Y = (int)position.Y;
-        }
+        //if (amountToMove.X > 0 && velocity.X < 0)
+        //{
+        //    velocity.X = 0;
+        //    position.X = (int)position.X;
+        //}
+        //if (amountToMove.X < 0 && velocity.X > 0)
+        //{
+        //    velocity.X = 0;
+        //    position.X = (int)position.X;
+        //}
+        //if (amountToMove.Y > 0 && velocity.Y < 0)
+        //{
+        //    velocity.Y = 0;
+        //    position.Y = (int)position.Y;
+        //}
+        //if (amountToMove.Y < 0 && velocity.Y > 0)
+        //{
+        //    velocity.Y = 0;
+        //    position.Y = (int)position.Y;
+        //}
+
+        //if (amountToMove.X != 0)
+        //{
+        //    position.X = (int)position.X;
+        //}
+        //if (amountToMove.Y != 0)
+        //{
+        //    position.Y = (int)position.Y;
+        //}
         position += amountToMove;
 
         CalculateMovement();
@@ -1338,9 +1320,25 @@ public class Player
             Irbis.Irbis.WriteLine();
         }
 
+        if (walled.Top > 0 && velocity.Y < 0)
+        {
+            velocity.Y = 0;
+            position.Y = (int)Math.Round((decimal)position.Y);
+        }
         if (walled.Bottom > 0 && velocity.Y > 0)
         {
             velocity.Y = 0;
+            position.Y = (int)Math.Round((decimal)position.Y);
+        }
+        if (walled.Left > 0 && velocity.X < 0)
+        {
+            velocity.X = 0;
+            position.X = (int)Math.Round((decimal)position.X);
+        }
+        if (walled.Right > 0 && velocity.X > 0)
+        {
+            velocity.X = 0;
+            position.X = (int)Math.Round((decimal)position.X);
         }
     }
 
@@ -1576,10 +1574,9 @@ public class Player
     public void Draw(SpriteBatch sb)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Draw"); }
-        if (Irbis.Irbis.debug > 1) { colliderDrawer.Draw(sb, Irbis.Irbis.nullTex, depth - 0.05f); }
-        if (attackCollider != Rectangle.Empty) { attackColliderDrawer.Draw(sb, Irbis.Irbis.nullTex, depth - 0.05f); }
-        //sb.Draw(colliderTex, collider, null, Color.White, randomrotation, Vector2.Zero, SpriteEffects.None, depth);
-        /*if (!game.debug) {*/ sb.Draw(tex, displayRect, animationSourceRect, Color.White, 0f, Vector2.Zero, SpriteEffects.None, depth); //}
-        if (shielded) { sb.Draw(shieldTex, displayRect, shieldSourceRect, Color.White, 0f, Vector2.Zero, SpriteEffects.None, depth + 0.1f); }
+        if (Irbis.Irbis.debug > 1) { RectangleBorder.Draw(sb, collider, Color.Magenta); }
+        if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta); }
+        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+        if (shielded) { sb.Draw(shieldTex, position * Irbis.Irbis.screenScale, shieldSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
     }
 }

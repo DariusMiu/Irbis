@@ -175,7 +175,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.2.0";
+        static string versionNo = "0.1.2.3";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
@@ -194,13 +194,14 @@ namespace Irbis
         private static double minFPStime;
         private static double maxFPS;
         private static double maxFPStime;
+        private static bool recordFPS;
         //public static StringBuilder methodLogger = new StringBuilder();
 
                                                                                                     //console
         EventHandler<TextInputEventArgs> onTextEntered;
         public static bool acceptTextInput;
         public static string textInputBuffer;
-        Print consoleWriteline;
+        private static Print consoleWriteline;
         private static Print developerConsole;
         public static bool console;
         private static int consoleLine;
@@ -441,7 +442,6 @@ namespace Irbis
                                                                                                     //graphics
         public static GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-        RenderTarget2D renderTarget;
 
                                                                                                     //save info
         private static string autosave;
@@ -482,8 +482,8 @@ namespace Irbis
         public static Rectangle boundingBox;
         public static Rectangle screenspace;
         public static Rectangle zeroScreenspace;
-        private static RectangleBorder startingScreenLocation;
-        public static RectangleBorder boundingBoxBorder;
+        public static float screenScale;
+        public static Point resolution;
         public static bool cameraLerp;
         public static float cameraLerpSpeed;
         public static bool cameraShakeSetting;
@@ -532,8 +532,6 @@ namespace Irbis
         public static int vendingMenu;
 
                                                                                                     //settings vars
-        public static int screenScale;
-        public static Point resolution;
         public static Point halfResolution;
         public static Point tempResolution;
 
@@ -589,6 +587,8 @@ namespace Irbis
         private static Random RAND;
         private static int lastRandomInt;
         public static Texture2D nullTex;
+        public static Texture2D largeNullTex;
+        public static Texture2D defaultTex;
         public static Game game;
 
         public static BinaryTree<float> testTree;
@@ -645,10 +645,6 @@ namespace Irbis
             enemyList = new List<IEnemy>();
             printList = new List<Print>();
             sliderList = new List<UIElementSlider>();
-
-            meanFPS = new TotalMeanFramerate(true);
-            maxFPS = double.MinValue;
-            minFPS = double.MaxValue;
 
             AIenabled = true;
             framebyframe = false;
@@ -747,6 +743,8 @@ namespace Irbis
             menuTex[7] = Content.Load<Texture2D>("Level Select title");
 
             nullTex = Content.Load<Texture2D>("nullTex");
+            largeNullTex = Content.Load<Texture2D>("largeNullTex");
+            defaultTex = Content.Load<Texture2D>("defaultTex");
 
             enemySpawnPoints = new List<Vector2>();
 
@@ -844,7 +842,7 @@ namespace Irbis
             {
                 Load(@".\content\playerSettings.ini");
             }
-            sList.Add(new Square(menuTex[scene], Color.White, Point.Zero, menuTex[scene].Width, menuTex[scene].Height, false, true, true, 0.5f));
+            //sList.Add(new Square(menuTex[scene], Color.White, Point.Zero, menuTex[scene].Width, menuTex[scene].Height, false, true, true, 0.5f));
             if (resetRequired)
             {
                 Print resettt = new Print(resolution.X - 132, font, Color.White, false, new Point(resolution.X - 32, resolution.Y - 26), Direction.right, 0.5f);
@@ -886,11 +884,11 @@ namespace Irbis
 
             if (loadUI)
             {
-                healthBar = new UIElementSlider(Direction.left, new Point(32, 32), 250, 20, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, shieldBarTex, font, false, 0.505f, 0.55f, 0.5f);
-                shieldBar = new UIElementSlider(Direction.left, new Point(32, 51), 150, 20, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBarTex, font, false, 0.501f);
-                energyBar = new UIElementSlider(Direction.left, new Point(32, 70), 100, 20, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, shieldBarTex, font, false, 0.5f);
+                healthBar = new UIElementSlider(Direction.left, new Point(32, 32), 250, 20, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
+                shieldBar = new UIElementSlider(Direction.right, new Point(182, 52), 150, 20, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBarTex, font, false, 0.5f);
+                energyBar = new UIElementSlider(Direction.forward, new Point(82, 72), 100, 20, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
                 potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle(184, 54, 96, 15), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
-                enemyHealthBar = new UIElementSlider(Direction.right, new Point(resolution.X - 32, 32), 500, 20, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, shieldBarTex, font, false, 0.5f);
+                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - 32), 32), 500, 20, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
 
                 if (geralt != null)
                 {
@@ -1039,7 +1037,7 @@ namespace Irbis
             else
             {
                 mouseState = Mouse.GetState();
-                mouseState = new MouseState(mouseState.X / screenScale, mouseState.Y / screenScale, mouseState.ScrollWheelValue, mouseState.LeftButton, mouseState.MiddleButton, mouseState.RightButton, mouseState.XButton1, mouseState.XButton2);
+                mouseState = new MouseState(mouseState.X /*/ screenScale*/, mouseState.Y /*/ screenScale*/, mouseState.ScrollWheelValue, mouseState.LeftButton, mouseState.MiddleButton, mouseState.RightButton, mouseState.XButton1, mouseState.XButton2);
 
                 if (levelEditor)
                 {
@@ -1096,16 +1094,19 @@ namespace Irbis
         protected void LevelUpdate(GameTime gameTime)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelUpdate"); }
-            meanFPS.Update(gameTime.ElapsedGameTime.TotalSeconds);
-            if (maxFPS < (1d / gameTime.ElapsedGameTime.TotalSeconds))
+            if (recordFPS)
             {
-                maxFPS = (1d / gameTime.ElapsedGameTime.TotalSeconds);
-                maxFPStime = Timer;
-            }
-            if (minFPS > (1d / gameTime.ElapsedGameTime.TotalSeconds))
-            {
-                minFPS = (1d / gameTime.ElapsedGameTime.TotalSeconds);
-                minFPStime = Timer;
+                meanFPS.Update(gameTime.ElapsedGameTime.TotalSeconds);
+                if (maxFPS < (1d / gameTime.ElapsedGameTime.TotalSeconds))
+                {
+                    maxFPS = (1d / gameTime.ElapsedGameTime.TotalSeconds);
+                    maxFPStime = Timer;
+                }
+                if (minFPS > (1d / gameTime.ElapsedGameTime.TotalSeconds))
+                {
+                    minFPS = (1d / gameTime.ElapsedGameTime.TotalSeconds);
+                    minFPStime = Timer;
+                }
             }
 
             if ((keyboardState.IsKeyDown(Keys.T) && !acceptTextInput) || geralt.health <= 0)                            //RESPAWN
@@ -1159,14 +1160,14 @@ namespace Irbis
                     }
                 }
 
-                healthBar.Update(false, geralt.health);
+                healthBar.UpdateValue(false, geralt.health);
                 if (geralt.shielded)
                 {
-                    shieldBar.Update(true, geralt.shield);
+                    shieldBar.UpdateValue(true, geralt.shield);
                 }
                 else
                 {
-                    shieldBar.Update(false, geralt.shield);
+                    shieldBar.UpdateValue(false, geralt.shield);
                 }
                 energyBar.UpdateValue(geralt.energy);
 
@@ -1180,7 +1181,7 @@ namespace Irbis
                         float thisEnemysSqrDistance = 0f;
                         foreach (IEnemy e in enemyList)
                         {
-                            thisEnemysSqrDistance = DistanceSquared(geralt.collider.Center, e.Collider.Center);
+                            thisEnemysSqrDistance = DistanceSquared(geralt.Collider.Center, e.Collider.Center);
                             if (thisEnemysSqrDistance < closestSqrDistance)
                             {
                                 closestSqrDistance = thisEnemysSqrDistance;
@@ -1231,7 +1232,7 @@ namespace Irbis
                 {
                     for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
                     {
-                        if (geralt.collider.Intersects(onslaughtSpawner.vendingMachineList[i].displayRect)) //add collider to vending machine
+                        if (geralt.Collider.Intersects(onslaughtSpawner.vendingMachineList[i].collider)) //add collider to vending machine
                         {
                             onslaughtSpawner.vendingMachineList[i].LoadMenu();
                             geralt.inputEnabled = !onslaughtSpawner.vendingMachineList[i].drawMenu;
@@ -1342,8 +1343,8 @@ namespace Irbis
         private void Camera()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Camera"); }
-            screenSpacePlayerPos.X = geralt.collider.Center.X + (int)foreground.M41;
-            screenSpacePlayerPos.Y = geralt.collider.Center.Y + (int)foreground.M42;
+            screenSpacePlayerPos.X = (int)(geralt.Collider.Center.X * screenScale) + (int)foreground.M41;
+            screenSpacePlayerPos.Y = (int)(geralt.Collider.Center.Y * screenScale) + (int)foreground.M42;
 
             //mainCamera is used for returning the camera to where it "should" be
             //camera is what is displayed on-screen
@@ -1546,7 +1547,7 @@ namespace Irbis
             }
             if (mouseState.LeftButton == ButtonState.Pressed && selectedBlock >= 0)
             {
-                squareList[selectedBlock].Position = worldSpaceMouseLocation;
+                squareList[selectedBlock].Position = worldSpaceMouseLocation.ToVector2();
             }
 
 
@@ -1613,7 +1614,7 @@ namespace Irbis
             List<string> squareTextures = new List<string>();
             for (int i = 0; i < squareList.Count; i++)
             {
-                squareSpawns.Add(squareList[i].Position);
+                squareSpawns.Add(squareList[i].Position.ToPoint());
                 squareTextures.Add(squareList[i].tex.Name);
             }
 
@@ -1622,7 +1623,7 @@ namespace Irbis
             List<float> backgroundSquareDepths = new List<float>();
             for (int i = 0; i < backgroundSquareList.Count; i++)
             {
-                BackgroundSquares.Add(backgroundSquareList[i].Position);
+                BackgroundSquares.Add(backgroundSquareList[i].Position.ToPoint());
                 backgroundTextures.Add(backgroundSquareList[i].tex.Name);
                 backgroundSquareDepths.Add(backgroundSquareList[i].depth);
             }
@@ -1643,7 +1644,7 @@ namespace Irbis
                 foreach (VendingMachine v in onslaughtSpawner.vendingMachineList)
                 {
                     vendingMachineTextures.Add(v.vendingTex.ToString());
-                    vendingMachineLocations.Add(v.displayRect.Location);
+                    vendingMachineLocations.Add(v.displayLocation.ToPoint());
                     vendingMachineTypes.Add(v.type);
                 }
 
@@ -1691,9 +1692,6 @@ namespace Irbis
             timer = 0;
 
             screenspace = new Rectangle(Point.Zero, resolution);
-            startingScreenLocation = new RectangleBorder(new Rectangle(Point.Zero, resolution), Color.Magenta, 0f);
-            boundingBoxBorder = new RectangleBorder(boundingBox, Color.Magenta, 0.8f);
-
         }
 
         public void ClearUI()
@@ -1725,11 +1723,13 @@ namespace Irbis
             {
                 debuginfo.Update("\n     input:" + geralt.input + "  isRunning:" + geralt.isRunning);
                 debuginfo.Update("\n prevInput:" + geralt.prevInput);
-                debuginfo.Update("\n\nwalledInputChange:" + geralt.walledInputChange);
+                debuginfo.Update("\n\nwallJumpTimer:" + geralt.wallJumpTimer);
                 debuginfo.Update("\n\n  player info");
                 debuginfo.Update("\nHealth:" + geralt.health + "\nShield:" + geralt.shield + "\nEnergy:" + geralt.energy);
                 debuginfo.Update("\n  Xpos:" + geralt.position.X + "\n  Ypos:" + geralt.position.Y);
                 debuginfo.Update("\n  Xvel:" + geralt.velocity.X + "\n  Yvel:" + geralt.velocity.Y);
+                debuginfo.Update("\n   col:" + geralt.Collider);
+                debuginfo.Update("\nmaxspeed:" + geralt.debugspeed);
                 debuginfo.Update("\ninvulner:" + geralt.invulnerableTime);
                 debuginfo.Update("\nShielded:" + geralt.shielded);
                 debuginfo.Update("\ncolliders:" + collisionObjects.Count);
@@ -2033,7 +2033,7 @@ namespace Irbis
 
             cameraLerp = playerSettings.cameraLerp;
             cameraLerpSpeed = playerSettings.cameraLerpSpeed;
-            boundingBox = playerSettings.boundingBox;
+        
             debug = playerSettings.debug;
             initialPos = playerSettings.initialPosition;
             minSqrDetectDistance = playerSettings.minSqrDetectDistance;
@@ -2050,25 +2050,35 @@ namespace Irbis
 
             if (!resetRequired)
             {
-                tempResolution = resolution = playerSettings.resolution;
-                halfResolution.X = resolution.X / 2;
-                halfResolution.Y = resolution.Y / 2;
-                consoleRect = new Rectangle(0, -halfResolution.Y, resolution.X, halfResolution.Y);
-                zeroScreenspace = new Rectangle(Point.Zero, resolution);
-                if (consoleWriteline != null)
+                tempResolution = playerSettings.resolution;
+
+                if (tempResolution != Point.Zero)
                 {
-                    developerConsole.Update(resolution.X);
-                    consoleWriteline.Update(resolution.X);
+                    SetResolution(tempResolution);
                 }
-                screenScale = playerSettings.screenScale;
-                graphics.PreferredBackBufferHeight = resolution.Y * screenScale;
-                graphics.PreferredBackBufferWidth = resolution.X * screenScale;
+                else
+                {
+                    tempResolution = new Point(graphics.GraphicsDevice.DisplayMode.Width, graphics.GraphicsDevice.DisplayMode.Height);
+                    SetResolution(tempResolution);
+                }
                 graphics.IsFullScreen = playerSettings.fullscreen;
+            }
+
+            screenScale = playerSettings.screenScale;
+
+            if (screenScale <= 0)
+            {
+                screenScale = resolution.X / 960f;
             }
 
             graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = playerSettings.vSync;
             graphics.ApplyChanges();
-            renderTarget = new RenderTarget2D(GraphicsDevice, resolution.X, resolution.Y);
+
+            boundingBox = playerSettings.boundingBox;
+            if (boundingBox == Rectangle.Empty)
+            {
+                boundingBox = new Rectangle((resolution.ToVector2() * 0.3f).ToPoint(), (resolution.ToVector2() * 0.4f).ToPoint());
+            }
 
             if (geralt != null)
             {
@@ -2076,6 +2086,24 @@ namespace Irbis
             }
 
             return playerSettings;
+        }
+
+        public static void SetResolution(Point newResolution)
+        {
+            tempResolution = resolution = newResolution;
+            halfResolution.X = resolution.X / 2;
+            halfResolution.Y = resolution.Y / 2;
+            consoleRect = new Rectangle(0, -halfResolution.Y, resolution.X, halfResolution.Y);
+            zeroScreenspace = new Rectangle(Point.Zero, resolution);
+            if (consoleWriteline != null)
+            {
+                developerConsole.Update(resolution.X);
+                consoleWriteline.Update(resolution.X);
+            }
+            graphics.PreferredBackBufferHeight = resolution.Y;
+            graphics.PreferredBackBufferWidth = resolution.X;
+            game.GraphicsDevice.SetRenderTarget(null);
+            //graphics.ApplyChanges();
         }
 
         public static bool Use()
@@ -2209,8 +2237,8 @@ namespace Irbis
             {
                 consoleMoveTimer = 0;
             }
-            consoleWriteline.Update(new Point(1, consoleRect.Bottom - 10));
-            developerConsole.Update(new Point(1, consoleRect.Bottom - 20));
+            consoleWriteline.Update(new Point(1, consoleRect.Bottom - (int)(10 * screenScale)));
+            developerConsole.Update(new Point(1, consoleRect.Bottom - (int)(20 * screenScale)));
         }
 
         public void UpdateConsole()
@@ -2346,11 +2374,14 @@ namespace Irbis
             debug = rank;
             if (debug > 0)
             {
-                this.IsMouseVisible = true;
+                this.IsMouseVisible = recordFPS = true;
+                meanFPS = new TotalMeanFramerate(true);
+                maxFPS = double.MinValue;
+                minFPS = double.MaxValue;
             }
             else
             {
-                this.IsMouseVisible = false;
+                this.IsMouseVisible = recordFPS = false;
                 debuginfo.Clear();
                 foreach (Square s in squareList)
                 {
@@ -2377,6 +2408,33 @@ namespace Irbis
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Write"); }
             developerConsole.Write(line);
+        }
+
+        public static void ChangeScreenScale(float newScale)
+        {
+            screenScale = newScale;
+            //change the location of everything bound to the right side of the screen
+            if (enemyHealthBar != null)
+            {
+                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - 32), 32), 500, 20, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
+            }
+            if (healthBar != null)
+            {
+                healthBar = new UIElementSlider(Direction.left, new Point(32, 32), 250, 20, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
+            }
+            if (shieldBar != null)
+            {
+                shieldBar = new UIElementSlider(Direction.right, new Point(182, 52), 150, 20, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBar.overlayTex, font, false, 0.5f);
+            }
+            if (energyBar != null)
+            {
+                energyBar = new UIElementSlider(Direction.forward, new Point(82, 72), 100, 20, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
+            }
+            if (potionBar != null)
+            {
+                potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle(184, 54, 96, 15), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
+            }
+
         }
 
         public string Credits()
@@ -2522,8 +2580,7 @@ Thank you, Ze Frank, for the inspiration.";
         public void PrintVersion()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.PrintVersion"); }
-            WriteLine("    Project: Irbis (" + versionTy + ")");
-            WriteLine("    " + versionID + " v" + versionNo);
+            WriteLine("    Project: Irbis (" + versionTy + ")\n    " + versionID + " v" + versionNo);
         }
 
         private static Point PointParser(string value)
@@ -2695,7 +2752,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "jumptimemax":
@@ -2706,7 +2762,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "idletimemax":
@@ -2717,7 +2772,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "maxhealth":
@@ -2729,7 +2783,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "maxshield":
@@ -2741,7 +2794,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "maxenergy":
@@ -2753,7 +2805,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "superShockwaveHoldtime":
@@ -2764,7 +2815,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "shockwavemaxeffectdistance":
@@ -2775,7 +2825,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "shockwaveeffectivedistance":
@@ -2786,7 +2835,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "shockwavestuntime":
@@ -2797,7 +2845,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "invulnerablemaxtime":
@@ -2808,7 +2855,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "shieldrechargerate":
@@ -2819,7 +2865,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "energyrechargerate":
@@ -2830,7 +2875,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "healthrechargerate":
@@ -2841,7 +2885,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "energyusablemargin":
@@ -2852,7 +2895,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "minsqrdetectdistance":
@@ -2863,7 +2905,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
 
@@ -2875,7 +2916,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "shieldhealingpercentage":
@@ -2886,7 +2926,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "cameralerpspeed":
@@ -2897,7 +2936,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "terminalvelocity":
@@ -2908,7 +2946,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "masteraudiolevel":
@@ -2919,7 +2956,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "musiclevel":
@@ -2930,7 +2966,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "soundeffectslevel":
@@ -2941,7 +2976,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "potionrechargerate":
@@ -2952,7 +2986,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "potionrechargetime":
@@ -2963,7 +2996,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     //public float potionRechargeRate;
@@ -2981,7 +3013,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "ycollideroffset":
@@ -2992,7 +3023,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "colliderwidth":
@@ -3003,7 +3033,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "colliderheight":
@@ -3014,7 +3043,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "attackcolliderwidth":
@@ -3025,7 +3053,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "attackcolliderheight":
@@ -3036,18 +3063,17 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "screenscale":
-                        if (int.TryParse(value, out intResult))
+                        if (float.TryParse(value, out floatResult))
                         {
-                            screenScale = intResult;
+                            ChangeScreenScale(floatResult);
+                            WriteLine("screenscale:" + screenScale);
                         }
                         else
                         {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
+                            WriteLine("this command changes the screenscale\ncurrent screenscale:" + screenScale);
                         }
                         break;
                     case "maxnumberofpotions":
@@ -3058,7 +3084,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
 
@@ -3074,7 +3099,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altattackkey":
@@ -3085,7 +3109,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "shockwavekey":
@@ -3096,7 +3119,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altshockwavekey":
@@ -3107,7 +3129,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "shieldkey":
@@ -3118,7 +3139,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altshieldkey":
@@ -3129,7 +3149,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "jumpkey":
@@ -3140,7 +3159,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altjumpkey":
@@ -3151,7 +3169,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "upkey":
@@ -3162,7 +3179,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altupkey":
@@ -3173,7 +3189,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "downkey":
@@ -3184,7 +3199,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altdownkey":
@@ -3195,7 +3209,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "leftkey":
@@ -3206,7 +3219,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altleftkey":
@@ -3217,7 +3229,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "rightkey":
@@ -3228,7 +3239,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altrightkey":
@@ -3239,7 +3249,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "rollkey":
@@ -3250,7 +3259,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altrollkey":
@@ -3261,7 +3269,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "potionkey":
@@ -3272,7 +3279,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "altpotionkey":
@@ -3283,7 +3289,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
 
@@ -3314,7 +3319,6 @@ Thank you, Ze Frank, for the inspiration.";
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
                         }
-
                         break;
 
 
@@ -3329,7 +3333,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "camerashakesetting":
@@ -3340,7 +3343,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "fullscreen":
@@ -3351,7 +3353,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "verticalretrace":
@@ -3362,7 +3363,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "Isfixedtimestep":
@@ -3373,7 +3373,6 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                         }
                         break;
                     case "summonenemy":
@@ -3424,15 +3423,16 @@ Thank you, Ze Frank, for the inspiration.";
                     case "savelevel":
                         if (string.IsNullOrWhiteSpace(value))
                         {
+                            WriteLine("saving level as " + currentLevel);
                             SaveLevel(currentLevel);
-                            WriteLine("saved as " + currentLevel);
                         }
                         else
                         {
+                            WriteLine("saving level as " + value);
                             SaveLevel(value);
                             LoadLevel(value, true);
-                            WriteLine("saved as " + value);
                         }
+                        WriteLine("done.");
                         break;
                     case "skiptowave":
                         if (onslaughtMode)
@@ -3445,16 +3445,16 @@ Thank you, Ze Frank, for the inspiration.";
                             else
                             {
                                 WriteLine("error: variable \"" + variable + "\" could not be parsed");
-
                             }
                         }
                         break;
                     case "loadlevel":
                         if (File.Exists(".\\levels\\" + value + ".lvl"))
                         {
+                            WriteLine("loading level: " + value);
                             LoadLevel(value, !levelEditor);
                             if (levelEditor) { sceneIsMenu = true; }
-                            WriteLine("loading level: " + value);
+                            WriteLine("done.");
                         }
                         else
                         {
@@ -3464,10 +3464,10 @@ Thank you, Ze Frank, for the inspiration.";
                     case "newlevel":
                         if (levelEditor && !string.IsNullOrWhiteSpace(value))
                         {
+                            WriteLine("creating new level: " + value);
                             Level thisLevel = new Level(true);
                             SaveLevel(value);
                             LoadLevel(value, true);
-                            WriteLine("creating new level: " + value);
                         }
                         break;
                     case "leveleditor":
@@ -3639,8 +3639,16 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "fps":
                         WriteLine("smart fps: " + smartFPS.Framerate + ", raw fps: " + (1 / DeltaTime));
+                        if (recordFPS)
+                        {
+                            WriteLine("meanfps:" + meanFPS.Framerate);
+                            WriteLine(" maxfps:" + maxFPS + " at time:" + maxFPStime);
+                            WriteLine(" minfps:" + minFPS + " at time:" + minFPStime);
+                        }
                         WriteLine();
                         break;
+                    case "framerate":
+                        goto case "fps";
                     case "timer":
                         WriteLine("timer: " + Timer);
                         WriteLine();
@@ -3848,7 +3856,33 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         WriteLine();
                         break;
-
+                    case "recordfps":
+                        meanFPS = new TotalMeanFramerate(true);
+                        maxFPS = double.MinValue;
+                        minFPS = double.MaxValue;
+                        recordFPS = true;
+                        break;
+                    case "recordframerate":
+                        goto case "recordfps";
+                    case "god":
+                        geralt.invulnerableTime = float.MaxValue;
+                        geralt.invulnerable = true;
+                        WriteLine("godmode on");
+                        break;
+                    case "addpoints":
+                        if (int.TryParse(value, out intResult))
+                        {
+                            if (onslaughtSpawner != null)
+                            {
+                                onslaughtSpawner.Points += intResult;
+                                WriteLine("added " + intResult + " points");
+                            }
+                        }
+                        else
+                        {
+                            WriteLine("use this command to add points to your score");
+                        }
+                        break;
 
 
 
@@ -3925,27 +3959,27 @@ Thank you, Ze Frank, for the inspiration.";
                         WriteLine(Help());
                         break;
                     default:
-                        if (string.IsNullOrWhiteSpace(extra))
-                        {
-                            WriteLine("statement: " + statement);
-                            WriteLine(" variable: " + variable);
-                            WriteLine("    value: " + value);
-                        }
-                        else
-                        {
-                            WriteLine("statement: " + statement);
-                            WriteLine(" variable: " + variable);
-                            WriteLine("    extra: " + extra);
-                            WriteLine("    value: " + value);
-                        }
+                        //if (string.IsNullOrWhiteSpace(extra))
+                        //{
+                        //    WriteLine("statement: " + statement);
+                        //    WriteLine("  command: " + variable);
+                        //    WriteLine("    value: " + value);
+                        //}
+                        //else
+                        //{
+                        //    WriteLine("statement: " + statement);
+                        //    WriteLine("  command: " + variable);
+                        //    WriteLine("    extra: " + extra);
+                        //    WriteLine("    value: " + value);
+                        //}
 
                         if (string.IsNullOrWhiteSpace(extra))
                         {
-                            WriteLine("error: no variable with name: \"" + variable + "\"");
+                            WriteLine("error: no command with name: \"" + variable + "\"");
                         }
                         else
                         {
-                            WriteLine("error: no variable with name: \"" + variable + "[" + extra + "]\"");
+                            WriteLine("error: no command with name: \"" + variable + "[" + extra + "]\"");
                         }
                         break;
                 }
@@ -3955,7 +3989,7 @@ Thank you, Ze Frank, for the inspiration.";
         protected override void Draw(GameTime gameTime)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Draw"); }
-            GraphicsDevice.SetRenderTarget(renderTarget);
+            //GraphicsDevice.SetRenderTarget(renderTarget);
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             // TODO: Add your drawing code here    --------------------------------------------------------------------------------------------
@@ -3984,7 +4018,7 @@ Thank you, Ze Frank, for the inspiration.";
             if (geralt != null) { geralt.Draw(spriteBatch); }
             if (debug > 1)
             {
-                startingScreenLocation.Draw(spriteBatch, nullTex);
+                RectangleBorder.Draw(spriteBatch, new Rectangle(Point.Zero, screenspace.Size), Color.Magenta, false);
                 if (levelEditor)
                 {
                     Texture2D squareTex = Content.Load<Texture2D>("originTexture");
@@ -4015,16 +4049,17 @@ Thank you, Ze Frank, for the inspiration.";
             if (onslaughtDisplay != null)
             {
                 onslaughtDisplay.Draw(spriteBatch);
-                spriteBatch.DrawString(spriteFont2, "Points: " + onslaughtSpawner.Points, new Vector2(1, 14), Color.White);
             }
 
 
-
-            debuginfo.Draw(spriteBatch);
+            if (!sceneIsMenu)
+            {
+                debuginfo.Draw(spriteBatch);
+            }
 
             if (debug > 1)
             {
-                boundingBoxBorder.Draw(spriteBatch, nullTex);
+                RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false);
             }
 
             if ((console || consoleMoveTimer > 0) && !sceneIsMenu)
@@ -4039,6 +4074,9 @@ Thank you, Ze Frank, for the inspiration.";
             if (sceneIsMenu)        //FOR MENU DRAWING
             {
                 // TODO: Add your drawing code here    --------------------------------------------------------------------------------------------
+                spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
+                spriteBatch.Draw(menuTex[scene], Vector2.Zero, null, Color.White, 0f, Vector2.Zero, (140f / menuTex[scene].Height) * screenScale, SpriteEffects.None, 0.5f);
+                spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
                 if (console || consoleMoveTimer > 0)
                 {
@@ -4046,16 +4084,17 @@ Thank you, Ze Frank, for the inspiration.";
                     consoleWriteline.Draw(spriteBatch);
                     developerConsole.Draw(spriteBatch);
                 }
+                debuginfo.Draw(spriteBatch);
 
                 if (levelLoaded > 0 && !levelEditor)
                 {
                     //darken bg screen
-                    spriteBatch.Draw(nullTex, new Rectangle(Point.Zero, resolution), new Color(Color.Black, 0.25f));
+                    //spriteBatch.Draw(nullTex, zeroScreenspace, null, Color.Black, 0f, Vector2.Zero, SpriteEffects.None, 0.0f);
                 }
 
                 if (scene == 3 && menuSelection >= 0 && menuSelection <= 3)
                 {
-                    boundingBoxBorder.Draw(spriteBatch, nullTex);
+                    RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false);
                 }
 
                 if (scene == 5)
@@ -4070,6 +4109,7 @@ Thank you, Ze Frank, for the inspiration.";
                 {
                     b.Draw(spriteBatch);
                 }
+
                 for (int i = 0; i < printList.Count; i++)
                 {
                     if (scene == 3)
@@ -4101,11 +4141,11 @@ Thank you, Ze Frank, for the inspiration.";
                 // --------------------------------------------------------------------------------------------------------------------------------
             }
 
-            GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-            spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, Matrix.Identity);
-            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), Color.White);
-            spriteBatch.End();
+            //GraphicsDevice.SetRenderTarget(null);
+            //GraphicsDevice.Clear(Color.CornflowerBlue);
+            //spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, Matrix.Identity);
+            //spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height), Color.White);
+            //spriteBatch.End();
             base.Draw(gameTime);
         }
     }

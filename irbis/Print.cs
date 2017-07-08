@@ -17,7 +17,7 @@ public class Print
         }
     }
     Texture2D tex;
-    Rectangle displayRect;
+    Vector2 displayPosition;
     
     Color fontColor;
     int width;
@@ -71,7 +71,7 @@ public class Print
                 fontSourceRect.Add(tempRect);
             }
         }
-        displayRect = new Rectangle(origin.X, origin.Y, characterHeight, characterHeight);
+        displayPosition = origin.ToVector2();
     }
 
     public Print(int mW, Font font, Color colorForFont, bool monospace, Point location, Direction alignSide, float drawDepth)
@@ -116,7 +116,7 @@ public class Print
                 fontSourceRect.Add(tempRect);
             }
         }
-        displayRect = new Rectangle(origin.X, origin.Y, characterHeight, characterHeight);
+        displayPosition = origin.ToVector2();
     }
 
     public Print(Font CONSOLE)
@@ -150,7 +150,6 @@ public class Print
                 fontSourceRect.Add(tempRect);
             }
         }
-        displayRect = new Rectangle(origin.X, origin.Y, characterHeight, characterHeight);
     }
 
     public void Clear()
@@ -608,18 +607,15 @@ public class Print
 
                             //only this part changes in monospace
                             //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                            displayRect.X = (int)(width + (int)origin.X);
-                            displayRect.Y = height * characterHeight + (int)origin.Y;
-                            displayRect.Width = fontSourceRect[charIndex].Width;
-                            if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.zeroScreenspace))
+                            displayPosition.X = (int)(width + origin.X);
+                            displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
+                            //displayRect.Width = fontSourceRect[charIndex].Width;
+                            if (true)
                             {
-                                sb.Draw(tex, displayRect, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
+                                sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                             }
-                            else
-                            {
-                                return;
-                            }
-                            width += characterHeight;
+                            //else { return; }
+                            width += (int)(characterHeight * Irbis.Irbis.screenScale);
                         }
                     }
                 }
@@ -652,18 +648,15 @@ public class Print
                             int charIndex = ReturnCharacterIndex(c);
 
                             //only this part changes in monospace
-                            displayRect.X = (int)(width + (int)origin.X);
-                            displayRect.Y = height * characterHeight + (int)origin.Y;
+                            displayPosition.X = (int)(width + (int)origin.X);
+                            displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
                             //displayRect.Width = fontSourceRect[charIndex].Width;
-                            if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.zeroScreenspace))
+                            if (true)
                             {
-                                sb.Draw(tex, displayRect, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
+                                sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                             }
-                            else
-                            {
-                                return;
-                            }
-                            width += characterHeight;
+                            //else { return; }
+                            width += (int)(characterHeight * Irbis.Irbis.screenScale);
                         }
 
                         if (lastindexofnewline > 0)
@@ -715,17 +708,13 @@ public class Print
 
                         //only this part changes in monospace
                         //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayRect.X = (int)(width + (int)origin.X);
-                        displayRect.Y = height * characterHeight + (int)origin.Y;
-                        displayRect.Width = fontSourceRect[charIndex].Width;
-                        if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.zeroScreenspace))
+                        displayPosition.X = (int)(width + (int)origin.X);
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
+                        if (true)
                         {
-                            sb.Draw(tex, displayRect, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                         }
-                        else
-                        {
-                            return;
-                        }
+                        //else { return; }
                         width -= characterHeight;
                     }
                 }
@@ -790,17 +779,13 @@ public class Print
                         //only this part changes in monospace
 
                         //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayRect.X = (int)(width + (int)origin.X);
-                        displayRect.Y = height * characterHeight + (int)origin.Y;
-                        displayRect.Width = fontSourceRect[charIndex].Width;
-                        if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.zeroScreenspace))
+                        displayPosition.X = (int)(width + (int)origin.X);
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
+                        if (true)
                         {
-                            sb.Draw(tex, displayRect, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                         }
-                        else
-                        {
-                            return;
-                        }
+                        //else { return; }
                         width -= fontSourceRect[charIndex].Width + 1;
                     }
                 }
@@ -837,21 +822,14 @@ public class Print
                             height++;
                         }
                         int charIndex = ReturnCharacterIndex(c);
-                        //only this part changes in monospace
-                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayRect.X = (width + origin.X);
-                        displayRect.Y = (height * characterHeight) + origin.Y;
-                        displayRect.Width = fontSourceRect[charIndex].Width;
-                        //displayRect.Height = characterHeight;
-                        if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.zeroScreenspace))
+                        displayPosition.X = width + origin.X;
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + origin.Y;
+                        if (true)
                         {
-                            sb.Draw(tex, displayRect, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                         }
-                        else
-                        {
-                            return;
-                        }
-                        width += fontSourceRect[charIndex].Width + 1;
+                        //else { return; }
+                        width += (int)(fontSourceRect[charIndex].Width * Irbis.Irbis.screenScale) + 1;
                     }
                 }
             }
@@ -883,20 +861,15 @@ public class Print
                         }
                         Char c = statement[i];
                         int charIndex = ReturnCharacterIndex(c);
-                        width += fontSourceRect[charIndex].Width + 1;
-                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayRect.X = origin.X - width;
-                        displayRect.Y = height * characterHeight + origin.Y;
-                        displayRect.Width = fontSourceRect[charIndex].Width;
+                        width += (int)(fontSourceRect[charIndex].Width * Irbis.Irbis.screenScale) + 1;
+                        displayPosition.X = origin.X - width;
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + origin.Y;
                         //displayRect.Height = characterHeight;
-                        if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.zeroScreenspace))
+                        if (true)
                         {
-                            sb.Draw(tex, displayRect, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                         }
-                        else
-                        {
-                            return;
-                        }
+                        //else { return; }
                     }
                 }
             }
@@ -922,7 +895,8 @@ public class Print
                     }
                     else
                     {
-                        width += fontSourceRect[ReturnCharacterIndex(c)].Width + 1; if (width >= maxWidth)
+                        width += (int)(fontSourceRect[ReturnCharacterIndex(c)].Width * Irbis.Irbis.screenScale) + 1;
+                        if (width >= maxWidth)
                         {
                             width = 0;
                             height++;
@@ -952,19 +926,384 @@ public class Print
                         }
                         int charIndex = ReturnCharacterIndex(c);
                         //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayRect.X = width + origin.X;
-                        displayRect.Y = height * characterHeight + origin.Y;
-                        displayRect.Width = fontSourceRect[charIndex].Width;
-                        //displayRect.Height = characterHeight;
-                        if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.zeroScreenspace))
+                        displayPosition.X = width + origin.X;
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + origin.Y;
+                        if (true)
                         {
-                            sb.Draw(tex, displayRect, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                        }
+                        //else { return; }
+                        width += (int)(fontSourceRect[charIndex].Width * Irbis.Irbis.screenScale) + 1;
+                    }
+                }
+            }
+        }
+    }
+
+    public void Draw(SpriteBatch sb, Point location)
+    {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Draw"); }
+        //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||MONOSPACE
+        origin.X = location.X;
+        origin.Y = (int)(location.Y - ((characterHeight * Irbis.Irbis.screenScale) / 2));
+
+        if (monoSpace)
+        {
+            if (align == Direction.left)
+            {
+                width = 0;
+                if (scrollDown)
+                {
+                    height = 0;
+
+                    int statementLength = statement.Length;
+                    for (int i = 0; i < statementLength; i++)
+                    {
+                        if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
+                        {
+                            width = 0;
+                            height++;
                         }
                         else
                         {
-                            return;
+                            if (width >= maxWidth)
+                            {
+                                width = 0;
+                                height++;
+                            }
+
+                            Char c = statement[i];
+                            int charIndex = ReturnCharacterIndex(c);
+
+                            //only this part changes in monospace
+                            //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
+                            displayPosition.X = (int)(width + origin.X);
+                            displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
+                            //displayRect.Width = fontSourceRect[charIndex].Width;
+                            if (true)
+                            {
+                                sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                            }
+                            //else { return; }
+                            width += (int)(characterHeight * Irbis.Irbis.screenScale);
                         }
-                        width += fontSourceRect[charIndex].Width + 1;
+                    }
+                }
+                else
+                {
+                    height = 0;
+
+                    while (printLines > 50)
+                    {
+                        printStatement = printStatement.Substring(printStatement.IndexOf("\n") + 1);
+                        printLines--;
+                    }
+
+                    string tempstatement = printStatement;
+                    int lastindexofnewline = -1;
+
+                    while (!string.IsNullOrWhiteSpace(tempstatement))
+                    {
+                        lastindexofnewline = tempstatement.LastIndexOf('\n');
+
+                        for (int i = lastindexofnewline + 1; i < tempstatement.Length; i++)
+                        {
+                            if (width >= maxWidth)
+                            {
+                                width = 0;
+                                height--;
+                            }
+
+                            Char c = tempstatement[i];
+                            int charIndex = ReturnCharacterIndex(c);
+
+                            //only this part changes in monospace
+                            displayPosition.X = (int)(width + (int)origin.X);
+                            displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
+                            //displayRect.Width = fontSourceRect[charIndex].Width;
+                            if (true)
+                            {
+                                sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                            }
+                            //else { return; }
+                            width += (int)(characterHeight * Irbis.Irbis.screenScale);
+                        }
+
+                        if (lastindexofnewline > 0)
+                        {
+                            tempstatement = tempstatement.Substring(0, lastindexofnewline);
+                            width = 0;
+                            height--;
+                        }
+                        else
+                        {
+                            tempstatement = string.Empty;
+                        }
+                    }
+                }
+
+            }
+            else if (align == Direction.right)
+            {
+                width = -1;
+                if (scrollDown)
+                {
+                    height = 0;
+                }
+                else
+                {
+                    height = -lines;
+                }
+
+                int statementLengthMinOne = statement.Length - 1;
+                //for (int i = 0; i < statementLength; i++)
+                for (int i = statementLengthMinOne; i >= 0; i--)
+                {
+                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
+                    {
+                        width = -1;
+                        height++;
+                    }
+                    else
+                    {
+                        if (width >= maxWidth)
+                        {
+                            width = -1;
+                            height++;
+                        }
+
+
+                        Char c = statement[i];
+                        int charIndex = ReturnCharacterIndex(c);
+
+                        //only this part changes in monospace
+                        //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
+                        displayPosition.X = (int)(width + (int)origin.X);
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
+                        if (true)
+                        {
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                        }
+                        //else { return; }
+                        width -= characterHeight;
+                    }
+                }
+            }
+            else
+            {
+                maxWidth += 12;
+                int maxUsedWidth = 0;
+                width = 0;
+                if (scrollDown)
+                {
+                    height = 0;
+                }
+                else
+                {
+                    height = -lines;
+                }
+
+                for (int i = 0; i < statement.Length; i++)
+                {
+                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
+                    {
+                        width = 0;
+                        height++;
+                    }
+                    else
+                    {
+                        if (width >= maxWidth)
+                        {
+                            width = 0;
+                            height++;
+                        }
+                        width += fontSourceRect[ReturnCharacterIndex(statement[i])].Width;
+                        if (maxUsedWidth > width)
+                        {
+                            maxUsedWidth = width;
+                        }
+                    }
+                }
+
+                width = -maxUsedWidth / 2;
+                height = 0;
+
+                for (int i = 0; i < statement.Length; i++)
+                {
+                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
+                    {
+                        width = -maxUsedWidth / 2;
+                        height++;
+                    }
+                    else
+                    {
+                        if (width >= maxWidth)
+                        {
+                            width = -maxUsedWidth / 2;
+                            height++;
+                        }
+
+                        Char c = statement[i];
+                        int charIndex = ReturnCharacterIndex(c);
+
+                        //only this part changes in monospace
+
+                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
+                        displayPosition.X = (int)(width + (int)origin.X);
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
+                        if (true)
+                        {
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                        }
+                        //else { return; }
+                        width -= fontSourceRect[charIndex].Width + 1;
+                    }
+                }
+            }
+        }
+        //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||NON MONOSPACE
+        else
+        {
+            if (align == Direction.left)
+            {
+                width = 0;
+                if (scrollDown)
+                {
+                    height = 0;
+                }
+                else
+                {
+                    height = -lines;
+                }
+
+                int statementLength = statement.Length;
+                foreach (char c in statement)
+                {
+                    if (c.Equals('\n'))
+                    {
+                        width = 0;
+                        height++;
+                    }
+                    else
+                    {
+                        if (width >= maxWidth)
+                        {
+                            width = 0;
+                            height++;
+                        }
+                        int charIndex = ReturnCharacterIndex(c);
+                        displayPosition.X = width + origin.X;
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + origin.Y;
+                        if (true)
+                        {
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                        }
+                        //else { return; }
+                        width += (int)(fontSourceRect[charIndex].Width * Irbis.Irbis.screenScale) + 1;
+                    }
+                }
+            }
+            else if (align == Direction.right)
+            {
+                width = 0;
+                int maxUsedHeight = 0;
+                foreach (char c in statement)
+                {
+                    if (c.Equals('\n'))
+                    {
+                        maxUsedHeight++;
+                    }
+                }
+                height = maxUsedHeight;
+                for (int i = statement.Length - 1; i >= 0; i--)
+                {
+                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
+                    {
+                        width = 0;
+                        height--;
+                    }
+                    else
+                    {
+                        if (width >= maxWidth)
+                        {
+                            width = 0;
+                            height--;
+                        }
+                        Char c = statement[i];
+                        int charIndex = ReturnCharacterIndex(c);
+                        width += (int)(fontSourceRect[charIndex].Width * Irbis.Irbis.screenScale) + 1;
+                        displayPosition.X = origin.X - width;
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + origin.Y;
+                        //displayRect.Height = characterHeight;
+                        if (true)
+                        {
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                        }
+                        //else { return; }
+                    }
+                }
+            }
+            else
+            {
+                int maxUsedWidth = 0;
+                width = 0;
+                if (scrollDown)
+                {
+                    height = 0;
+                }
+                else
+                {
+                    height = -lines;
+                }
+
+                foreach (char c in statement)
+                {
+                    if (c.Equals('\n'))
+                    {
+                        width = 0;
+                        height++;
+                    }
+                    else
+                    {
+                        width += (int)(fontSourceRect[ReturnCharacterIndex(c)].Width * Irbis.Irbis.screenScale) + 1;
+                        if (width >= maxWidth)
+                        {
+                            width = 0;
+                            height++;
+                            maxUsedWidth = maxWidth;
+                        }
+                        if (width > maxUsedWidth)
+                        {
+                            maxUsedWidth = width - 1;
+                        }
+                    }
+                }
+                width = -maxUsedWidth / 2;
+                height = 0;
+                foreach (char c in statement)
+                {
+                    if (c.Equals('\n'))
+                    {
+                        width = -maxUsedWidth / 2;
+                        height++;
+                    }
+                    else
+                    {
+                        if (width >= maxUsedWidth)
+                        {
+                            width = -maxUsedWidth / 2;
+                            height++;
+                        }
+                        int charIndex = ReturnCharacterIndex(c);
+                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
+                        displayPosition.X = width + origin.X;
+                        displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + origin.Y;
+                        if (true)
+                        {
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                        }
+                        //else { return; }
+                        width += (int)(fontSourceRect[charIndex].Width * Irbis.Irbis.screenScale) + 1;
                     }
                 }
             }

@@ -62,7 +62,7 @@ public class Enchant
                 break;
             case EnchantType.frost:
                 effectDuration = strength * 5f;
-                effectValue = 0.5f;
+                effectValue = (float)Math.Pow(0.5f, strength);
                 maxStack = ((int)(strength / 3f)) + 2;
                 break;
             case EnchantType.knockback:
@@ -70,7 +70,7 @@ public class Enchant
                 break;
             case EnchantType.poison:
                 effectDuration = strength * 30f;
-                effectValue = strength * 3f;
+                effectValue = (float)Math.Pow(2, strength);
                 maxStack = ((int)(strength / 3f)) + 2;
                 uses = strength * 5;
                 break;

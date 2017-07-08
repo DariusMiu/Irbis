@@ -24,27 +24,26 @@ public class Square : ICollisionObject
     private Rectangle collider;
 
 
-    public Point Position
+    public Vector2 Position
     {
         get
         {
-            return pos;
+            return position;
         }
         set
         {
-            pos.X = value.X - 16;
-            pos.Y = value.Y - 16;
-            drawRect = collider = new Rectangle(pos.X, pos.Y, 32, 32);
+            position.X = value.X - 16;
+            position.Y = value.Y - 16;
         }
     }
 
     public bool alwaysDraw;
     public Texture2D tex;
-    public Rectangle drawRect;
-    private Point pos;
+    private Vector2 position;
     public bool drawTex;
     public float depth;
     public Color color;
+    private float scale;
     //public string texture;
 
     //bool pressed;
@@ -53,51 +52,54 @@ public class Square : ICollisionObject
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
-        pos = initialPos;
-        pos.X = pos.X * 32;
-        pos.Y = pos.Y * 32;
-        drawRect = collider = new Rectangle(pos.X, pos.Y, 32, 32);
+        position = initialPos.ToVector2();
+        position.X = position.X * 32;
+        position.Y = position.Y * 32;
         drawTex = true;
         color = Color.White;
+        scale = 1;
+        collider = new Rectangle((int)position.X, (int)position.Y, (int)(32 * scale), (int)(32 * scale));
     }
     public Square(Texture2D t, Point initialPos, bool exactCoords, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
-        pos = initialPos;
+        position = initialPos.ToVector2();
         if (exactCoords)
         {
-            //pos.X = pos.X;
-            //pos.Y = pos.Y;
+            //position.X = position.X;
+            //position.Y = position.Y;
         }
         else
         {
-            pos.X = pos.X * 32;
-            pos.Y = pos.Y * 32;
+            position.X = position.X * 32;
+            position.Y = position.Y * 32;
         }
-        drawRect = collider = new Rectangle(pos.X, pos.Y, 32, 32);
         drawTex = true;
         color = Color.White;
+        scale = 1;
+        collider = new Rectangle((int)position.X, (int)position.Y, (int)(32 * scale), (int)(32 * scale));
     }
     public Square(Texture2D t, Point initialPos, int scale, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
-        pos = initialPos;
-        drawRect = collider = new Rectangle(pos.X, pos.Y, 32 * scale, 32 * scale);
+        position = initialPos.ToVector2();
         drawTex = true;
         color = Color.White;
+        scale = 1;
+        collider = new Rectangle((int)position.X, (int)position.Y, (int)(32 * scale), (int)(32 * scale));
     }
-    public Square(Texture2D t, Point initialPos, int scale, bool hascollider, float drawDepth)
+    public Square(Texture2D t, Point initialPos, int squareScale, bool hascollider, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         depth = drawDepth;
         tex = t;
-        pos = initialPos;
-        drawRect = new Rectangle(pos.X, pos.Y, 32 * scale, 32 * scale);
-        if (hascollider) { collider = drawRect; }
+        position = initialPos.ToVector2();
+        scale = squareScale;
+        if (hascollider) { collider = new Rectangle((int)position.X, (int)position.Y, (int)(32 * scale), (int)(32 * scale)); }
         else { collider = Rectangle.Empty; }
         drawTex = true;
         color = Color.White;
@@ -105,38 +107,30 @@ public class Square : ICollisionObject
     public Square(Texture2D t, Color drawColor, Point initialPos, int width, int height, bool hascollider, bool useExactPixels, bool AlwaysDraw, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
+        scale = 1;
         depth = drawDepth;
         tex = t;
-        pos = initialPos;
+        position = initialPos.ToVector2();
         color = drawColor;
 
-        if (useExactPixels)
-        {
-            drawRect = new Rectangle(pos.X, pos.Y, width, height);
-        }
-        else
-        {
-            drawRect = new Rectangle(pos.X * 32, pos.Y * 32, width * 32, height * 32);
-        }
-        if (hascollider) { collider = drawRect; }
+        if (hascollider) { collider = new Rectangle((int)position.X, (int)position.Y, (int)(32 * scale), (int)(32 * scale)); }
         else { collider = Rectangle.Empty; }
         alwaysDraw = AlwaysDraw;
     }
     public Square(Texture2D t, Point drawPos, Point colliderPos, int drawWidth, int drawHeight, int colliderWidth, int colliderHeight, bool useExactPixels, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
+        scale = 1;
         depth = drawDepth;
         tex = t;
-        pos = drawPos;
+        position = drawPos.ToVector2();
         if (useExactPixels)
         {
-            drawRect = new Rectangle(drawPos.X, drawPos.Y, drawWidth, drawHeight);
-            collider = new Rectangle(colliderPos.X, colliderPos.Y, colliderWidth, colliderHeight);
+            collider = new Rectangle((int)position.X, (int)position.Y, (int)(32 * scale), (int)(32 * scale));
         }
         else
         {
-            drawRect = new Rectangle(drawPos.X * 32, drawPos.Y * 32, drawWidth * 32, drawHeight * 32);
-            collider = new Rectangle(colliderPos.X * 32, colliderPos.Y * 32, colliderWidth * 32, colliderHeight * 32);
+            collider = new Rectangle((int)position.X, (int)position.Y, (int)(32 * scale), (int)(32 * scale));
         }
         drawTex = true;
         color = Color.White;
@@ -145,9 +139,9 @@ public class Square : ICollisionObject
     public void Draw(SpriteBatch sb)
     {
         ////if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Draw"); }
-        if (alwaysDraw || Irbis.Irbis.IsTouching(drawRect, Irbis.Irbis.screenspace))
+        //if (alwaysDraw || Irbis.Irbis.IsTouching(collider, Irbis.Irbis.screenspace))
         {
-            sb.Draw(tex, drawRect, null, color, 0f, Vector2.Zero, SpriteEffects.None, depth);
+            sb.Draw(tex, position * Irbis.Irbis.screenScale, null, color, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
         }
     }
 }

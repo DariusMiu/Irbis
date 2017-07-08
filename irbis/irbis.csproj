@@ -167,6 +167,7 @@
     <Content Include="content\frost enchant icon.png" />
     <Content Include="content\Keybinds title.png" />
     <Content Include="content\knockback enchant icon.png" />
+    <Content Include="content\largeNullTex.png" />
     <Content Include="content\Level Select title.png" />
     <Content Include="content\Main Menu title.png" />
     <Content Include="content\Misc title.png" />

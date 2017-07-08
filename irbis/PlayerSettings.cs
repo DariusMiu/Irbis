@@ -127,7 +127,7 @@ public struct PlayerSettings
             //The camera will move when the player leaves this area on the screen
             //{int X location, int Y location, int Width, int Height}
             //where location refers to the center of the rectangle
-            boundingBox = new Rectangle(330, 256, 300, 144);
+            boundingBox = Rectangle.Empty;
 
             //Do you want the camera to smoothly trail the player?
             cameraLerp = true;
@@ -154,11 +154,10 @@ public struct PlayerSettings
             fullscreen = false;
 
             //the screenScale of the window
-            screenScale = 1;
+            screenScale = 0;
 
             //how much will be drawn
-            resolution.X = 960;
-            resolution.Y = 540;
+            resolution = Point.Zero;
             //the actual size of the window is a combination of resolution and scale
             //for example, a 960x540 resolution at 2x scale gives you a 1920x1080window
             //with each in-game pixel using 2x2 pixels on your screen
@@ -410,7 +409,7 @@ public struct PlayerSettings
             //The camera will move when the player leaves this area on the screen
             //{int X location, int Y location, int Width, int Height}
             //where location refers to the center of the rectangle
-            boundingBox = new Rectangle(330, 256, 300, 144);
+            boundingBox = Rectangle.Empty;
 
             //Do you want the camera to smoothly trail the player?
             cameraLerp = false;
@@ -440,8 +439,7 @@ public struct PlayerSettings
             screenScale = 0;
 
             //how much will be drawn
-            resolution.X = 100;
-            resolution.Y = 100;
+            resolution = Point.Zero;
             //the actual size of the window is a combination of resolution and scale
             //for example, a 960x540 resolution at 2x scale gives you a 1920x1080window
             //with each in-game pixel using 2x2 pixels on your screen

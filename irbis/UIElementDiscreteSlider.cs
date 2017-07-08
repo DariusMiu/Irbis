@@ -15,7 +15,7 @@ public class UIElementDiscreteSlider
     Texture2D fillTex;
 
     Rectangle[] bounds;
-    RectangleBorder[] boundsBorder;
+    Vector2[] locations;
     Rectangle sliderArea;
 
     Color fillColor;
@@ -45,7 +45,7 @@ public class UIElementDiscreteSlider
         depth = drawDepth;
 
         bounds = new Rectangle[numberofelements];
-        boundsBorder = new RectangleBorder[numberofelements];
+        locations = new Vector2[numberofelements];
 
         float remainingWidth = areaForSlider.Width;
 
@@ -57,7 +57,7 @@ public class UIElementDiscreteSlider
                 tempWidth++;
             }
             bounds[i] = new Rectangle(areaForSlider.X + (areaForSlider.Width - (int)remainingWidth), areaForSlider.Y, tempWidth, areaForSlider.Height);
-            boundsBorder[i] = new RectangleBorder(bounds[i], borderColor, depth + 0.1f);
+            locations[i] = bounds[i].Location.ToVector2();
             remainingWidth -= tempWidth;
             remainingWidth -= negativeSpace;
         }
@@ -74,9 +74,9 @@ public class UIElementDiscreteSlider
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.Draw"); }
         for (int i = bounds.Length - 1; i >= 0; i--)
         {
-            if (value >= i) { sb.Draw(overlayTex, bounds[i], sliderArea, overlayColor, 0f, Vector2.Zero, SpriteEffects.None, depth + 0.01f); }
-            sb.Draw(fillTex, bounds[i], sliderArea, fillColor, 0f, Vector2.Zero, SpriteEffects.None, depth);
-            boundsBorder[i].Draw(sb, borderTex);
+            if (value >= i) { sb.Draw(overlayTex, locations[i] * Irbis.Irbis.screenScale, bounds[i], overlayColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
+            sb.Draw(fillTex, locations[i] * Irbis.Irbis.screenScale, bounds[i], fillColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+            RectangleBorder.Draw(sb, bounds[i], borderColor, true);
         }
     }
 }
