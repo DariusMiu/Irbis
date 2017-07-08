@@ -3,48 +3,31 @@
     public int Top
     {
         get
-        {
-            return t;
-        }
+        { return t; }
         set
-        {
-            t = value;
-        }
+        { t = value; }
     }
     public int Bottom
     {
         get
-        {
-            return b;
-        }
+        { return b; }
         set
-        {
-            b = value;
-        }
+        { b = value; }
     }
     public int Left
     {
         get
-        {
-            return l;
-        }
+        { return l; }
         set
-        {
-            l = value;
-        }
+        { l = value; }
     }
     public int Right
     {
         get
-        {
-            return r;
-        }
+        { return r; }
         set
-        {
-            r = value;
-        }
+        { r = value; }
     }
-
     /// <summary>
     /// Returns true if Left or Right is greater than zero
     /// </summary>
@@ -53,13 +36,10 @@
         get
         {
             if (l > 0 || r > 0)
-            {
-                return true;
-            }
+            { return true; }
             return false;
         }
     }
-
     /// <summary>
     /// Returns true if Top or Bottom is greater than zero
     /// </summary>
@@ -68,13 +48,10 @@
         get
         {
             if (b > 0 || t > 0)
-            {
-                return true;
-            }
+            { return true; }
             return false;
         }
     }
-
     /// <summary>
     /// Static constant equalling Wall(0, 0, 0, 0)
     /// </summary>
@@ -86,12 +63,10 @@
         }
     }
     private static Wall zero = new Wall(0, 0, 0, 0);
-
     private int t;
     private int b;
     private int l;
     private int r;
-
     public Wall(int top, int bottom, int left, int right)
     {
         t = top;
@@ -99,33 +74,27 @@
         l = left;
         r = right;
     }
-
     public static bool operator ==(Wall value1, Wall value2)
     {
         return ((value1.t == value2.t) && (value1.b == value2.b) && (value1.l == value2.l) && (value1.r == value2.r));
     }
-
     public static bool operator !=(Wall value1, Wall value2)
     {
         return ((value1.t != value2.t) || (value1.b != value2.b) || (value1.l != value2.l) || (value1.r != value2.r));
     }
-
     public bool Equals(Wall value)
     {
-        return ((this.t == value.t) && (this.b == value.b) && (this.l == value.l) && (this.r == value.r));
+        return ((t == value.t) && (b == value.b) && (l == value.l) && (r == value.r));
     }
-
     public override bool Equals(object obj)
     {
-        if (obj is Wall) return this.Equals((Wall)obj);
-        else return false;
+        if (obj is Wall) { return Equals((Wall)obj); }
+        else { return false; }
     }
-
     public override int GetHashCode()
     {
-        return (this.t.GetHashCode() + this.b.GetHashCode() + this.l.GetHashCode() + this.r.GetHashCode());
+        return (t.GetHashCode() + b.GetHashCode() + l.GetHashCode() + r.GetHashCode());
     }
-
     public override string ToString()
     {
         return "{Top:" + t + " Bottom:" + b + " Left:" + l + " Right:" + r + "}";

@@ -171,6 +171,8 @@ public class Player
     Vector2 negAmountToMove;
     Vector2 testPos;
 
+    private bool collidedContains;
+
     public List<ICollisionObject> collided;
     public List<Side> sideCollided;
 
@@ -1026,51 +1028,80 @@ public class Player
 
         foreach (ICollisionObject s in colliderList)
         {
-            if (s.Collider != Rectangle.Empty && Irbis.Irbis.DistanceSquared(collider.Center, s.Collider.Center) < collisionCheckDistanceSqr && !collided.Contains(s))
+            if (s.Collider != Rectangle.Empty && Irbis.Irbis.DistanceSquared(collider.Center, s.Collider.Center) < collisionCheckDistanceSqr /*&& !collided.Contains(s)*/)
             {
+                collidedContains = collided.Contains(s);
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.bottom))                              //DOWN
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.bottom);
-                    walled.Bottom++;
-                    if (negAmountToMove.Y > s.Collider.Top - collider.Bottom && (velocity.Y * Irbis.Irbis.DeltaTime) >= -(s.Collider.Top - collider.Bottom))
+                    if (!collidedContains)
+                    {
+                        collided.Add(s);
+                        sideCollided.Add(Side.bottom);
+                        walled.Bottom++;
+                        if (negAmountToMove.Y > s.Collider.Top - collider.Bottom && (velocity.Y * Irbis.Irbis.DeltaTime) >= -(s.Collider.Top - collider.Bottom))
+                        {
+                            negAmountToMove.Y = s.Collider.Top - collider.Bottom;
+                        }
+                    }
+                    else if (negAmountToMove.Y > s.Collider.Top - collider.Bottom)
                     {
                         negAmountToMove.Y = s.Collider.Top - collider.Bottom;
                     }
                 }
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.right))                               //RIGHT
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.right);
-                    walled.Right++;
-                    if (negAmountToMove.X > s.Collider.Left - collider.Right && (velocity.X * Irbis.Irbis.DeltaTime) >= -(s.Collider.Left - collider.Right))
+                    if (!collidedContains)
+                    {
+                        collided.Add(s);
+                        sideCollided.Add(Side.right);
+                        walled.Right++;
+                        if (negAmountToMove.X > s.Collider.Left - collider.Right && (velocity.X * Irbis.Irbis.DeltaTime) >= -(s.Collider.Left - collider.Right))
+                        {
+                            negAmountToMove.X = s.Collider.Left - collider.Right;
+                        }
+                    }
+                    else if (negAmountToMove.X > s.Collider.Left - collider.Right)
                     {
                         negAmountToMove.X = s.Collider.Left - collider.Right;
                     }
                 }
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.left))                                //LEFT
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.left);
-                    walled.Left++;
-                    if (amountToMove.X < s.Collider.Right - collider.Left && (velocity.X * Irbis.Irbis.DeltaTime) <= -(s.Collider.Right - collider.Left))
+                    if (!collidedContains)
+                    {
+                        collided.Add(s);
+                        sideCollided.Add(Side.left);
+                        walled.Left++;
+                        if (amountToMove.X < s.Collider.Right - collider.Left && (velocity.X * Irbis.Irbis.DeltaTime) <= -(s.Collider.Right - collider.Left))
+                        {
+                            amountToMove.X = s.Collider.Right - collider.Left;
+                        }
+                    }
+                    else if (amountToMove.X < s.Collider.Right - collider.Left)
                     {
                         amountToMove.X = s.Collider.Right - collider.Left;
                     }
                 }
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.top))                                 //UP
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.top);
-                    walled.Top++;
-                    if (amountToMove.Y < s.Collider.Bottom - collider.Top && (velocity.Y * Irbis.Irbis.DeltaTime) <= -(s.Collider.Bottom - collider.Top))
+                    if (!collidedContains)
+                    {
+                        collided.Add(s);
+                        sideCollided.Add(Side.top);
+                        walled.Top++;
+                        if (amountToMove.Y < s.Collider.Bottom - collider.Top && (velocity.Y * Irbis.Irbis.DeltaTime) <= -(s.Collider.Bottom - collider.Top))
+                        {
+                            amountToMove.Y = s.Collider.Bottom - collider.Top;
+                        }
+                    }
+                    else if (amountToMove.Y < s.Collider.Bottom - collider.Top)
                     {
                         amountToMove.Y = s.Collider.Bottom - collider.Top;
                     }
                 }
             }
         }
-        
+
         if (walled.Left == 1 && input.X < 0)
         {
             int climbamount = (collider.Bottom - collided[sideCollided.IndexOf(Side.left)].Collider.Top);
@@ -1094,6 +1125,7 @@ public class Player
             }
         }
 
+
         if (amountToMove.X == 0)
         {
             amountToMove.X = negAmountToMove.X;
@@ -1116,14 +1148,14 @@ public class Player
         bool X = false;
         if (Math.Abs(amountToMove.Y) <= Math.Abs(amountToMove.X) && amountToMove.Y != 0)
         {
-            testPos.Y = (int)position.Y;
+            testPos.Y = (int)Math.Round((decimal)position.Y);
             testPos.X = position.X;
             testPos.Y += amountToMove.Y;
             Y = true;
         }
         else if (amountToMove.X != 0)
         {
-            testPos.X = (int)position.X;
+            testPos.X = (int)Math.Round((decimal)position.X);
             testPos.Y = position.Y;
             testPos.X += amountToMove.X;
             X = true;
@@ -1168,13 +1200,13 @@ public class Player
                 {
                     Irbis.Irbis.WriteLine("   scollider: T:" + s.Collider.Top + " B:" + s.Collider.Bottom + " L:" + s.Collider.Left + " R:" + s.Collider.Right);
                 }
-                Irbis.Irbis.WriteLine("afte1--");
+                Irbis.Irbis.WriteLine("after1--");
             }
 
             pass = true;
             if (Y)
             {
-                testPos.X = (int)position.X;
+                testPos.X = (int)Math.Round((decimal)position.X);
                 testPos.Y = position.Y;
                 testPos.X += amountToMove.X;
                 testCollider.X = (int)testPos.X + XcolliderOffset;
@@ -1195,7 +1227,7 @@ public class Player
             }
             else if (X)
             {
-                testPos.Y = (int)position.Y;
+                testPos.Y = (int)Math.Round((decimal)position.Y);
                 testPos.X = position.X;
                 testPos.Y += amountToMove.Y;
                 testCollider.X = (int)testPos.X + XcolliderOffset;
@@ -1236,35 +1268,6 @@ public class Player
             Irbis.Irbis.WriteLine("    velocity: " + velocity);
         }
 
-        //if (amountToMove.X > 0 && velocity.X < 0)
-        //{
-        //    velocity.X = 0;
-        //    position.X = (int)position.X;
-        //}
-        //if (amountToMove.X < 0 && velocity.X > 0)
-        //{
-        //    velocity.X = 0;
-        //    position.X = (int)position.X;
-        //}
-        //if (amountToMove.Y > 0 && velocity.Y < 0)
-        //{
-        //    velocity.Y = 0;
-        //    position.Y = (int)position.Y;
-        //}
-        //if (amountToMove.Y < 0 && velocity.Y > 0)
-        //{
-        //    velocity.Y = 0;
-        //    position.Y = (int)position.Y;
-        //}
-
-        //if (amountToMove.X != 0)
-        //{
-        //    position.X = (int)position.X;
-        //}
-        //if (amountToMove.Y != 0)
-        //{
-        //    position.Y = (int)position.Y;
-        //}
         position += amountToMove;
 
         CalculateMovement();
@@ -1319,7 +1322,6 @@ public class Player
             Irbis.Irbis.WriteLine("done--");
             Irbis.Irbis.WriteLine();
         }
-
         if (walled.Top > 0 && velocity.Y < 0)
         {
             velocity.Y = 0;
@@ -1437,10 +1439,7 @@ public class Player
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("ClearCollision"); }
         collided.Clear();
         sideCollided.Clear();
-        walled.Top = 0;
-        walled.Bottom = 0;
-        walled.Left = 0;
-        walled.Right = 0;
+        walled = Wall.Zero;
     }
 
     public void Hitbox()

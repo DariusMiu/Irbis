@@ -175,7 +175,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.2.3";
+        static string versionNo = "0.1.2.4";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
@@ -474,6 +474,7 @@ namespace Irbis
 
                                                                                                     //camera
         private static Vector2 camera;
+        private static Vector2 trueCamera;
         private static Vector2 mainCamera;
         private static Vector2 screenSpacePlayerPos;
         private static Matrix background;
@@ -487,16 +488,20 @@ namespace Irbis
         public static bool cameraLerp;
         public static float cameraLerpSpeed;
         public static bool cameraShakeSetting;
-        static float cameraShakeDuration;
-        static float cameraShakeMagnitude;
-        static float cameraSwingDuration;
-        static float cameraSwingMaxDuration;
-        static float cameraSwingMagnitude;
+        private static float cameraShakeDuration;
+        private static float cameraShakeMagnitude;
+        private static float cameraSwingDuration;
+        private static float cameraSwingMaxDuration;
+        private static float cameraSwingMagnitude;
+        private static float cameraShakeLerpTime;
+        private static float cameraShakeLerpTimeMax;
+        private static Vector2 cameraShakeTargetLocation;
         public static float swingDuration;
         public static float swingMagnitude;
         static Vector2 cameraSwingHeading;
         public static bool cameraSwingSetting;
         static bool cameraSwing;
+
 
                                                                                                     //menu
         public static Menu menu;
@@ -545,40 +550,28 @@ namespace Irbis
                                                                                                     //keyboard/keys
         private static KeyboardState keyboardState;
         private static KeyboardState previousKeyboardState;
-
         private static MouseState mouseState;
         private static MouseState previousMouseState;
-
         public static Keys attackKey;
         public static Keys altAttackKey;
-
         public static Keys shockwaveKey;
         public static Keys altShockwaveKey;
-
         public static Keys shieldKey;
         public static Keys altShieldKey;
-
         public static Keys jumpKey;
         public static Keys altJumpKey;
-
         public static Keys upKey;
         public static Keys altUpKey;
-
         public static Keys downKey;
         public static Keys altDownKey;
-
         public static Keys leftKey;
         public static Keys altLeftKey;
-
         public static Keys rightKey;
         public static Keys altRightKey;
-
         public static Keys potionKey;
         public static Keys altPotionKey;
-
         public static Keys rollKey;
         public static Keys altRollKey;
-
         public static Keys useKey;
         public static Keys altUseKey;
 
@@ -652,6 +645,8 @@ namespace Irbis
             //pressed = false;
             randomTimer = 0f;
 
+            cameraShakeLerpTimeMax = 0.025f;
+            cameraShakeLerpTime = 0f;
             levelLoaded = -1;
 
             RAND = new Random();
@@ -1078,7 +1073,10 @@ namespace Irbis
 
             //CleanConsole();
 
-            previousKeyboardState = keyboardState;
+            if (!framebyframe)
+            {
+                previousKeyboardState = keyboardState;
+            }
             base.Update(gameTime);
         }
 
@@ -1145,10 +1143,9 @@ namespace Irbis
 
                 timer += gameTime.ElapsedGameTime.TotalSeconds;
                 if (timerDisplay != null) { timerDisplay.Update(TimerText(timer), true); }
-                
+
+
                 //PlayerCollision(geralt, sList);
-
-
 
                 for (int i = 0; i < eList.Count; i++)
                 {
@@ -1206,7 +1203,7 @@ namespace Irbis
                     }
                 }
 
-                if (nextframe) { framebyframe = true; } //nex
+                if (nextframe) { framebyframe = true; previousKeyboardState = keyboardState; } //nex
             }
 
             if (onslaughtMode)
@@ -1343,9 +1340,6 @@ namespace Irbis
         private void Camera()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Camera"); }
-            screenSpacePlayerPos.X = (int)(geralt.Collider.Center.X * screenScale) + (int)foreground.M41;
-            screenSpacePlayerPos.Y = (int)(geralt.Collider.Center.Y * screenScale) + (int)foreground.M42;
-
             //mainCamera is used for returning the camera to where it "should" be
             //camera is what is displayed on-screen
             if (cameraLerp)
@@ -1386,11 +1380,18 @@ namespace Irbis
                     mainCamera.Y = camera.Y += screenSpacePlayerPos.Y - boundingBox.Top;
                 }
             }
-            screenspace.X = (int)(camera.X - halfResolution.X);
-            screenspace.Y = (int)(camera.Y - halfResolution.Y);
 
-            background.M31 = foreground.M41 = halfResolution.X - camera.X;
-            background.M32 = foreground.M42 = halfResolution.Y - camera.Y;
+            trueCamera.X = halfResolution.X - camera.X;
+            trueCamera.Y = halfResolution.Y - camera.Y;
+
+            screenspace.X = (int)(-trueCamera.X);
+            screenspace.Y = (int)(-trueCamera.Y);
+
+            background.M31 = foreground.M41 = trueCamera.X;
+            background.M32 = foreground.M42 = trueCamera.Y;
+
+            screenSpacePlayerPos.X = (int)((geralt.Collider.Center.X * screenScale) + halfResolution.X - mainCamera.X);
+            screenSpacePlayerPos.Y = (int)((geralt.Collider.Center.Y * screenScale) + halfResolution.Y - mainCamera.Y);
 
             if (cameraShakeSetting && cameraShakeDuration > 0) { CameraShake(); }
             if (cameraSwingSetting && cameraSwingDuration > 0) { CameraSwing(); }
@@ -1425,7 +1426,7 @@ namespace Irbis
             cameraSwingDuration = cameraSwingMaxDuration = duration;
             cameraSwingHeading = heading;
             cameraSwingHeading.Normalize();
-            cameraSwingMagnitude = magnitude;
+            cameraSwingMagnitude = magnitude * screenScale;
             cameraSwing = true;
         }
 
@@ -1433,10 +1434,20 @@ namespace Irbis
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraShake"); }
             cameraShakeDuration -= DeltaTime;
-            //cameraTimePerShake += DeltaTime;
-
-            background.M31 = foreground.M41 = background.M31 + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //X
-            background.M32 = foreground.M42 = background.M32 + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //Y
+            cameraShakeLerpTime -= DeltaTime;
+            if (cameraShakeLerpTime <= 0)
+            {
+                cameraShakeTargetLocation.X = (halfResolution.X - mainCamera.X) + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //X
+                cameraShakeTargetLocation.Y = (halfResolution.Y - mainCamera.Y) + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //Y
+                if (debug > 0)
+                {
+                    WriteLine("               background:{X:" + background.M31 + " Y:" + background.M32 + "}\ncameraShakeTargetLocation:" + cameraShakeTargetLocation);
+                    WriteLine();
+                }
+                cameraShakeLerpTime = cameraShakeLerpTimeMax;
+            }
+            background.M31 = foreground.M41 = Lerp(background.M31, cameraShakeTargetLocation.X, (cameraShakeLerpTimeMax - cameraShakeLerpTime) / cameraShakeLerpTimeMax);       //X
+            background.M32 = foreground.M42 = Lerp(background.M32, cameraShakeTargetLocation.Y, (cameraShakeLerpTimeMax - cameraShakeLerpTime) / cameraShakeLerpTimeMax);       //Y
         }
 
         public static void CameraShake(float duration, float magnitude)
@@ -1447,7 +1458,8 @@ namespace Irbis
             {
                 cameraShakeDuration = duration;
             }
-            cameraShakeMagnitude = magnitude;
+            cameraShakeLerpTime = 0;
+            cameraShakeMagnitude = magnitude * screenScale;
         }
 
         public void LevelEditor()
@@ -1715,10 +1727,12 @@ namespace Irbis
             debuginfo.Update("\n DeltaTime:" + DeltaTime);
             debuginfo.Update("\n       FPS:" + (1 / DeltaTime).ToString("0000.0"));
             debuginfo.Update("\n  smartFPS:" + smartFPS.Framerate.ToString("0000.0"));
-            debuginfo.Update("\n   meanFPS:" + meanFPS.Framerate.ToString("0000.0"));
-            debuginfo.Update("\n    minFPS:" + minFPS.ToString("0000.0"));
-            debuginfo.Update("\n    maxFPS:" + maxFPS.ToString("0000.0"));
-            //debuginfo.Update("\n smoothFPS:" + smoothFPS.framerate.ToString("0000.0"));
+            if (meanFPS != null)
+            {
+                debuginfo.Update("\n   meanFPS:" + meanFPS.Framerate.ToString("0000.0"));
+                debuginfo.Update("\n    minFPS:" + minFPS.ToString("0000.0"));
+                debuginfo.Update("\n    maxFPS:" + maxFPS.ToString("0000.0"));
+            }
             if (geralt != null)
             {
                 debuginfo.Update("\n     input:" + geralt.input + "  isRunning:" + geralt.isRunning);
