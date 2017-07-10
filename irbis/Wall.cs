@@ -3,58 +3,55 @@
     public int Top
     {
         get
-        { return t; }
+        { return _top; }
         set
-        { t = value; }
+        { _top = value; }
     }
     public int Bottom
     {
         get
-        { return b; }
+        { return _bottom; }
         set
-        { b = value; }
+        { _bottom = value; }
     }
     public int Left
     {
         get
-        { return l; }
+        { return _left; }
         set
-        { l = value; }
+        { _left = value; }
     }
     public int Right
     {
         get
-        { return r; }
+        { return _right; }
         set
-        { r = value; }
+        { _right = value; }
     }
-    /// <summary>
-    /// Returns true if Left or Right is greater than zero
-    /// </summary>
+    public int Total
+    {
+        get
+        {
+            return _top + _bottom + _left + _right;
+        }
+    }
+    /// <summary> Returns true if Left or Right is greater than zero </summary>
     public bool Horizontal
     {
         get
         {
-            if (l > 0 || r > 0)
-            { return true; }
-            return false;
+            return (_left > 0 || _right > 0);
         }
     }
-    /// <summary>
-    /// Returns true if Top or Bottom is greater than zero
-    /// </summary>
+    /// <summary> Returns true if Top or Bottom is greater than zero </summary>
     public bool Vertical
     {
         get
         {
-            if (b > 0 || t > 0)
-            { return true; }
-            return false;
+            return (_bottom > 0 || _top > 0);
         }
     }
-    /// <summary>
-    /// Static constant equalling Wall(0, 0, 0, 0)
-    /// </summary>
+    /// <summary> Static constant equalling Wall(0, 0, 0, 0) </summary>
     public static Wall Zero
     {
         get
@@ -63,28 +60,28 @@
         }
     }
     private static Wall zero = new Wall(0, 0, 0, 0);
-    private int t;
-    private int b;
-    private int l;
-    private int r;
+    private int _top;
+    private int _bottom;
+    private int _left;
+    private int _right;
     public Wall(int top, int bottom, int left, int right)
     {
-        t = top;
-        b = bottom;
-        l = left;
-        r = right;
+        _top = top;
+        _bottom = bottom;
+        _left = left;
+        _right = right;
     }
     public static bool operator ==(Wall value1, Wall value2)
     {
-        return ((value1.t == value2.t) && (value1.b == value2.b) && (value1.l == value2.l) && (value1.r == value2.r));
+        return ((value1._top == value2._top) && (value1._bottom == value2._bottom) && (value1._left == value2._left) && (value1._right == value2._right));
     }
     public static bool operator !=(Wall value1, Wall value2)
     {
-        return ((value1.t != value2.t) || (value1.b != value2.b) || (value1.l != value2.l) || (value1.r != value2.r));
+        return ((value1._top != value2._top) || (value1._bottom != value2._bottom) || (value1._left != value2._left) || (value1._right != value2._right));
     }
     public bool Equals(Wall value)
     {
-        return ((t == value.t) && (b == value.b) && (l == value.l) && (r == value.r));
+        return ((_top == value._top) && (_bottom == value._bottom) && (_left == value._left) && (_right == value._right));
     }
     public override bool Equals(object obj)
     {
@@ -93,10 +90,10 @@
     }
     public override int GetHashCode()
     {
-        return (t.GetHashCode() + b.GetHashCode() + l.GetHashCode() + r.GetHashCode());
+        return (_top.GetHashCode() + _bottom.GetHashCode() + _left.GetHashCode() + _right.GetHashCode());
     }
     public override string ToString()
     {
-        return "{Top:" + t + " Bottom:" + b + " Left:" + l + " Right:" + r + "}";
+        return "{Top:" + _top + " Bottom:" + _bottom + " Left:" + _left + " Right:" + _right + "}";
     }
 }

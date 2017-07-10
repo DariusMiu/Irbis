@@ -180,7 +180,7 @@ public struct PlayerSettings
 
             //This is the time it takes to "charge" the super shockwave (seconds)
             //Basically, how long you have to hold the shockwaveKey to use
-            superShockwaveHoldtime = 0.25f;
+            superShockwaveHoldtime = 0.1f;
 
             //The amount of time the player can hold down the left or right movement key
             //during a wall jump before they drift away from the wall (seconds)

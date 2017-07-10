@@ -95,7 +95,7 @@ public class UIElementSlider
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
-        overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        overlaySourceRect = new Rectangle(currentOverlayFrame * bounds.Width, 0, bounds.Width, bounds.Height);
         origin = bounds.Location.ToVector2();
         valueLocation = origin * Irbis.Irbis.screenScale;
     }
@@ -149,7 +149,7 @@ public class UIElementSlider
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
-        overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        overlaySourceRect = new Rectangle(currentOverlayFrame * bounds.Width, 0, bounds.Width, bounds.Height);
         origin = bounds.Location.ToVector2();
         valueLocation = origin * Irbis.Irbis.screenScale;
     }
@@ -203,7 +203,7 @@ public class UIElementSlider
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
-        overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        overlaySourceRect = new Rectangle(currentOverlayFrame * bounds.Width, 0, bounds.Width, bounds.Height);
         origin = bounds.Location.ToVector2();
         valueLocation = origin * Irbis.Irbis.screenScale;
     }
@@ -256,7 +256,7 @@ public class UIElementSlider
         overlayAnimationSpeed = 0.05f;
         currentOverlayFrame = 0;
         timeSinceLastFrame = 0;
-        overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
+        overlaySourceRect = new Rectangle(currentOverlayFrame * bounds.Width, 0, bounds.Width, bounds.Height);
         origin = bounds.Location.ToVector2();
         valueLocation = origin * Irbis.Irbis.screenScale;
     }
@@ -270,15 +270,50 @@ public class UIElementSlider
             timeSinceLastFrame -= overlayAnimationSpeed;
             currentOverlayFrame++;
         }
-        if (currentOverlayFrame * 32 >= overlayTex.Width)
+        if (currentOverlayFrame * 150 >= overlayTex.Width)
         {
             currentOverlayFrame = 0;
         }
-        //overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
-        overlaySourceRect.X = currentOverlayFrame * 32;
+        overlaySourceRect.X = currentOverlayFrame * 150;
 
-        //timeSinceLastFrame = 0;
+        value = v;
+        if (align == Direction.right)
+        {
+            //valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect.X = bounds.Right - (int)((value / maxValue) * bounds.Width);
+            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+        }
+        else if (align == Direction.forward)
+        {
+            //valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
+            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+        }
+        else
+        {
+            //valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            //valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
+            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+        }
+        printValue.Update(value.ToString("0"), true);
+    }
 
+    public void Update(Color border_color, Color fill_color, float v)
+    {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
+        borderColor = border_color;
+        fillColor = fill_color;
+        timeSinceLastFrame += Irbis.Irbis.DeltaTime;
+        if (timeSinceLastFrame >= overlayAnimationSpeed)
+        {
+            timeSinceLastFrame -= overlayAnimationSpeed;
+            currentOverlayFrame++;
+        }
+        if (currentOverlayFrame * 150 >= overlayTex.Width)
+        {
+            currentOverlayFrame = 0;
+        }
+        overlaySourceRect.X = currentOverlayFrame * 150;
 
         value = v;
         if (align == Direction.right)
@@ -329,12 +364,11 @@ public class UIElementSlider
             timeSinceLastFrame -= overlayAnimationSpeed;
             currentOverlayFrame++;
         }
-        if (currentOverlayFrame * 32 >= overlayTex.Width)
+        if (currentOverlayFrame * 150 >= overlayTex.Width)
         {
             currentOverlayFrame = 0;
         }
-        overlaySourceRect.X = currentOverlayFrame * 32;
-
+        overlaySourceRect.X = currentOverlayFrame * 150;
 
         value = v;
         if (align == Direction.right)
@@ -346,49 +380,6 @@ public class UIElementSlider
             valueLocation.X = (bounds.Left + halfWidth - ((value / maxValue) * halfWidth)) * Irbis.Irbis.screenScale;
         }
         valueRect.Width = (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale);
-        printValue.Update(value.ToString("0"), true);
-    }
-
-    public void Update(Color border_color, Color fill_color, float v)
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
-        borderColor = border_color;
-        fillColor = fill_color;
-        timeSinceLastFrame += Irbis.Irbis.DeltaTime;
-        if (timeSinceLastFrame >= overlayAnimationSpeed)
-        {
-            timeSinceLastFrame -= overlayAnimationSpeed;
-            currentOverlayFrame++;
-        }
-        if (currentOverlayFrame * 32 >= overlayTex.Width)
-        {
-            currentOverlayFrame = 0;
-        }
-        //overlaySourceRect = new Rectangle(currentOverlayFrame * 32, 0, 32, 32);
-        overlaySourceRect.X = currentOverlayFrame * 32;
-
-        //timeSinceLastFrame = 0;
-
-
-        value = v;
-        if (align == Direction.right)
-        {
-            //valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Right - (int)((value / maxValue) * bounds.Width);
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        else if (align == Direction.forward)
-        {
-            //valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        else
-        {
-            //valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            //valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
         printValue.Update(value.ToString("0"), true);
     }
 
@@ -417,7 +408,6 @@ public class UIElementSlider
         }
         return false;
     }
-
 
     public void Draw(SpriteBatch sb)
     {

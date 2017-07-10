@@ -1,5 +1,5 @@
-## Build Version: 0.1.2.4
-## |KICKASS COLLISION, BABY  
+## Build Version: 0.1.2.6
+## |multithreading  
 
 ### Change Log (new changes since 0.1.2.0)
 `01.` Completely overhauled the Camera system (somewhat still in progress)  
@@ -10,11 +10,14 @@
 `06.` Game should now automatically start in windowed fullscreen mode  
 `07.` Fixed minor bug in collision (stemmed from changing positional rounding)  
 `08.` Collision will now automatically push the play out of collided objects, should they get stuck  
+`09.` The player can now walljump by pressing a directional key and jump key in either order, even before touching the wall  
+`10.` Camera shake now uses lerp  
+`11.` Walljump bahavior has been improved even more  
+`12.` MULTITHREADING!  
 
 ### Known Bug List
 `01.` Backgrounds don't seem to center properly when screenscale is over 2  
 `02.` Most menus are completely and totally broken.  
-`03.` Shield bar overlay texture (when holding Q) looks broken (the texture just isn't the right size)  
 
 ### Controls
 `         A:` Move left  

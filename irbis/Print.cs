@@ -1021,11 +1021,11 @@ public class Print
                             displayPosition.X = (int)(width + (int)origin.X);
                             displayPosition.Y = height * (int)(characterHeight * Irbis.Irbis.screenScale) + (int)origin.Y;
                             //displayRect.Width = fontSourceRect[charIndex].Width;
-                            if (true)
+                            if (Irbis.Irbis.zeroScreenspace.Contains(displayPosition))
                             {
                                 sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                             }
-                            //else { return; }
+                            else { return; }
                             width += (int)(characterHeight * Irbis.Irbis.screenScale);
                         }
 

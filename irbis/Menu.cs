@@ -414,7 +414,7 @@ public class Menu
 
     }
 
-    public void Update(Irbis.Irbis game)
+    public bool Update(Irbis.Irbis game)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Menu.Update"); }
         switch (Irbis.Irbis.scene)
@@ -469,7 +469,7 @@ public class Menu
                             Irbis.Irbis.buttonList.Clear();
                             Irbis.Irbis.WriteLine("    Continue");
                             Irbis.Irbis.sceneIsMenu = false;
-                            if (Irbis.Irbis.geralt == null) { Irbis.Irbis.levelEditor = true; return; }
+                            if (Irbis.Irbis.geralt == null) { Irbis.Irbis.levelEditor = true; return true; }
                             if (Irbis.Irbis.levelLoaded > 0)        ///game MEANS A /TRUE/ LEVEL (one not loaded exclusively for the titlescreen) HAS ALREADY BEEN LOADED
                             {
                                 if (Irbis.Irbis.debug <= 0) { game.IsMouseVisible = false; }
@@ -1803,5 +1803,6 @@ public class Menu
                 Irbis.Irbis.WriteLine("Error. Irbis.Irbis.scene ID " + Irbis.Irbis.scene + " is not in MenuUpdate list");
                 break;
         }
+        return true;
     }
 }

@@ -98,21 +98,10 @@ public class OnslaughtSpawner
     {
         string debugstring = string.Empty;
 
-        debugstring += "\npoints: " + points;
-        debugstring += "\ntimer: " + timer;
-        debugstring += "\ntimeUntilNextSpawn: " + timeUntilNextSpawn;
-        debugstring += "\nmaxEnemies: " + maxEnemies;
-        debugstring += "\nwave: " + wave;
-        debugstring += "\nenemiesLeftThisWave: " + enemiesLeftThisWave;
-        debugstring += "\nenemiesThisWave: " + enemiesThisWave;
-        debugstring += "\nenemyHealth: " + enemyHealth;
-        debugstring += "\nenemyDamage: " + enemyDamage;
-        debugstring += "\nenemySpeed: " + enemySpeed;
-        debugstring += "\nwaveStarted: " + waveStarted;
-        debugstring += "\nenemiesKilled: " + enemiesKilled;
-        debugstring += "\npointsPerKill: " + pointsPerKill;
-        debugstring += "\npointsPerWave: " + pointsPerWave;
-        debugstring += "\nvendingMachines: " + vendingMachineList.Count;
+        debugstring += "\npoints: " + points + "\ntimer: " + timer + "\ntimeUntilNextSpawn: " + timeUntilNextSpawn + "\nmaxEnemies: " + maxEnemies + "\nwave: " + wave
+        + "\nenemiesLeftThisWave: " + enemiesLeftThisWave + "\nenemiesThisWave: " + enemiesThisWave + "\nenemyHealth: " + enemyHealth + "\nenemyDamage: " + enemyDamage
+        +"\nenemySpeed: " + enemySpeed + "\nwaveStarted: " + waveStarted + "\nenemiesKilled: " + enemiesKilled + "\npointsPerKill: " + pointsPerKill
+        + "\npointsPerWave: " + pointsPerWave +"\nvendingMachines: " + vendingMachineList.Count;
 
         foreach (VendingMachine v in vendingMachineList)
         {

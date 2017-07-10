@@ -10,7 +10,7 @@ namespace Irbis
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
-        [STAThread]
+        //[STAThread]
         static void Main()
         {
             using (var game = new Irbis())

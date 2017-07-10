@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -100,8 +101,6 @@ public class Enemy : ICollisionObject, IEnemy
     public int colliderWidth;
     public int colliderHeight;
 
-    //public Rectangle edgeCollider;
-    //public Vector2 previousPos;
     public Vector2 velocity;
 
     float depth;
@@ -124,7 +123,6 @@ public class Enemy : ICollisionObject, IEnemy
     public int leftWalled;
     public int topWalled;
     public int bottomWalled;
-    //public Vector2 currentLocation;
 
     public float shockwaveEffectiveDistance;
     public float shockwaveMaxEffectDistance;
@@ -176,14 +174,13 @@ public class Enemy : ICollisionObject, IEnemy
     public float attackCooldownTimer;
 
     public float freezeTimer;
-        
+
     public List<ICollisionObject> collided;
     List<Side> sideCollided;
 
     public Enemy(Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, float drawDepth)
 	{
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Enemy"); }
-
         tex = t;
 
         AIenabled = true;
@@ -282,7 +279,7 @@ public class Enemy : ICollisionObject, IEnemy
         }
     }
 
-    public void Update()
+    public bool Update()
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Update"); }
         if (stunned <= 0)
@@ -352,6 +349,26 @@ public class Enemy : ICollisionObject, IEnemy
         CalculateMovement();
         Animate();
         Collision(this, Irbis.Irbis.squareList);
+        return true;
+    }
+
+    public void ThreadPoolCallback(Object threadContext)
+    {
+        try
+        {
+            Update();
+            if (health <= 0 || position.Y > 5000f)
+            {
+                Irbis.Irbis.KillEnemy(this);
+            }
+        }
+        finally
+        {
+            if (Interlocked.Decrement(ref Irbis.Irbis.pendingThreads) <= 0)
+            {
+                Irbis.Irbis.doneEvent.Set();
+            }
+        }
     }
 
     public void Respawn(Vector2 initialPos)
@@ -365,11 +382,9 @@ public class Enemy : ICollisionObject, IEnemy
         CalculateMovement();
     }
 
-    public void Wander()
+    public bool Wander()
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Wander"); }
-
-
         if (wanderTime > 0)
         {
             wanderTime -= Irbis.Irbis.DeltaTime;
@@ -432,7 +447,6 @@ public class Enemy : ICollisionObject, IEnemy
             wanderTime = Irbis.Irbis.RandomFloat() + 0.5f;
         }
 
-
         if (bottomWalled > 0)                                                               //movement
         {
             velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * wanderSpeed * speedModifier, movementLerpBuildup * Irbis.Irbis.DeltaTime);
@@ -441,14 +455,13 @@ public class Enemy : ICollisionObject, IEnemy
         {
             velocity.X = input.X * 0.1f * speed;
         }
-
+        return true;
     }
 
-    public void Persue(Player player)
+    public bool Persue(Player player)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Persue"); }
         input = Point.Zero;
-
         player.heading = (player.Collider.Center - collider.Center).ToVector2();
         //player.heading.Normalize();
 
@@ -489,9 +502,10 @@ public class Enemy : ICollisionObject, IEnemy
         {
             velocity.X = input.X * 0.1f * speed;
         }
+        return true;
     }
 
-    public void Combat(Player player)
+    public bool Combat(Player player)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Combat"); }
         velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpBuildup * Irbis.Irbis.DeltaTime);
@@ -518,6 +532,7 @@ public class Enemy : ICollisionObject, IEnemy
             attackDamage = 0f;
             attackID = 0;
         }
+        return true;
     }
 
     public void Hitbox()
@@ -1202,9 +1217,6 @@ public class Enemy : ICollisionObject, IEnemy
     public void Draw(SpriteBatch sb)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Draw"); }
-        //if (Irbis.Irbis.IsTouching(displayRect, Irbis.Irbis.screenspace))
-        {
-            sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale * 2, SpriteEffects.None, depth);
-        }
+        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale * 2, SpriteEffects.None, depth);
     }
 }
