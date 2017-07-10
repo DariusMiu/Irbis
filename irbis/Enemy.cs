@@ -175,6 +175,8 @@ public class Enemy : ICollisionObject, IEnemy
 
     public float freezeTimer;
 
+    private object attackPlayerLock;
+
     public List<ICollisionObject> collided;
     List<Side> sideCollided;
 
@@ -182,7 +184,7 @@ public class Enemy : ICollisionObject, IEnemy
 	{
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Enemy"); }
         tex = t;
-
+        attackPlayerLock = new object();
         AIenabled = true;
 
         depth = drawDepth;
@@ -785,24 +787,27 @@ public class Enemy : ICollisionObject, IEnemy
     public void PlayerCollision(Player player, Enemy enemy)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.PlayerCollision"); }
-        if (player.invulnerableTime <= 0)
+        lock (attackPlayerLock)
         {
-            if (enemy.collider != Rectangle.Empty && player.Collider.Intersects(enemy.collider))
+            if (player.invulnerableTime <= 0)
             {
-                if (!player.shielded)
+                if (enemy.collider != Rectangle.Empty && player.Collider.Intersects(enemy.collider))
                 {
-                    if (player.velocity.X >= 0)
+                    if (!player.shielded)
                     {
-                        player.velocity.X = -player.hurtVelocity.X;
-                        player.velocity.Y = player.hurtVelocity.Y;
+                        if (player.velocity.X >= 0)
+                        {
+                            player.velocity.X = -player.hurtVelocity.X;
+                            player.velocity.Y = player.hurtVelocity.Y;
+                        }
+                        else
+                        {
+                            player.velocity = player.hurtVelocity;
+                        }
                     }
-                    else
-                    {
-                        player.velocity = player.hurtVelocity;
-                    }
+                    player.Hurt(20);
+                    player.invulnerableTime = player.invulnerableMaxTime;
                 }
-                player.Hurt(20);
-                player.invulnerableTime = player.invulnerableMaxTime;
             }
         }
     }

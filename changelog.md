@@ -1,4 +1,4 @@
-## Build Version: 0.1.2.6
+## Build Version: 0.1.2.7
 ## |multithreading  
 
 ### Change Log (new changes since 0.1.2.0)
@@ -14,6 +14,7 @@
 `10.` Camera shake now uses lerp  
 `11.` Walljump bahavior has been improved even more  
 `12.` MULTITHREADING!  
+`13.` Some multithreading bug fixes  
 
 ### Known Bug List
 `01.` Backgrounds don't seem to center properly when screenscale is over 2  

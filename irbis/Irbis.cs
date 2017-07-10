@@ -176,7 +176,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.2.6";
+        static string versionNo = "0.1.2.7";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
@@ -554,7 +554,6 @@ namespace Irbis
         public static List<Print> printList;
         public static List<UIElementSlider> sliderList;
         public static string[] levelList;
-        private static object listLock = new object();
 
                                                                                                     //player
         public static Player geralt;
@@ -673,6 +672,7 @@ namespace Irbis
         //private static int frameID;
         public static ManualResetEvent doneEvent;
         public static int pendingThreads;
+        private static object listLock = new object();
 
                                                                                                     //etc
         public static float gravity;
@@ -1247,14 +1247,23 @@ namespace Irbis
 
                         float closestSqrDistance = float.MaxValue;
                         float thisEnemysSqrDistance = 0f;
-                        foreach (IEnemy e in enemyList)
+                        try
                         {
-                            thisEnemysSqrDistance = DistanceSquared(geralt.Collider.Center, e.Collider.Center);
-                            if (thisEnemysSqrDistance < closestSqrDistance)
+                            foreach (IEnemy e in enemyList)
                             {
-                                closestSqrDistance = thisEnemysSqrDistance;
-                                closest = e;
+                                thisEnemysSqrDistance = DistanceSquared(geralt.Collider.Center, e.Collider.Center);
+                                if (thisEnemysSqrDistance < closestSqrDistance)
+                                {
+                                    closestSqrDistance = thisEnemysSqrDistance;
+                                    closest = e;
+                                }
                             }
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            WriteLine("caught: InvalidOperationException");
+                            Console.WriteLine("caught: InvalidOperationException");
+                            //just continue as normal
                         }
                         if (closestSqrDistance <= minSqrDetectDistance)
                         {
