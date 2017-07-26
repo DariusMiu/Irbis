@@ -30,6 +30,14 @@ public class Player
     }
     private Rectangle collider;
 
+    public Vector2 TrueCenter
+    {
+        get
+        {
+            return new Vector2(position.X+XcolliderOffset+(colliderWidth/2), position.Y+YcolliderOffset+(colliderHeight/2));
+        }
+    }
+
     Texture2D tex;
     Texture2D shieldTex;
 
@@ -190,6 +198,9 @@ public class Player
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Player"); }
         Load(playerSettings);
 
+        //light = new PointLight();
+        //light.Scale = new Vector2(1000f, 1000f);
+
         stunTime = 0f;
         isRunning = false;
 
@@ -285,21 +296,21 @@ public class Player
         {
             if (Irbis.Irbis.GetLeftKey) //left
             {
-                if (!walled.Horizontal || walled.Bottom > 0 || wallJumpTimer > walljumpHoldtime)
+                if (walled.Bottom > 0 || !walled.Horizontal || wallJumpTimer > walljumpHoldtime)
                 {
                     input.X--;
                     direction = Direction.left;
                 }
-                    wallJumpTimer += Irbis.Irbis.DeltaTime;
+                wallJumpTimer += Irbis.Irbis.DeltaTime;
             }
             if (Irbis.Irbis.GetRightKey) //right
             {
-                if (!walled.Horizontal || walled.Bottom > 0 || wallJumpTimer > walljumpHoldtime)
+                if (walled.Bottom > 0 || !walled.Horizontal || wallJumpTimer > walljumpHoldtime)
                 {
                     input.X++;
                     direction = Direction.right;
                 }
-                    wallJumpTimer += Irbis.Irbis.DeltaTime;
+                wallJumpTimer += Irbis.Irbis.DeltaTime;
             }
 
             if (direction != Direction.forward)
@@ -326,8 +337,7 @@ public class Player
                 }
                 else
                 {
-                    shieldDepleted = false;
-                    shielded = false;
+                    shieldDepleted = shielded = false;
                 }
                 if (Irbis.Irbis.GetShockwaveKey && energy > maxShield * energyUsableMargin)
                 //shockwave key held
@@ -538,6 +548,8 @@ public class Player
                 }
             }
         }
+
+        //light.Position = new Vector2(position.X + XcolliderOffset + (collider.Width/2), position.Y + YcolliderOffset + (collider.Height / 2));
         return true;
     }
 
@@ -1381,7 +1393,7 @@ public class Player
         //energyed = true;
         //activate shockwave animation
         //stun for duration of animation
-        Stun(0.25f);
+        Stun(0.25f);        //the time it takes to "cast" shockwave
         if (superShockwave < superShockwaveHoldtime)
         {
             energy -= 30;
@@ -1559,12 +1571,23 @@ public class Player
         }
     }
 
+    public override string ToString()
+    {
+        return
+            "Position:" + position +
+            " TrueCenter:" + TrueCenter +
+            " Center:" + collider.Center +
+            " Collider:" + collider +
+            " Health:" + health +
+            " MaxHealth:" + maxHealth;
+    }
+
     public void Draw(SpriteBatch sb)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Draw"); }
-        if (Irbis.Irbis.debug > 1) { RectangleBorder.Draw(sb, collider, Color.Magenta); }
-        if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta); }
-        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-        if (shielded) { sb.Draw(shieldTex, position * Irbis.Irbis.screenScale, shieldSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
+        if (Irbis.Irbis.debug > 1) { RectangleBorder.Draw(sb, collider, Color.Magenta, 0.9f); }
+        if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, 0.9f); }
+        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, (Irbis.Irbis.screenScale / 2f), SpriteEffects.None, depth);
+        if (shielded) { sb.Draw(shieldTex, (position - new Vector2(32, 32)) * Irbis.Irbis.screenScale, shieldSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
     }
 }

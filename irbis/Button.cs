@@ -55,7 +55,7 @@ public class Button
     public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, bool dBorder, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Irbis.Button"); }
-        bounds = new Rectangle((int)(buttonBounds.X - ((buttonBounds.Width * Irbis.Irbis.screenScale) - buttonBounds.Width)), (int)(buttonBounds.Y - ((buttonBounds.Height * Irbis.Irbis.screenScale) - buttonBounds.Height)), (int)(buttonBounds.Width * Irbis.Irbis.screenScale), (int)(buttonBounds.Height * Irbis.Irbis.screenScale));
+        bounds = buttonBounds;//new Rectangle((int)(buttonBounds.X - ((buttonBounds.Width * Irbis.Irbis.screenScale) - buttonBounds.Width)), (int)(buttonBounds.Y - ((buttonBounds.Height * Irbis.Irbis.screenScale) - buttonBounds.Height)), (int)(buttonBounds.Width * Irbis.Irbis.screenScale), (int)(buttonBounds.Height * Irbis.Irbis.screenScale));
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
         highlightStatement = highlightText;
@@ -77,7 +77,7 @@ public class Button
     public Button(Rectangle buttonBounds, Direction align, Side side, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, bool dBorder, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Button"); }
-        bounds = new Rectangle((int)(buttonBounds.X - ((buttonBounds.Width * Irbis.Irbis.screenScale) - buttonBounds.Width)), (int)(buttonBounds.Y - ((buttonBounds.Height * Irbis.Irbis.screenScale) - buttonBounds.Height)), (int)(buttonBounds.Width * Irbis.Irbis.screenScale), (int)(buttonBounds.Height * Irbis.Irbis.screenScale));
+        bounds = buttonBounds;// new Rectangle((int)(buttonBounds.X - ((buttonBounds.Width * Irbis.Irbis.screenScale) - buttonBounds.Width)), (int)(buttonBounds.Y - ((buttonBounds.Height * Irbis.Irbis.screenScale) - buttonBounds.Height)), (int)(buttonBounds.Width * Irbis.Irbis.screenScale), (int)(buttonBounds.Height * Irbis.Irbis.screenScale));
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
         highlightStatement = highlightText;

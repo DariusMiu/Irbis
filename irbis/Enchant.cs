@@ -50,34 +50,34 @@ public class Enchant
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.CalculateStrength"); }
         switch (enchantType)
         {
-            case EnchantType.bleed:
+            case EnchantType.Bleed:
                 effectDuration = strength * 10f;
                 effectValue = strength * 1f;
                 maxStack = ((int)(strength / 3f)) + 2;
                 break;
-            case EnchantType.fire:
+            case EnchantType.Fire:
                 effectDuration = (strength * 2f) + 1;
                 effectValue = strength * 3f;
                 maxStack = ((int)(strength / 3f)) + 2;
                 break;
-            case EnchantType.frost:
+            case EnchantType.Frost:
                 effectDuration = strength * 5f;
                 effectValue = (float)Math.Pow(0.5f, strength);
                 maxStack = ((int)(strength / 3f)) + 2;
                 break;
-            case EnchantType.knockback:
+            case EnchantType.Knockback:
                 effectValue = strength;
                 break;
-            case EnchantType.poison:
+            case EnchantType.Poison:
                 effectDuration = strength * 30f;
                 effectValue = (float)Math.Pow(2, strength);
                 maxStack = ((int)(strength / 3f)) + 2;
                 uses = strength * 5;
                 break;
-            case EnchantType.sharpness:
+            case EnchantType.Sharpness:
                 effectValue = strength * 15f;
                 break;
-            case EnchantType.stun:
+            case EnchantType.Stun:
                 effectDuration = strength * 1.5f;
                 break;
         }
@@ -93,16 +93,16 @@ public class Enchant
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enchant.ApplyEffect"); }
         switch (enchantType)
         {
-            case EnchantType.bleed:
+            case EnchantType.Bleed:
                 enemy.Hurt(effectValue * strength * Irbis.Irbis.DeltaTime);
                 break;
-            case EnchantType.fire:
+            case EnchantType.Fire:
                 enemy.Hurt(effectValue * strength * Irbis.Irbis.DeltaTime);
                 break;
-            case EnchantType.frost:
+            case EnchantType.Frost:
                 enemy.SpeedModifier = effectValue;
                 break;
-            case EnchantType.poison:
+            case EnchantType.Poison:
                 enemy.Hurt(effectValue * strength * Irbis.Irbis.DeltaTime);
                 break;
         }
@@ -111,7 +111,7 @@ public class Enchant
         {
             switch (enchantType)
             {
-                case EnchantType.frost:
+                case EnchantType.Frost:
                     enemy.SpeedModifier = 1f;
                     break;
             }
@@ -129,8 +129,8 @@ public class Enchant
         int enchantIndex;
         switch (enchantType)
         {
-            case EnchantType.bleed:
-                enchantIndex = Contains(enemy.ActiveEffects, EnchantType.bleed);
+            case EnchantType.Bleed:
+                enchantIndex = Contains(enemy.ActiveEffects, EnchantType.Bleed);
                 if (enchantIndex >= 0)
                 {
                     if (enemy.ActiveEffects[enchantIndex].strength < maxStack)
@@ -143,8 +143,8 @@ public class Enchant
                     enemy.AddEffect(CloneOf(this));
                 }
                 break;
-            case EnchantType.fire:
-                enchantIndex = Contains(enemy.ActiveEffects, EnchantType.fire);
+            case EnchantType.Fire:
+                enchantIndex = Contains(enemy.ActiveEffects, EnchantType.Fire);
                 if (enchantIndex >= 0)
                 {
                     if (enemy.ActiveEffects[enchantIndex].strength < maxStack)
@@ -157,19 +157,19 @@ public class Enchant
                     enemy.AddEffect(CloneOf(this));
                 }
                 break;
-            case EnchantType.frost:
-                if (!(Contains(enemy.ActiveEffects, EnchantType.poison) >= 0))
+            case EnchantType.Frost:
+                if (!(Contains(enemy.ActiveEffects, EnchantType.Poison) >= 0))
                 {
                     enemy.AddEffect(CloneOf(this));
                 }
                 break;
-            case EnchantType.knockback:
+            case EnchantType.Knockback:
                 enemy.Knockback(Irbis.Irbis.geralt.direction, effectValue);
                 break;
-            case EnchantType.poison:
+            case EnchantType.Poison:
                 if (uses > 0)
                 {
-                    enchantIndex = Contains(enemy.ActiveEffects, EnchantType.poison);
+                    enchantIndex = Contains(enemy.ActiveEffects, EnchantType.Poison);
                     if (enchantIndex >= 0)
                     {
                         if (enemy.ActiveEffects[enchantIndex].strength < maxStack)
@@ -185,10 +185,10 @@ public class Enchant
                     uses--;
                 }
                 break;
-            case EnchantType.sharpness:
+            case EnchantType.Sharpness:
                 enemy.Hurt(effectValue);
                 break;
-            case EnchantType.stun:
+            case EnchantType.Stun:
                 enemy.Stun(effectDuration);
                 break;
         }

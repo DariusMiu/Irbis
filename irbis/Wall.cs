@@ -31,33 +31,25 @@
     public int Total
     {
         get
-        {
-            return _top + _bottom + _left + _right;
-        }
+        { return _top + _bottom + _left + _right; }
     }
     /// <summary> Returns true if Left or Right is greater than zero </summary>
     public bool Horizontal
     {
         get
-        {
-            return (_left > 0 || _right > 0);
-        }
+        { return (_left > 0 || _right > 0); }
     }
     /// <summary> Returns true if Top or Bottom is greater than zero </summary>
     public bool Vertical
     {
         get
-        {
-            return (_bottom > 0 || _top > 0);
-        }
+        { return (_bottom > 0 || _top > 0); }
     }
     /// <summary> Static constant equalling Wall(0, 0, 0, 0) </summary>
     public static Wall Zero
     {
         get
-        {
-            return zero;
-        }
+        { return zero; }
     }
     private static Wall zero = new Wall(0, 0, 0, 0);
     private int _top;

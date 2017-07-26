@@ -1,5 +1,5 @@
 ## Build Version: 0.1.3.3
-## |screenscale change
+## |Vending Machine Menu
 
 ### Change Log (new changes since 0.1.2.0)
 `01.` Completely overhauled the Camera system (somewhat still in progress)  
@@ -18,6 +18,7 @@
 `14.` screenscale based on 480 pixel base instead of 960
 `15.` Tiny bug fix with vending machine menu
 `16.` Vending machine menu is now fully functional
+`17.` Added ability to be able to generate tooltips (this is used in vending machine menus)
 
 ### Known Bug List
 `01.` Backgrounds don't seem to center properly when screenscale is over 2  

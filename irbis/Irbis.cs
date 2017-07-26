@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
+using System.Runtime.CompilerServices;
 
 namespace Irbis
 {
@@ -56,13 +57,13 @@ namespace Irbis
     }
     public enum EnchantType
     {
-        bleed = 0,          //long duration, low damage                 stacks:                             upgrade: longer duration, more damage/second
-        fire = 1,           //short duration, high damage               stacks:                             upgrade: longer duration, more damage/second
-        frost = 2,          //long duration, slows                      stacks:                             upgrade: longer duration
-        knockback = 3,      //knocks enemies back short distance        stacks:                             upgrade: knocks back further
-        poison = 4,         //long duration, high damage, limited use   stacks:                             upgrade: more uses
-        sharpness = 5,      //flat damage increase (no duration)        stacks:                             upgrade: more damage
-        stun = 6,           //short duration, full stun                 stacks:                             upgrade: longer duration
+        Bleed = 0,          //long duration, low damage                 stacks:                             upgrade: longer duration, more damage/second
+        Fire = 1,           //short duration, high damage               stacks:                             upgrade: longer duration, more damage/second
+        Frost = 2,          //long duration, slows                      stacks:                             upgrade: longer duration
+        Knockback = 3,      //knocks enemies back short distance        stacks:                             upgrade: knocks back further
+        Poison = 4,         //long duration, high damage, limited use   stacks:                             upgrade: more uses
+        Sharpness = 5,      //flat damage increase (no duration)        stacks:                             upgrade: more damage
+        Stun = 6,           //short duration, full stun                 stacks:                             upgrade: longer duration
     }
     public enum VendingType
     {
@@ -170,22 +171,22 @@ namespace Irbis
         }
 
     }
-    
+
     public class Irbis : Game
     {                                                                                               //version info
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.2.7";
+        static string versionNo = "0.1.3.3";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
         /// debug
         /// release candidate
         /// release
-        
+
                                                                                                     //debug
-        public static int debug;
+        public static int debug = 1;
         private static Print debuginfo;
         private static SmartFramerate smartFPS;
         public static bool framebyframe;
@@ -229,6 +230,7 @@ namespace Irbis
             }
         }
         private static double timer;
+        
         public static KeyboardState GetKeyboardState
         {
             get
@@ -439,6 +441,13 @@ namespace Irbis
                 return (GetKeyDown(rollKey) || GetKeyDown(altRollKey));
             }
         }
+        public static bool GetLeftMouseDown
+        {
+            get
+            {
+                return (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton == ButtonState.Released);
+            }
+        }
         public static bool GetEscapeKeyUp
         {
             get
@@ -531,9 +540,10 @@ namespace Irbis
             }
         }
 
+
                                                                                                     //graphics
         public static GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        private static SpriteBatch spriteBatch;
 
                                                                                                     //save info
         private static string autosave;
@@ -563,6 +573,7 @@ namespace Irbis
         public static bool onslaughtMode;
         public static OnslaughtSpawner onslaughtSpawner;
         private static Print onslaughtDisplay;
+        public static int vendingMachineUseDistanceSqr;
 
                                                                                                     //camera
         private static Vector2 camera;
@@ -576,6 +587,7 @@ namespace Irbis
         public static Rectangle screenspace;
         public static Rectangle zeroScreenspace;
         public static float screenScale;
+        public static int textScale;
         public static Point resolution;
         public static bool cameraLerp;
         public static float cameraLerpSpeed;
@@ -606,6 +618,7 @@ namespace Irbis
         public static bool sceneIsMenu;
         public static bool levelEditor;
         int selectedBlock;
+        public static VendingMenu vendingMachineMenu;
 
                                                                                                     //enemy/AI variables
         public static bool AIenabled;
@@ -669,7 +682,7 @@ namespace Irbis
 
                                                                                                     //threading
         private static int threadCount;
-        //private static int frameID;
+        private static bool useMultithreading = false;
         public static ManualResetEvent doneEvent;
         public static int pendingThreads;
         private static object listLock = new object();
@@ -683,8 +696,16 @@ namespace Irbis
         public static Texture2D defaultTex;
         public static Game game;
         public static BinaryTree<float> testTree;
-        //public static BinaryTree<IDrawableObject> drawtree;
-
+        private static float nextFrameTimer;
+        private static BasicEffect basicEffect;
+        private static Matrix projection = Matrix.Identity;
+        private static Ray[] debugrays = new Ray[50];
+        private static Line[] debuglines = new Line[5];
+        private static Shape[] debugshapes = new Shape[4];
+        private static Shape shadowShape;
+        private static List<Vector2> shadows;
+        public static TooltipGenerator tooltipGenerator;
+        Point worldSpaceMouseLocation;
 
         public Irbis()
         {
@@ -705,7 +726,7 @@ namespace Irbis
             IsFixedTimeStep = false;
 
             Content.RootDirectory = ".\\content";
-            gravity = 2250f;
+            gravity = 1125f;
         }
 
         /// <summary>
@@ -732,10 +753,13 @@ namespace Irbis
             doneEvent = new ManualResetEvent(false);
 
             AIenabled = true;
-            framebyframe = false;
             nextframe = true;
             //pressed = false;
             randomTimer = 0f;
+
+            basicEffect = new BasicEffect(graphics.GraphicsDevice);
+            basicEffect.TextureEnabled = false;
+            basicEffect.VertexColorEnabled = true;// = Color.Red;
 
             cameraShakeLerpTimeMax = 0.025f;
             cameraShakeLerpTime = 0f;
@@ -754,6 +778,7 @@ namespace Irbis
             foreground = Matrix.Identity;
             background = Matrix.Identity;
             UIground = Matrix.Identity;
+
             base.Initialize();
         }
 
@@ -766,13 +791,14 @@ namespace Irbis
             //if (debug > 4) { methodLogger.AppendLine("Irbis.LoadContent"); }
             Console.WriteLine("loading content");
             Texture2D fontTex2 = Content.Load<Texture2D>("font2");
-            spriteFont2 = Content.Load<SpriteFont>("console font");
             Font font2 = new Font(fontTex2, 8);
-            developerConsole = new Print(font2);
             consoleTex = Content.Load<Texture2D>("console texture");
+            developerConsole = new Print(font2);
             PrintVersion();
             Irbis.WriteLine("Number of logical processors:" + threadCount);
             WriteLine();
+
+            tooltipGenerator = new TooltipGenerator(game);
 
             testTree = new BinaryTree<float>();
             vendingMenu = -1;
@@ -805,6 +831,8 @@ namespace Irbis
                 savefile = new SaveFile(false);
                 savefile.Save(autosave);
             }
+
+            developerConsole.textScale = textScale;
 
             Texture2D playerTex = Content.Load<Texture2D>("player");
             Texture2D shieldTex = Content.Load<Texture2D>("shield");
@@ -849,6 +877,53 @@ namespace Irbis
             printList.Add(developerConsole);
 
             smartFPS = new SmartFramerate(5);
+
+            basicEffect.View = Matrix.Identity;
+            basicEffect.World = Matrix.Identity;
+            basicEffect.Projection = projection;
+            
+            for (int i = 0; i < debuglines.Length; i++)
+            {
+                debuglines[i] = new Line(new Vector2(300f * i, 300f), new Vector2(100f * i, 500f));
+            }
+            //debugrays[0] = new Ray(halfResolution.ToVector2() / screenScale, Vector2.One);
+            for (int i = 0; i < debugrays.Length; i++)
+            {
+                float myAngleInRadians = (2f * (float)Math.PI) * ((float)i / 50f);
+                Vector2 angleVector = new Vector2(
+                    (float)Math.Cos(myAngleInRadians),
+                    -(float)Math.Sin(myAngleInRadians));
+                debugrays[i] = new Ray(halfResolution.ToVector2() / screenScale, angleVector);
+            }
+
+            vendingMachineUseDistanceSqr = 2500;
+
+            Vector2[] debugshapevertices = new Vector2[3];
+            debugshapevertices[0] = new Vector2(100f, 200f);
+            debugshapevertices[1] = new Vector2(300f, 200f);
+            debugshapevertices[2] = new Vector2(400f, 400f);
+            debugshapes[0] = new Shape(debugshapevertices);
+
+            debugshapevertices = new Vector2[4];
+            debugshapevertices[0] = new Vector2(900f, 700f);
+            debugshapevertices[1] = new Vector2(600f, 500f);
+            debugshapevertices[2] = new Vector2(600f, 450f);
+            debugshapevertices[3] = new Vector2(500f, 600f);
+            debugshapes[1] = new Shape(debugshapevertices);
+
+            debugshapevertices = new Vector2[5];
+            debugshapevertices[0] = new Vector2(900f, 100f);
+            debugshapevertices[1] = new Vector2(850f, 450f);
+            debugshapevertices[2] = new Vector2(700f, 500f);
+            debugshapevertices[3] = new Vector2(800f, 200f);
+            debugshapevertices[4] = new Vector2(750f, 100f);
+            debugshapes[2] = new Shape(debugshapevertices);
+
+            debugshapes[3] = new Shape(zeroScreenspace);
+
+            shadows = new List<Vector2>();
+            WriteLine("creating shadowShape");
+            shadowShape = new Shape(shadows.ToArray());
 
             //scenes 0-10 are reserved for menus
 
@@ -957,6 +1032,10 @@ namespace Irbis
 
             onslaughtMode = thisLevel.isOnslaught;
             initialPos = thisLevel.PlayerSpawn;
+            //foreach (Vector2 v in thisLevel.EnemySpawnPoints)
+            //{
+            //    enemySpawnPoints.Add(v / 2f);
+            //}
             enemySpawnPoints = thisLevel.EnemySpawnPoints;
             bossSpawn = thisLevel.BossSpawn;
 
@@ -966,15 +1045,16 @@ namespace Irbis
 
             if (loadUI)
             {
-                healthBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale)), 250, 20, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
-                shieldBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 20), 150, 20, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBarTex, font, false, 0.5f);
-                energyBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 40), 100, 20, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
-                potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle((int)(32 / screenScale) + 152, (int)(32 / screenScale) + 22, 96, 15), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
-                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - 32), 32), 500, 20, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
+                healthBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale)), 125, 10, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
+                shieldBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 10), 75, 10, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBarTex, font, false, 0.5f);
+                energyBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 20), 50, 10, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
+                potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle((int)(32 / screenScale) + 76, (int)(32 / screenScale) + 11, 48, 8), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
+                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - (32 / screenScale)), (int)(32 / screenScale)), 250, 10, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
 
                 if (geralt != null)
                 {
                     geralt.Respawn(initialPos);
+                    //lighting.Lights.Add(geralt.light);
                 }
             }
             else
@@ -1059,6 +1139,7 @@ namespace Irbis
             pendingThreads = 0;
             doneEvent = new ManualResetEvent(false);
             keyboardState = Keyboard.GetState();
+            mouseState = Mouse.GetState();
             if (debug > 0)
             {
                 if (!console && (gameTime.ElapsedGameTime.TotalSeconds) > (framedropfactor * DeltaTime))
@@ -1162,15 +1243,90 @@ namespace Irbis
                 UpdateConsole();
             }
 
-            if (!framebyframe)
+            if (debug > 3)
             {
-                previousKeyboardState = keyboardState;
+                //if (mouseState.LeftButton == ButtonState.Pressed)
+                //{
+                //    debugrays[0].Origin = (mouseState.Position.ToVector2() / screenScale);
+                //}
+                //if (mouseState.RightButton == ButtonState.Pressed)
+                //{
+                //    debugrays[0].Direction = (mouseState.Position.ToVector2() - halfResolution.ToVector2()) - (new Vector2(debugrays[0].Origin.X * screenScale, -debugrays[0].Origin.Y * screenScale));
+                //}
+
+                if (mouseState.LeftButton == ButtonState.Pressed)
+                {
+                    for (int i = 0; i < debugrays.Length; i++)
+                    {
+                        debugrays[i] = new Ray(mouseState.Position.ToVector2() / screenScale, debugrays[i].Direction);
+                    }
+                }
+                //if (mouseState != previousMouseState)
+                //{
+                //    for (int i = 0; i < debugrays.Length; i++)
+                //    {
+                //        debugrays[i] = new Ray(halfResolution.ToVector2() / screenScale, mouseState.Position.ToVector2() - (halfResolution.ToVector2()));
+                //    }
+                //}
+
+
+                //if (!console)
+                //{
+                //    if (GetKey(Keys.Y))
+                //    {
+                //        debugline.Origin += new Vector2(0.01f, 0); 
+                //    }
+                //    if (GetKey(Keys.H))
+                //    {
+                //        debugline.Origin -= new Vector2(0.01f, 0);
+                //    }
+                //    if (GetKey(Keys.U))
+                //    {
+                //        debugline.Origin += new Vector2(0, 0.01f);
+                //    }
+                //    if (GetKey(Keys.J))
+                //    {
+                //        debugline.Origin -= new Vector2(0, 0.01f);
+                //    }
+                //    if (GetKey(Keys.I))
+                //    {
+                //        projection.M41 += 0.001f;
+                //    }
+                //    if (GetKey(Keys.K))
+                //    {
+                //        projection.M41 -= 0.001f;
+                //    }
+                //    if (GetKey(Keys.O))
+                //    {
+                //        projection.M42 += 0.001f;
+                //    }
+                //    if (GetKey(Keys.L))
+                //    {
+                //        projection.M42 -= 0.001f;
+                //    }
+                //}
+
+
+                shadows.Clear();
+                for (int i = 0; i < debugrays.Length; i++)
+                {
+                    Vector2 tempvector = debugrays[i].Intersect(debugshapes);
+                    //if (shadows.Count > i && shadows[i] != tempvector && tempvector != Vector2.Zero)
+                    //{
+                    //    shadows[i] = tempvector;
+                    //}
+                    /*else*/ if (/*shadows.Count < i &&*/ tempvector != Vector2.Zero)
+                    {
+                        shadows.Add(tempvector);
+                    }
+                }
+
+                shadowShape.Vertices = shadows.ToArray();
             }
 
-            if (pendingThreads <= 0)
-            {
-                doneEvent.Set();
-            }
+            previousMouseState = mouseState;
+            previousKeyboardState = keyboardState;
+            if (pendingThreads <= 0) { doneEvent.Set(); }
             doneEvent.WaitOne();
             base.Update(gameTime);
         }
@@ -1199,24 +1355,25 @@ namespace Irbis
                 enemyList.Clear();
             }
 
-            if (keyboardState.IsKeyDown(Keys.N) && !acceptTextInput)
+            if (GetKeyDown(Keys.N) && !acceptTextInput)
             {
-                if (!nextframe)
-                {
-                    framebyframe = false; //nex
-                }
-                nextframe = true;
+                nextFrameTimer = 0f;
+                framebyframe = true; //nex
             }
-            else
+            else if (framebyframe && GetKey(Keys.N) && !acceptTextInput)
             {
-                nextframe = false;
+                nextFrameTimer += DeltaTime;
             }
             if (keyboardState.IsKeyDown(Keys.G) && !acceptTextInput)
             {
                 framebyframe = false; //nex
             }
-            if (!framebyframe) //nex
+            if (!framebyframe || GetKeyDown(Keys.N) || nextFrameTimer > 0.1f) //nex
             {
+                if (framebyframe)
+                {
+                    nextFrameTimer -= 0.1f;
+                }
                 timer += gameTime.ElapsedGameTime.TotalSeconds;
                 geralt.Update();
 
@@ -1234,9 +1391,24 @@ namespace Irbis
                 }
                 energyBar.UpdateValue(geralt.energy);
 
-                for (int i = 0; i < eList.Count; i++)
+                if (useMultithreading)
                 {
-                    QueueThread(eList[i].ThreadPoolCallback);
+                    for (int i = 0; i < eList.Count; i++)
+                    {
+                        QueueThread(eList[i].ThreadPoolCallback);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < eList.Count; i++)
+                    {
+                        eList[i].Update();
+                        if (eList[i].Health <= 0 || eList[i].Position.Y > 5000f)
+                        {
+                            KillEnemy(eList[i]);
+                            i--;
+                        }
+                    }
                 }
 
                 if (true)
@@ -1278,7 +1450,6 @@ namespace Irbis
                     else
                     { displayEnemyHealth = geralt.combat = false; }
                 }
-                if (nextframe) { framebyframe = true; previousKeyboardState = keyboardState; } //nex
             }
 
             if (onslaughtMode)
@@ -1304,18 +1475,20 @@ namespace Irbis
                 {
                     for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
                     {
-                        if (geralt.Collider.Intersects(onslaughtSpawner.vendingMachineList[i].collider)) //add collider to vending machine
+                        if (DistanceSquared(onslaughtSpawner.vendingMachineList[i].collider.Center, geralt.Collider.Center) <= vendingMachineUseDistanceSqr) //add collider to vending machine
                         {
                             onslaughtSpawner.vendingMachineList[i].LoadMenu();
                             geralt.inputEnabled = !onslaughtSpawner.vendingMachineList[i].drawMenu;
                             if (!geralt.inputEnabled)
                             {
                                 vendingMenu = i;
+                                IsMouseVisible = true;
                                 WriteLine("vending machine menu open");
                             }
                             else
                             {
                                 vendingMenu = -1;
+                                IsMouseVisible = false;
                                 WriteLine("vending machine menu close");
                             }
                         }
@@ -1326,8 +1499,9 @@ namespace Irbis
                 {
                     if (geralt.inputEnabled)
                     {
-                        onslaughtSpawner.vendingMachineList[vendingMenu].drawMenu = !geralt.inputEnabled;
+                        onslaughtSpawner.vendingMachineList[vendingMenu].LoadMenu();
                         vendingMenu = -1;
+                        IsMouseVisible = false;
                         WriteLine("vending machine menu close");
                     }
                     if (GetLeftKeyDown)
@@ -1337,6 +1511,23 @@ namespace Irbis
                     if (GetRightKeyDown)
                     {
                         onslaughtSpawner.vendingMachineList[vendingMenu].Update(onslaughtSpawner.vendingMachineList[vendingMenu].selection + 1);
+                    }
+                    if (GetUpKeyDown)
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].MoveSelectionUp();
+                    }
+                    if (GetDownKeyDown)
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].MoveSelectionDown();
+                    }
+                    if (GetLeftMouseDown)
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].OnClick(mouseState.Position);
+                    }
+
+                    if (mouseState != previousMouseState)
+                    {
+                        onslaughtSpawner.vendingMachineList[vendingMenu].Update(mouseState.Position);
                     }
 
                     if (Use())
@@ -1354,6 +1545,7 @@ namespace Irbis
                     onslaughtSpawner.vendingMachineList[vendingMenu].LoadMenu();
                     geralt.inputEnabled = true;
                     vendingMenu = -1;
+                    IsMouseVisible = false;
                     WriteLine("vending machine menu close");
                 }
                 else
@@ -1385,6 +1577,11 @@ namespace Irbis
         {
             ThreadPool.QueueUserWorkItem(callBack);
             Interlocked.Increment(ref pendingThreads);
+        }
+
+        private static void QueueThreadNoWait(WaitCallback callBack)
+        {
+            ThreadPool.QueueUserWorkItem(callBack);
         }
 
         private void TextEntered(object sender, TextInputEventArgs e)
@@ -1419,7 +1616,7 @@ namespace Irbis
         }
 
         private void Camera()
-        {
+        {            
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Camera"); }
             //mainCamera is used for returning the camera to where it "should" be
             //camera is what is displayed on-screen
@@ -1465,17 +1662,20 @@ namespace Irbis
             trueCamera.X = halfResolution.X - camera.X;
             trueCamera.Y = halfResolution.Y - camera.Y;
 
+            screenSpacePlayerPos.X = ((geralt.TrueCenter.X * screenScale) + halfResolution.X - mainCamera.X);
+            screenSpacePlayerPos.Y = ((geralt.TrueCenter.Y * screenScale) + halfResolution.Y - mainCamera.Y);
+
             screenspace.X = (int)(-trueCamera.X);
             screenspace.Y = (int)(-trueCamera.Y);
 
             background.M31 = foreground.M41 = trueCamera.X;
             background.M32 = foreground.M42 = trueCamera.Y;
 
-            screenSpacePlayerPos.X = (int)((geralt.Collider.Center.X * screenScale) + halfResolution.X - mainCamera.X);
-            screenSpacePlayerPos.Y = (int)((geralt.Collider.Center.Y * screenScale) + halfResolution.Y - mainCamera.Y);
-
             if (cameraShakeSetting && cameraShakeDuration > 0) { CameraShake(); }
             if (cameraSwingSetting && cameraSwingDuration > 0) { CameraSwing(); }
+
+            //lighting.Transform = foreground;
+            //geralt.light.Position = screenSpacePlayerPos;
         }
 
         private static void CameraSwing()
@@ -1543,6 +1743,26 @@ namespace Irbis
             cameraShakeMagnitude = magnitude * screenScale;
         }
 
+        public static void RemoveFromPrintList(string printStatement)
+        {
+            for (int i = 0; i < printList.Count; i++)
+            {
+                if (printList[i].statement.Equals(printStatement))
+                {
+                    printList.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+
+        public void EnableLevelEditor()
+        {
+            ClearUI();
+            levelEditor = sceneIsMenu = true;
+            geralt = null;
+
+        }
+
         public void LevelEditor()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelEditor"); }
@@ -1596,7 +1816,7 @@ namespace Irbis
             screenspace.X = (int)(camera.X - halfResolution.X);
             screenspace.Y = (int)(camera.Y - halfResolution.Y);
 
-            Point worldSpaceMouseLocation = new Point((int)(mouseState.Position.X + camera.X - (halfResolution.X)), (int)(mouseState.Position.Y + camera.Y - (halfResolution.Y)));
+            worldSpaceMouseLocation = (mouseState.Position.ToVector2() / screenScale).ToPoint() + (camera / screenScale).ToPoint() - (halfResolution.ToVector2() / screenScale).ToPoint();
             if (mouseState.RightButton == ButtonState.Pressed && previousMouseState.RightButton != ButtonState.Pressed)
             {
                 int destroyBlock = -1;
@@ -1638,13 +1858,11 @@ namespace Irbis
                     WriteLine("moving block " + selectedBlock);
                 }
             }
+
             if (mouseState.LeftButton == ButtonState.Pressed && selectedBlock >= 0)
             {
                 squareList[selectedBlock].Position = worldSpaceMouseLocation.ToVector2();
             }
-
-
-
         }
 
         public bool ConvertOldLevelFilesToNew()
@@ -1824,7 +2042,7 @@ namespace Irbis
                 debuginfo.Update("\n    maxFPS:" + maxFPS.ToString("0000.0"));
             }
             debuginfo.Update("\n     timer:" + TimerText(timer));
-            //debuginfo.Update("\n   FrameID:" + FrameID);
+            debuginfo.Update("\nnextFrameTimer:" + nextFrameTimer);
             if (geralt != null)
             {
                 debuginfo.Update("\n     input:" + geralt.input + "  isRunning:" + geralt.isRunning);
@@ -1918,6 +2136,21 @@ namespace Irbis
             texlist.Add(game.Content.Load<Texture2D>("stun enchant icon"));
 
             return texlist.ToArray();
+        }
+
+        public static string[] LoadEnchantDescriptions()
+        {
+            string[] returnstrings = new string[7];
+
+            returnstrings[0] = "long duration, low damage";                     //Bleed = 0,          //long duration, low damage                 stacks:                             upgrade: longer duration, more damage/second
+            returnstrings[1] = "short duration, high damage";                   //Fire = 1,           //short duration, high damage               stacks:                             upgrade: longer duration, more damage/second
+            returnstrings[2] = "long duration, slows";                          //Frost = 2,          //long duration, slows                      stacks:                             upgrade: longer duration
+            returnstrings[3] = "knocks enemies back short distance";            //Knockback = 3,      //knocks enemies back short distance        stacks:                             upgrade: knocks back further
+            returnstrings[4] = "long duration, high damage, limited use";       //Poison = 4,         //long duration, high damage, limited use   stacks:                             upgrade: more uses
+            returnstrings[5] = "flat damage increase (no duration)";            //Sharpness = 5,      //flat damage increase (no duration)        stacks:                             upgrade: more damage
+            returnstrings[6] = "short duration, full stun";                     //Stun = 6,           //short duration, full stun                 stacks:                             upgrade: longer duration
+
+            return returnstrings;
         }
 
         public static float RandomFloat()
@@ -2089,7 +2322,7 @@ namespace Irbis
             if (enemySpawnPoints.Count > 0)
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
-                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], 100f, 10f, 300f, 0.4f);
+                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], 100f, 10f, 200f, 0.4f);
                 eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
@@ -2119,17 +2352,15 @@ namespace Irbis
             }
         }
 
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public static void KillEnemy(Enemy killMe)
         {
-            lock (listLock)
-            {
-                WriteLine("removing enemy. index:" + eList.IndexOf(killMe));
-                //collisionObjects.Remove(eList[i]);
-                enemyList.Remove(killMe);
-                eList.Remove(killMe);
-                if (onslaughtMode) { onslaughtSpawner.EnemyKilled(); }
-                WriteLine("success.");
-            }
+            WriteLine("removing enemy. index:" + eList.IndexOf(killMe));
+            //collisionObjects.Remove(eList[i]);
+            enemyList.Remove(killMe);
+            eList.Remove(killMe);
+            if (onslaughtMode) { onslaughtSpawner.EnemyKilled(); }
+            WriteLine("success.");
         }
 
         public PlayerSettings Load(string filename)
@@ -2163,7 +2394,7 @@ namespace Irbis
             cameraLerp = playerSettings.cameraLerp;
             cameraLerpSpeed = playerSettings.cameraLerpSpeed;
         
-            debug = playerSettings.debug;
+            //debug = playerSettings.debug;
             initialPos = playerSettings.initialPosition;
             minSqrDetectDistance = playerSettings.minSqrDetectDistance;
             cameraShakeSetting = playerSettings.cameraShakeSetting;
@@ -2193,12 +2424,24 @@ namespace Irbis
                 graphics.IsFullScreen = playerSettings.fullscreen;
             }
 
-            screenScale = playerSettings.screenScale;
+            SetScreenScale(playerSettings.screenScale);
 
-            if (screenScale <= 0)
+            if ((int)(screenScale / 2) == (screenScale / 2))
             {
-                screenScale = resolution.X / 960f;
+                textScale = (int)(screenScale / 2);
             }
+            else
+            {
+                textScale = (int)(screenScale / 2) + 1;
+            }
+
+            projection.M11 = 4f / (resolution.X);
+            projection.M22 = 4f / (resolution.Y);
+
+            //halfPixelOffset.M41 = -(resolution.X / (screenScale * 2));
+            //halfPixelOffset.M42 = (resolution.Y / (screenScale * 2));
+            //halfPixelOffset.M44 = (resolution.X / (screenScale * 2));
+            //halfPixelOffset.M22 = (resolution.X / (float)resolution.Y);
 
             graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = playerSettings.vSync;
             graphics.ApplyChanges();
@@ -2525,31 +2768,45 @@ namespace Irbis
             developerConsole.Write(line);
         }
 
-        public static void ChangeScreenScale(float newScale)
+        public static void SetScreenScale(float newScale)
         {
-            screenScale = newScale;
-            //change the location of everything bound to the right side of the screen
+            if (newScale > 0)
+            {
+                screenScale = newScale;
+            }
+            else if (screenScale <= 0)
+            {
+                screenScale = resolution.X / 480f;      //this decides the screen scale on load         960/480
+            }
+            //change the location of everything
             if (enemyHealthBar != null)
             {
-                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - 32), 32), 500, 20, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
+                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - (32 / screenScale)), (int)(32 / screenScale)), 250, 10, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
             }
             if (healthBar != null)
             {
-                healthBar = new UIElementSlider(Direction.left, new Point(32, 32), 250, 20, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
+                healthBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale)), 125, 10, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
             }
             if (shieldBar != null)
             {
-                shieldBar = new UIElementSlider(Direction.right, new Point(182, 52), 150, 20, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBar.overlayTex, font, false, 0.5f);
+                shieldBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 10), 75, 10, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBar.overlayTex, font, false, 0.5f);
             }
             if (energyBar != null)
             {
-                energyBar = new UIElementSlider(Direction.forward, new Point(82, 72), 100, 20, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
+                energyBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 20), 50, 10, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
             }
             if (potionBar != null)
             {
-                potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle(184, 54, 96, 15), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
+                potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle((int)(32 / screenScale) + 76, (int)(32 / screenScale) + 11, 48, 8), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
             }
-
+            if ((int)(screenScale / 2) == (screenScale / 2))
+            {
+                textScale = (int)(screenScale / 2);
+            }
+            else
+            {
+                textScale = (int)(screenScale / 2) + 1;
+            }
         }
 
         public string Credits()
@@ -2743,6 +3000,18 @@ Thank you, Ze Frank, for the inspiration.";
                 Console.WriteLine("error: Point could not be parsed");
             }
             return Point.Zero;
+        }
+
+        private static string MatrixPrinter(Matrix matrix)
+        {
+            string matrixString = string.Empty;
+            matrixString = 
+                ("\n{M11:" + projection.M11 + " M12:" + projection.M12 + " M13:" + projection.M13 + " M14:" + projection.M14 + "} " + " {" + projection.M11 + ":" + projection.M12 + ":" + projection.M13 + ":" + projection.M14 + "}"
+                + "\n{M21:" + projection.M21 + " M22:" + projection.M22 + " M23:" + projection.M23 + " M24:" + projection.M24 + "} " + " {" + projection.M21 + ":" + projection.M22 + ":" + projection.M23 + ":" + projection.M24 + "}"
+                + "\n{M31:" + projection.M31 + " M32:" + projection.M32 + " M33:" + projection.M33 + " M34:" + projection.M34 + "} " + " {" + projection.M31 + ":" + projection.M32 + ":" + projection.M33 + ":" + projection.M34 + "}"
+                + "\n{M41:" + projection.M41 + " M42:" + projection.M42 + " M43:" + projection.M43 + " M44:" + projection.M44 + "} " + " {" + projection.M41 + ":" + projection.M42 + ":" + projection.M43 + ":" + projection.M44 + "}"
+                );
+            return matrixString;
         }
 
         public void ConsoleParser(string line)
@@ -3183,7 +3452,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "screenscale":
                         if (float.TryParse(value, out floatResult))
                         {
-                            ChangeScreenScale(floatResult);
+                            SetScreenScale(floatResult);
                             WriteLine("screenscale:" + screenScale);
                         }
                         else
@@ -3586,9 +3855,7 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         break;
                     case "leveleditor":
-                        ClearUI();
-                        levelEditor = sceneIsMenu = true;
-                        geralt = null;
+                        EnableLevelEditor();
                         WriteLine("levelEditor: " + levelEditor);
                         break;
                     case "clearui":
@@ -3998,6 +4265,60 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("use this command to add points to your score");
                         }
                         break;
+                    case "resolution":
+                        WriteLine("resolution:" + resolution);
+                        WriteLine();
+                        break;
+                    case "projection":
+                        WriteLine("basicEffect.Projection:" + MatrixPrinter(projection));
+                        WriteLine();
+                        break;
+                    case "debuglines":
+                        WriteLine("lines: " + debuglines.Length);
+                        for (int i = 0; i < debuglines.Length; i++)
+                        {
+                            WriteLine("line[" + i + "]:" + debuglines[i].ToString());
+                        }
+                        WriteLine();
+                        break;
+                    case "debugrays":
+                        WriteLine("rays: " + debugrays.Length);
+                        for (int i = 0; i < debugrays.Length; i++)
+                        {
+                            WriteLine("ray[" + i + "]:" + debugrays[i].ToString());
+                        }
+                        WriteLine();
+                        break;
+                    case "debugshapes":
+                        WriteLine("shapes: " + debugshapes.Length);
+                        for (int i = 0; i < debugshapes.Length; i++)
+                        {
+                            WriteLine("shape[" + i + "]:\n" + debugshapes[i].Debug(true));
+                            WriteLine();
+                        }
+                        break;
+                    case "multithreading":
+                        useMultithreading = !useMultithreading;
+                        WriteLine("multithreading:" + useMultithreading);
+                        WriteLine();
+                        break;
+                    case "multithread":
+                        goto case "multithreading";
+                    case "forcetriangulate":
+                        for (int i = 0; i < debugshapes.Length; i++)
+                        {
+                            WriteLine("triangulating debugshapes[" + i + "]...");
+                            if (debugshapes[i].Triangulate())
+                            { Write(" done."); }
+                            else
+                            { Write(" failed."); }
+                        }
+                        WriteLine();
+                        break;
+                    case "shadowshape":
+                        WriteLine(shadowShape.ToString());
+                        WriteLine();
+                        break;
 
 
 
@@ -4140,6 +4461,9 @@ Thank you, Ze Frank, for the inspiration.";
                         Square tempSquare = new Square(squareTex, p.ToPoint(), true, 0.9f);
                         tempSquare.Draw(spriteBatch);
                     }
+                    Square tempSquare2 = new Square(squareTex, worldSpaceMouseLocation, true, 0.9f);
+                    tempSquare2.Draw(spriteBatch);
+
                 }
             }
             if (onslaughtSpawner != null)
@@ -4151,20 +4475,43 @@ Thank you, Ze Frank, for the inspiration.";
             }
             spriteBatch.End();
 
+            if (debug > 4)
+            {
+                foreach (EffectPass effectPass in basicEffect.CurrentTechnique.Passes)
+                {
+                    effectPass.Apply();
+                    shadowShape.Draw();
+                    //foreach (Shape s in debugshapes)
+                    //{
+                    //    s.Draw();
+                    //    //s.DrawLines();
+                    //}
+                    //foreach (Ray r in debugrays)
+                    //{
+                    //    r.Draw(r.Intersect(debugshapes));
+                    //}
+                }
+            }
+
             //spritebatch for static elements (like UI, etc)
             spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
-            if (healthBar != null) { healthBar.Draw(spriteBatch); }
-            if (shieldBar != null) { shieldBar.Draw(spriteBatch); }
-            if (energyBar != null) { energyBar.Draw(spriteBatch); }
-            if (potionBar != null) { potionBar.Draw(spriteBatch); }
-            if (displayEnemyHealth) { enemyHealthBar.Draw(spriteBatch); }
+            if (vendingMachineMenu != null)
+            {
+                vendingMachineMenu.Draw(spriteBatch);
+            }
+            else
+            {
+                if (healthBar != null) { healthBar.Draw(spriteBatch); }
+                if (shieldBar != null) { shieldBar.Draw(spriteBatch); }
+                if (energyBar != null) { energyBar.Draw(spriteBatch); }
+                if (potionBar != null) { potionBar.Draw(spriteBatch); }
+                if (displayEnemyHealth) { enemyHealthBar.Draw(spriteBatch); }
+            }
             if (timerDisplay != null) { timerDisplay.Draw(spriteBatch); }
             if (onslaughtDisplay != null)
             {
                 onslaughtDisplay.Draw(spriteBatch);
             }
-
-
             if (!sceneIsMenu)
             {
                 debuginfo.Draw(spriteBatch);
@@ -4174,6 +4521,7 @@ Thank you, Ze Frank, for the inspiration.";
             {
                 RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false);
             }
+            
 
             if ((console || consoleMoveTimer > 0) && !sceneIsMenu)
             {
@@ -4187,9 +4535,12 @@ Thank you, Ze Frank, for the inspiration.";
             if (sceneIsMenu)        //FOR MENU DRAWING
             {
                 // TODO: Add your drawing code here    --------------------------------------------------------------------------------------------
-                spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
-                spriteBatch.Draw(menuTex[scene], Vector2.Zero, null, Color.White, 0f, Vector2.Zero, (140f / menuTex[scene].Height) * screenScale, SpriteEffects.None, 0.5f);
-                spriteBatch.End();
+                if (!levelEditor)
+                {
+                    spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
+                    spriteBatch.Draw(menuTex[scene], Vector2.Zero, null, Color.White, 0f, Vector2.Zero, (70f / menuTex[scene].Height) * screenScale, SpriteEffects.None, 0.5f);
+                    spriteBatch.End();
+                }
                 spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
                 if (console || consoleMoveTimer > 0)
                 {
@@ -4199,11 +4550,11 @@ Thank you, Ze Frank, for the inspiration.";
                 }
                 debuginfo.Draw(spriteBatch);
 
-                if (levelLoaded > 0 && !levelEditor)
-                {
-                    //darken bg screen
-                    //spriteBatch.Draw(nullTex, zeroScreenspace, null, Color.Black, 0f, Vector2.Zero, SpriteEffects.None, 0.0f);
-                }
+                //if (levelLoaded > 0 && !levelEditor)
+                //{
+                //    //darken bg screen
+                //    spriteBatch.Draw(nullTex, zeroScreenspace, null, Color.Black, 0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                //}
 
                 if (scene == 3 && menuSelection >= 0 && menuSelection <= 3)
                 {

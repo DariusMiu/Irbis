@@ -45,7 +45,7 @@ public class OnslaughtSpawner
 
         enemyHealth = 100f;
         enemyDamage = 10f;
-        enemySpeed = 300f;
+        enemySpeed = 150f;
 
         enemiesKilled = 0;
         pointsPerKill = 10;
@@ -78,7 +78,7 @@ public class OnslaughtSpawner
         enemiesLeftThisWave = enemiesThisWave = 4 + wave;
         enemyHealth = 100f + (wave * 5);
         enemyDamage = 10f + (wave);
-        enemySpeed = 300f + (wave * 2);
+        enemySpeed = 150f + (wave / 2f);
     }
 
     public void SkipToWave(int waveNumber)

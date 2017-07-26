@@ -38,6 +38,15 @@ public class Enemy : ICollisionObject, IEnemy
     }
     private Vector2 position;
 
+    public Wall Walled
+    {
+        get
+        {
+            return walled;
+        }
+    }
+    private Wall walled;
+
     public float Health
     {
         get
@@ -86,10 +95,9 @@ public class Enemy : ICollisionObject, IEnemy
     }
     private List<Enchant> activeEffects;
 
+    private bool collidedContains;
     public float speed;
-
     public float defaultSpeed;
-
     int climbablePixels;
 
     Texture2D tex;
@@ -119,10 +127,6 @@ public class Enemy : ICollisionObject, IEnemy
     int[] animationFrames = new int[20];
     bool animationNoLoop;
     public Point input;
-    public int rightWalled;
-    public int leftWalled;
-    public int topWalled;
-    public int bottomWalled;
 
     public float shockwaveEffectiveDistance;
     public float shockwaveMaxEffectDistance;
@@ -176,6 +180,7 @@ public class Enemy : ICollisionObject, IEnemy
     public float freezeTimer;
 
     private object attackPlayerLock;
+    private object collidedLock;
 
     public List<ICollisionObject> collided;
     List<Side> sideCollided;
@@ -185,6 +190,7 @@ public class Enemy : ICollisionObject, IEnemy
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Enemy"); }
         tex = t;
         attackPlayerLock = new object();
+        collidedLock = new object();
         AIenabled = true;
 
         depth = drawDepth;
@@ -204,10 +210,10 @@ public class Enemy : ICollisionObject, IEnemy
         jumpTime = 0;
         jumpTimeMax = 0.06f;
         animationNoLoop = false;
-        XcolliderOffset = 44;
-        YcolliderOffset = 38;
-        colliderWidth = 38;
-        colliderHeight = 86;
+        XcolliderOffset = 22;
+        YcolliderOffset = 19;
+        colliderWidth = 19;
+        colliderHeight = 43;
 
         position.X -= XcolliderOffset;
         position.Y -= YcolliderOffset;
@@ -220,8 +226,8 @@ public class Enemy : ICollisionObject, IEnemy
 
         attackCollider = Rectangle.Empty;
 
-        attackColliderWidth = 60;
-        attackColliderHeight = 60;
+        attackColliderWidth = 30;
+        attackColliderHeight = 30;
 
         attackID = attackIDtracker = 0;
         lastAttackID = -1;
@@ -233,7 +239,7 @@ public class Enemy : ICollisionObject, IEnemy
         attackCooldownTimer = 3f;
 
         combatCheckDistanceSqr = attackColliderWidth * attackColliderWidth;
-        persueCheckDistanceSqr = 160000;
+        persueCheckDistanceSqr = 40000;
         combat = false;
 
         activeEffects = new List<Enchant>();
@@ -288,7 +294,7 @@ public class Enemy : ICollisionObject, IEnemy
         {
             if (jumpTime > 0)
             {
-                velocity.Y = -500f;
+                velocity.Y = -250f;
                 jumpTime -= Irbis.Irbis.DeltaTime;
                 if (jumpTime <= 0) { jumpTime = 0; }
             }
@@ -330,7 +336,7 @@ public class Enemy : ICollisionObject, IEnemy
         else
         {
             stunned -= Irbis.Irbis.DeltaTime;
-            if (bottomWalled > 0 && Math.Abs(velocity.X) > 0)
+            if (walled.Bottom > 0 && Math.Abs(velocity.X) > 0)
             {
                 velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpBuildup * Irbis.Irbis.DeltaTime);
             }
@@ -350,7 +356,7 @@ public class Enemy : ICollisionObject, IEnemy
         Movement();
         CalculateMovement();
         Animate();
-        Collision(this, Irbis.Irbis.squareList);
+        Collision(Irbis.Irbis.squareList);
         return true;
     }
 
@@ -401,7 +407,35 @@ public class Enemy : ICollisionObject, IEnemy
             }
             else
             {
-                if (rightWalled <= 0 && leftWalled <= 0)
+                if (walled.Right > 0 && walled.Right <= 1)
+                {
+                    if (walled.Right > 0)
+                    {
+                        input.X++;
+                        direction = Direction.right;
+                        jumpTime = jumpTimeMax;
+                    }
+                    else
+                    {
+                        input.X--;
+                        direction = Direction.left;
+                    }
+                }
+                else if (walled.Left > 0 && walled.Left <= 1)
+                {
+                    if (walled.Left > 0)
+                    {
+                        input.X--;
+                        direction = Direction.left;
+                        jumpTime = jumpTimeMax;
+                    }
+                    else
+                    {
+                        input.X++;
+                        direction = Direction.right;
+                    }
+                }
+                else
                 {
                     if (Irbis.Irbis.RandomFloat() > 0.5)
                     {
@@ -414,42 +448,14 @@ public class Enemy : ICollisionObject, IEnemy
                         direction = Direction.right;
                     }
                 }
-                else if (rightWalled > 0 && rightWalled <= 1)
-                {
-                    if (rightWalled > 0)
-                    {
-                        input.X++;
-                        direction = Direction.right;
-                        jumpTime = jumpTimeMax;
-                    }
-                    else
-                    {
-                        input.X--;
-                        direction = Direction.left;
-                    }
-                }
-                else if (leftWalled > 0 && leftWalled <= 1)
-                {
-                    if (leftWalled > 0)
-                    {
-                        input.X--;
-                        direction = Direction.left;
-                        jumpTime = jumpTimeMax;
-                    }
-                    else
-                    {
-                        input.X++;
-                        direction = Direction.right;
-                    }
-                }
-                
+
                 previouslyWandered = true;
             }
             
             wanderTime = Irbis.Irbis.RandomFloat() + 0.5f;
         }
 
-        if (bottomWalled > 0)                                                               //movement
+        if (walled.Bottom > 0)                                                               //movement
         {
             velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * wanderSpeed * speedModifier, movementLerpBuildup * Irbis.Irbis.DeltaTime);
         }
@@ -469,12 +475,12 @@ public class Enemy : ICollisionObject, IEnemy
 
         if (player.heading.X > 0)
         {
-            if (rightWalled <= 0)
+            if (walled.Right <= 0)
             {
                 input.X++;
                 direction = Direction.right;
             }
-            else if (bottomWalled > 0)
+            else if (walled.Bottom > 0)
             {
                 input.X++;
                 direction = Direction.right;
@@ -483,12 +489,12 @@ public class Enemy : ICollisionObject, IEnemy
         }
         else if (player.heading.X < 0)
         {
-            if (leftWalled <= 0)
+            if (walled.Left <= 0)
             {
                 input.X--;
                 direction = Direction.left;
             }
-            else if (bottomWalled > 0)
+            else if (walled.Bottom > 0)
             {
                 input.X--;
                 direction = Direction.left;
@@ -496,7 +502,7 @@ public class Enemy : ICollisionObject, IEnemy
             }
         }
 
-        if (bottomWalled > 0)                                                               //movement
+        if (walled.Bottom > 0)                                                               //movement
         {
             velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * speed * speedModifier, movementLerpBuildup * Irbis.Irbis.DeltaTime);
         }
@@ -573,11 +579,11 @@ public class Enemy : ICollisionObject, IEnemy
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Movement"); }
 
-        if (rightWalled > 0 && velocity.X > 0)
+        if (walled.Right > 0 && velocity.X > 0)
         {
             velocity.X = 0;
         }
-        if (leftWalled > 0 && velocity.X < 0)
+        if (walled.Left > 0 && velocity.X < 0)
         {
             velocity.X = 0;
         }
@@ -587,12 +593,12 @@ public class Enemy : ICollisionObject, IEnemy
         {
             //velocity.Y = -speed;
         }
-        if (topWalled > 0 && velocity.Y < 0)
+        if (walled.Top > 0 && velocity.Y < 0)
         {
             velocity.Y = 0;
             jumpTime = 0;
         }
-        if (bottomWalled <= 0 && jumpTime <= 0)
+        if (walled.Bottom <= 0 && jumpTime <= 0)
         {
             velocity.Y += Irbis.Irbis.gravity * Irbis.Irbis.DeltaTime;
         }
@@ -672,7 +678,7 @@ public class Enemy : ICollisionObject, IEnemy
             {
                 if (input.X != 0)
                 {
-                    if (bottomWalled > 0)
+                    if (walled.Bottom > 0)
                     {
                         activity = Activity.running;
                     }
@@ -692,7 +698,7 @@ public class Enemy : ICollisionObject, IEnemy
                 }
                 else
                 {
-                    if (bottomWalled <= 0)
+                    if (walled.Bottom <= 0)
                     {
                         if (velocity.Y < 0)
                         {
@@ -713,7 +719,7 @@ public class Enemy : ICollisionObject, IEnemy
             }
             else
             {
-                if (bottomWalled <= 0)
+                if (walled.Bottom <= 0)
                 {
                     if (velocity.Y < 0)
                     {
@@ -860,80 +866,86 @@ public class Enemy : ICollisionObject, IEnemy
         }
     }
 
-    public void Collision(Enemy player, List<Square> colliderList)
+    public void Collision(List<Square> colliderList)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Collision"); }
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Collision"); }
         amountToMove = negAmountToMove = Vector2.Zero;
-        testCollider.Width = player.colliderWidth;
-        testCollider.Height = player.colliderHeight;
+        testCollider.Width = colliderWidth;
+        testCollider.Height = colliderHeight;
 
         foreach (ICollisionObject s in colliderList)
         {
-            if (s.Collider != Rectangle.Empty && Irbis.Irbis.DistanceSquared(collider.Center, s.Collider.Center) < collisionCheckDistanceSqr && !collided.Contains(s))
+            if (s.Collider != Rectangle.Empty && Irbis.Irbis.DistanceSquared(collider.Center, s.Collider.Center) < collisionCheckDistanceSqr /*&& !collided.Contains(s)*/)
             {
-                if (Irbis.Irbis.IsTouching(player.collider, s.Collider, Side.bottom))                              //DOWN
+                collidedContains = collided.Contains(s);
+                if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.bottom))                              //DOWN
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.bottom);
-                    player.bottomWalled++;
-                    if (negAmountToMove.Y > s.Collider.Top - player.collider.Bottom && (player.velocity.Y * Irbis.Irbis.DeltaTime) >= -(s.Collider.Top - player.collider.Bottom))
+                    if (!collidedContains)
                     {
-                        negAmountToMove.Y = s.Collider.Top - player.collider.Bottom;
+                        collided.Add(s);
+                        sideCollided.Add(Side.bottom);
+                        walled.Bottom++;
+                        if (negAmountToMove.Y > s.Collider.Top - collider.Bottom && (velocity.Y * Irbis.Irbis.DeltaTime) >= -(s.Collider.Top - collider.Bottom))
+                        {
+                            negAmountToMove.Y = s.Collider.Top - collider.Bottom;
+                        }
+                    }
+                    else if (negAmountToMove.Y > s.Collider.Top - collider.Bottom)
+                    {
+                        negAmountToMove.Y = s.Collider.Top - collider.Bottom;
                     }
                 }
-                if (Irbis.Irbis.IsTouching(player.collider, s.Collider, Side.right))                               //RIGHT
+                if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.right))                               //RIGHT
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.right);
-                    player.rightWalled++;
-                    if (negAmountToMove.X > s.Collider.Left - player.collider.Right && (player.velocity.X * Irbis.Irbis.DeltaTime) >= -(s.Collider.Left - player.collider.Right))
+                    if (!collidedContains)
                     {
-                        negAmountToMove.X = s.Collider.Left - player.collider.Right;
+                        collided.Add(s);
+                        sideCollided.Add(Side.right);
+                        walled.Right++;
+                        if (negAmountToMove.X > s.Collider.Left - collider.Right && (velocity.X * Irbis.Irbis.DeltaTime) >= -(s.Collider.Left - collider.Right))
+                        {
+                            negAmountToMove.X = s.Collider.Left - collider.Right;
+                        }
+                    }
+                    else if (negAmountToMove.X > s.Collider.Left - collider.Right)
+                    {
+                        negAmountToMove.X = s.Collider.Left - collider.Right;
                     }
                 }
-                if (Irbis.Irbis.IsTouching(player.collider, s.Collider, Side.left))                                //LEFT
+                if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.left))                                //LEFT
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.left);
-                    player.leftWalled++;
-                    if (amountToMove.X < s.Collider.Right - player.collider.Left && (player.velocity.X * Irbis.Irbis.DeltaTime) <= -(s.Collider.Right - player.collider.Left))
+                    if (!collidedContains)
                     {
-                        amountToMove.X = s.Collider.Right - player.collider.Left;
+                        collided.Add(s);
+                        sideCollided.Add(Side.left);
+                        walled.Left++;
+                        if (amountToMove.X < s.Collider.Right - collider.Left && (velocity.X * Irbis.Irbis.DeltaTime) <= -(s.Collider.Right - collider.Left))
+                        {
+                            amountToMove.X = s.Collider.Right - collider.Left;
+                        }
+                    }
+                    else if (amountToMove.X < s.Collider.Right - collider.Left)
+                    {
+                        amountToMove.X = s.Collider.Right - collider.Left;
                     }
                 }
-                if (Irbis.Irbis.IsTouching(player.collider, s.Collider, Side.top))                                 //UP
+                if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.top))                                 //UP
                 {
-                    collided.Add(s);
-                    sideCollided.Add(Side.top);
-                    player.topWalled++;
-                    if (amountToMove.Y < s.Collider.Bottom - player.collider.Top && (player.velocity.Y * Irbis.Irbis.DeltaTime) <= -(s.Collider.Bottom - player.collider.Top))
+                    if (!collidedContains)
                     {
-                        amountToMove.Y = s.Collider.Bottom - player.collider.Top;
+                        collided.Add(s);
+                        sideCollided.Add(Side.top);
+                        walled.Top++;
+                        if (amountToMove.Y < s.Collider.Bottom - collider.Top && (velocity.Y * Irbis.Irbis.DeltaTime) <= -(s.Collider.Bottom - collider.Top))
+                        {
+                            amountToMove.Y = s.Collider.Bottom - collider.Top;
+                        }
+                    }
+                    else if (amountToMove.Y < s.Collider.Bottom - collider.Top)
+                    {
+                        amountToMove.Y = s.Collider.Bottom - collider.Top;
                     }
                 }
-            }
-        }
-
-        if (leftWalled == 1 && input.X < 0)
-        {
-            int climbamount = (player.collider.Bottom - collided[sideCollided.IndexOf(Side.left)].Collider.Top);
-            if ((climbamount) <= climbablePixels)
-            {
-                position.Y -= climbamount;
-                //position.X -= 1;
-                amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels");
-            }
-        }
-        if (rightWalled == 1 && input.X > 0)
-        {
-            int climbamount = (player.collider.Bottom - collided[sideCollided.IndexOf(Side.right)].Collider.Top);
-            if ((climbamount) <= climbablePixels)
-            {
-                position.Y -= climbamount;
-                //position.X += 1;
-                amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels");
             }
         }
 
@@ -959,22 +971,22 @@ public class Enemy : ICollisionObject, IEnemy
         bool X = false;
         if (Math.Abs(amountToMove.Y) <= Math.Abs(amountToMove.X) && amountToMove.Y != 0)
         {
-            testPos.Y = (int)player.position.Y;
-            testPos.X = player.position.X;
+            testPos.Y = (int)Math.Round((decimal)position.Y);
+            testPos.X = position.X;
             testPos.Y += amountToMove.Y;
             Y = true;
         }
         else if (amountToMove.X != 0)
         {
-            testPos.X = (int)player.position.X;
-            testPos.Y = player.position.Y;
+            testPos.X = (int)Math.Round((decimal)position.X);
+            testPos.Y = position.Y;
             testPos.X += amountToMove.X;
             X = true;
         }
 
         bool pass = true;
-        testCollider.X = (int)testPos.X + player.XcolliderOffset;
-        testCollider.Y = (int)testPos.Y + player.YcolliderOffset;
+        testCollider.X = (int)testPos.X + XcolliderOffset;
+        testCollider.Y = (int)testPos.Y + YcolliderOffset;
 
         foreach (ICollisionObject s in collided)
         {
@@ -997,31 +1009,14 @@ public class Enemy : ICollisionObject, IEnemy
         }
         else
         {
-            if (amountToMove != Vector2.Zero)
-            {
-                Irbis.Irbis.WriteLine("this: " + this.ToString());
-                Irbis.Irbis.WriteLine("        pass: " + pass);
-                Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-                Irbis.Irbis.WriteLine("    velocity: " + player.velocity);
-                Irbis.Irbis.WriteLine("  player.position: " + player.position);
-                Irbis.Irbis.WriteLine("     testPos: " + testPos);
-                Irbis.Irbis.WriteLine("   pcollider: T:" + player.collider.Top + " B:" + player.collider.Bottom + " L:" + player.collider.Left + " R:" + player.collider.Right);
-                Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-                foreach (ICollisionObject s in collided)
-                {
-                    Irbis.Irbis.WriteLine("   scollider: T:" + s.Collider.Top + " B:" + s.Collider.Bottom + " L:" + s.Collider.Left + " R:" + s.Collider.Right);
-                }
-                Irbis.Irbis.WriteLine("afte1--");
-            }
-
             pass = true;
             if (Y)
             {
-                testPos.X = (int)player.position.X;
-                testPos.Y = player.position.Y;
+                testPos.X = (int)Math.Round((decimal)position.X);
+                testPos.Y = position.Y;
                 testPos.X += amountToMove.X;
-                testCollider.X = (int)testPos.X + player.XcolliderOffset;
-                testCollider.Y = (int)testPos.Y + player.YcolliderOffset;
+                testCollider.X = (int)testPos.X + XcolliderOffset;
+                testCollider.Y = (int)testPos.Y + YcolliderOffset;
 
                 foreach (ICollisionObject s in collided)
                 {
@@ -1038,11 +1033,11 @@ public class Enemy : ICollisionObject, IEnemy
             }
             else if (X)
             {
-                testPos.Y = (int)player.position.Y;
-                testPos.X = player.position.X;
+                testPos.Y = (int)Math.Round((decimal)position.Y);
+                testPos.X = position.X;
                 testPos.Y += amountToMove.Y;
-                testCollider.X = (int)testPos.X + player.XcolliderOffset;
-                testCollider.Y = (int)testPos.Y + player.YcolliderOffset;
+                testCollider.X = (int)testPos.X + XcolliderOffset;
+                testCollider.Y = (int)testPos.Y + YcolliderOffset;
 
                 foreach (ICollisionObject s in collided)
                 {
@@ -1057,82 +1052,37 @@ public class Enemy : ICollisionObject, IEnemy
                     amountToMove.X = 0;
                 }
             }
-            if (amountToMove != Vector2.Zero)
-            {
-                Irbis.Irbis.WriteLine("        pass: " + pass);
-                Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-                Irbis.Irbis.WriteLine("    velocity: " + player.velocity);
-                Irbis.Irbis.WriteLine("  player.position: " + player.position);
-                Irbis.Irbis.WriteLine("     testPos: " + testPos);
-                Irbis.Irbis.WriteLine("   pcollider: T:" + player.collider.Top + " B:" + player.collider.Bottom + " L:" + player.collider.Left + " R:" + player.collider.Right);
-                Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-                foreach (ICollisionObject s in collided)
-                {
-                    Irbis.Irbis.WriteLine("   scollider: T:" + s.Collider.Top + " B:" + s.Collider.Bottom + " L:" + s.Collider.Left + " R:" + s.Collider.Right);
-                }
-                Irbis.Irbis.WriteLine("after2--");
-            }
         }
 
-        if (amountToMove != Vector2.Zero)
-        {
-            Irbis.Irbis.WriteLine("    velocity: " + player.velocity);
-        }
+        position += amountToMove;
+        CalculateMovement();
 
-        if (amountToMove.X > 0 && player.velocity.X < 0)
-        {
-            player.velocity.X = 0;
-        }
-        if (amountToMove.X < 0 && player.velocity.X > 0)
-        {
-            player.velocity.X = 0;
-        }
-        if (amountToMove.Y > 0 && player.velocity.Y < 0)
-        {
-            player.velocity.Y = 0;
-        }
-        if (amountToMove.Y < 0 && player.velocity.Y > 0)
-        {
-            player.velocity.Y = 0;
-        }
-
-        if (amountToMove.X != 0)
-        {
-            player.position.X = (int)player.position.X;
-        }
-        if (amountToMove.Y != 0)
-        {
-            player.position.Y = (int)player.position.Y;
-        }
-        player.position += amountToMove;
-
-        player.CalculateMovement();
         for (int i = 0; i < collided.Count; i++)
         {
-            if (!Irbis.Irbis.IsTouching(player.collider, collided[i].Collider, sideCollided[i]))
+            if (!Irbis.Irbis.IsTouching(collider, collided[i].Collider, sideCollided[i]))
             {
                 switch (sideCollided[i])
                 {
                     case Side.bottom:
-                        player.bottomWalled--;
+                        walled.Bottom--;
                         collided.RemoveAt(i);
                         sideCollided.RemoveAt(i);
                         i--;
                         break;
                     case Side.right:
-                        player.rightWalled--;
+                        walled.Right--;
                         collided.RemoveAt(i);
                         sideCollided.RemoveAt(i);
                         i--;
                         break;
                     case Side.left:
-                        player.leftWalled--;
+                        walled.Left--;
                         collided.RemoveAt(i);
                         sideCollided.RemoveAt(i);
                         i--;
                         break;
                     case Side.top:
-                        player.topWalled--;
+                        walled.Top--;
                         collided.RemoveAt(i);
                         sideCollided.RemoveAt(i);
                         i--;
@@ -1142,26 +1092,26 @@ public class Enemy : ICollisionObject, IEnemy
                 }
             }
         }
-        if (amountToMove != Vector2.Zero)
-        {
-            Irbis.Irbis.WriteLine("        pass: " + pass);
-            Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-            Irbis.Irbis.WriteLine("    velocity: " + player.velocity);
-            Irbis.Irbis.WriteLine("  player.position: " + player.position);
-            Irbis.Irbis.WriteLine("     testPos: " + testPos);
-            Irbis.Irbis.WriteLine("   pcollider: T:" + player.collider.Top + " B:" + player.collider.Bottom + " L:" + player.collider.Left + " R:" + player.collider.Right);
-            Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-            foreach (ICollisionObject s in collided)
-            {
-                Irbis.Irbis.WriteLine("   scollider: T:" + s.Collider.Top + " B:" + s.Collider.Bottom + " L:" + s.Collider.Left + " R:" + s.Collider.Right);
-            }
-            Irbis.Irbis.WriteLine("done--");
-            Irbis.Irbis.WriteLine();
-        }
 
-        if (bottomWalled > 0 && player.velocity.Y > 0)
+        if (walled.Top > 0 && velocity.Y < 0)
         {
-            player.velocity.Y = 0;
+            velocity.Y = 0;
+            position.Y = (int)Math.Round((decimal)position.Y);
+        }
+        if (walled.Bottom > 0 && velocity.Y > 0)
+        {
+            velocity.Y = 0;
+            position.Y = (int)Math.Round((decimal)position.Y);
+        }
+        if (walled.Left > 0 && velocity.X < 0)
+        {
+            velocity.X = 0;
+            position.X = (int)Math.Round((decimal)position.X);
+        }
+        if (walled.Right > 0 && velocity.X > 0)
+        {
+            velocity.X = 0;
+            position.X = (int)Math.Round((decimal)position.X);
         }
     }
 
@@ -1222,6 +1172,6 @@ public class Enemy : ICollisionObject, IEnemy
     public void Draw(SpriteBatch sb)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Draw"); }
-        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale * 2, SpriteEffects.None, depth);
+        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
     }
 }

@@ -80,15 +80,21 @@
     <Compile Include="Print.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Ray.cs" />
     <Compile Include="RectangleBorder.cs" />
     <Compile Include="SaveFile.cs" />
+    <Compile Include="ShadowDrawer.cs" />
+    <Compile Include="Shape.cs" />
     <Compile Include="SmartFramerate.cs" />
     <Compile Include="SmoothFramerate.cs" />
     <Compile Include="Square.cs" />
+    <Compile Include="Tooltip.cs" />
+    <Compile Include="TooltipGenerator.cs" />
     <Compile Include="TotalMeanFramerate.cs" />
     <Compile Include="UIElementDiscreteSlider.cs" />
     <Compile Include="UIElementSlider.cs" />
     <Compile Include="VendingMachine.cs" />
+    <Compile Include="VendingMenu.cs" />
     <Compile Include="Wall.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +151,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />
+    <None Include="changelog.md">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="levels\c0b0.lvl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -170,6 +179,7 @@
     <Content Include="content\largeNullTex.png" />
     <Content Include="content\Level Select title.png" />
     <Content Include="content\Main Menu title.png" />
+    <Content Include="content\menu background.png" />
     <Content Include="content\Misc title.png" />
     <Content Include="content\nullTex.png" />
     <Content Include="content\Options title.png" />

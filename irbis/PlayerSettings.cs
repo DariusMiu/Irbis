@@ -196,7 +196,7 @@ public struct PlayerSettings
             attack2Damage = 45f;
 
             //run&jump speed
-            speed = 500f;
+            speed = 275f;
             //The maximum speed you can travel in any given direction
             terminalVelocity = 5000f;
             //how long your jumps will maintain jump velocity (seconds)
@@ -205,14 +205,14 @@ public struct PlayerSettings
 
             //highly unrecommended to not mess with these unless you really know what you're doing
             //collider size and placement relative to the 128x128 player sprite
-            XcolliderOffset = 48;
-            YcolliderOffset = 30;
-            colliderWidth = 32;
-            colliderHeight = 97;
+            XcolliderOffset = 24;
+            YcolliderOffset = 16;
+            colliderWidth = 16;
+            colliderHeight = 48;
 
             //this is the size of the rectangle used as the main attack hitbox
-            attackColliderWidth = 80;
-            attackColliderHeight = 60;
+            attackColliderWidth = 40;
+            attackColliderHeight = 30;
 
             //self-explanatory
             maxHealth = 100f;
@@ -220,9 +220,9 @@ public struct PlayerSettings
             maxEnergy = 50f;
 
             //the distance at which the shockwave stops gaining power (otherwise it would be insanely strong close-up)
-            shockwaveMaxEffectDistance = 100f;
+            shockwaveMaxEffectDistance = 50f;
             //distance at which shockwave has no power
-            shockwaveEffectiveDistance = 200f;
+            shockwaveEffectiveDistance = 100f;
             //shockwave multipliers
             shockwaveStunTime = 50f;
             shockwaveKnockback = new Vector2(5f, -2.5f);
