@@ -13,8 +13,16 @@ namespace Irbis
         //[STAThread]
         static void Main()
         {
-            using (var game = new Irbis())
-                game.Run();
+            try
+            {
+                using (var game = new Irbis())
+                    game.Run();
+            }
+            finally
+            {
+                if (Irbis.Crash)
+                    Irbis.ExportConsole();
+            }
         }
     }
 }

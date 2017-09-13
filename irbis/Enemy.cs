@@ -835,26 +835,26 @@ public class Enemy : ICollisionObject, IEnemy
                 {
                     velocity.Y = -25f;
                     velocity.X =  -0f;
-                    if (distanceSqr < 2000)
+                    if (distanceSqr < 1000)
                     {
-                        velocity.X -= 250;
+                        velocity.X -= 150;
                     }
                     else
                     {
-                        velocity.X -= (500000 / distanceSqr);
+                        velocity.X -= (22500 / distanceSqr);
                     }
                 }
                 else
                 {
                     velocity.Y = -25f;
                     velocity.X =   0f;
-                    if (distanceSqr < 2000)
+                    if (distanceSqr < 1000)
                     {
-                        velocity.X += 250;
+                        velocity.X += 150;
                     }
                     else
                     {
-                        velocity.X += (500000 / distanceSqr);
+                        velocity.X += (22500 / distanceSqr);
                     }
                 }
 

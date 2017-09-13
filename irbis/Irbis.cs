@@ -177,7 +177,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.3.3";
+        static string versionNo = "0.1.4.2";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
@@ -187,6 +187,7 @@ namespace Irbis
 
                                                                                                     //debug
         public static int debug = 1;
+        public static bool Crash = true;
         private static Print debuginfo;
         private static SmartFramerate smartFPS;
         public static bool framebyframe;
@@ -230,7 +231,10 @@ namespace Irbis
             }
         }
         private static double timer;
-        
+        private static double elapsedTime;
+        private static float timeScale = 1f;
+
+
         public static KeyboardState GetKeyboardState
         {
             get
@@ -576,8 +580,14 @@ namespace Irbis
         public static int vendingMachineUseDistanceSqr;
 
                                                                                                     //camera
+
+        /// <summary>
+        /// camera is what is displayed on-screen
+        /// </summary>
         private static Vector2 camera;
-        private static Vector2 trueCamera;
+        /// <summary>
+        /// mainCamera is used for returning the camera to where it "should" be
+        /// </summary>
         private static Vector2 mainCamera;
         private static Vector2 screenSpacePlayerPos;
         private static Matrix background;
@@ -590,6 +600,7 @@ namespace Irbis
         public static int textScale;
         public static Point resolution;
         public static bool cameraLerp;
+        public static bool cameraLerpSetting;
         public static float cameraLerpSpeed;
         public static bool cameraShakeSetting;
         private static float cameraShakeDuration;
@@ -598,13 +609,15 @@ namespace Irbis
         private static float cameraSwingMaxDuration;
         private static float cameraSwingMagnitude;
         private static float cameraShakeLerpTime;
+        private static float cameraShakePercentage;
         private static float cameraShakeLerpTimeMax;
+        private static float cameraReturnTime;
         private static Vector2 cameraShakeTargetLocation;
+        private static Vector2 cameraShakePrevLocation;
         public static float swingDuration;
         public static float swingMagnitude;
         static Vector2 cameraSwingHeading;
         public static bool cameraSwingSetting;
-        static bool cameraSwing;
 
 
                                                                                                     //menu
@@ -628,11 +641,7 @@ namespace Irbis
 
                                                                                                     //UI
         public static Font font;
-        public static UIElementSlider healthBar;
-        public static UIElementSlider shieldBar;
-        public static UIElementSlider energyBar;
-        public static UIElementDiscreteSlider potionBar;
-        public static UIElementSlider enemyHealthBar;
+        public static Bars bars;
         public static Print timerDisplay;
         public static string timerAccuracy;
         public static float minSqrDetectDistance;
@@ -644,11 +653,9 @@ namespace Irbis
                                                                                                     //settings vars
         public static Point halfResolution;
         public static Point tempResolution;
-
         public static float masterAudioLevel;
         public static float musicLevel;
         public static float soundEffectsLevel;
-
         public float randomTimer;
         public static int sliderPressed;
 
@@ -706,6 +713,7 @@ namespace Irbis
         private static List<Vector2> shadows;
         public static TooltipGenerator tooltipGenerator;
         Point worldSpaceMouseLocation;
+
 
         public Irbis()
         {
@@ -832,7 +840,9 @@ namespace Irbis
                 savefile.Save(autosave);
             }
 
+
             developerConsole.textScale = textScale;
+            font = new Font(Content.Load<Texture2D>("font"), playerSettings.characterHeight, playerSettings.characterWidth, false);
 
             Texture2D playerTex = Content.Load<Texture2D>("player");
             Texture2D shieldTex = Content.Load<Texture2D>("shield");
@@ -857,11 +867,6 @@ namespace Irbis
             defaultTex = Content.Load<Texture2D>("defaultTex");
 
             enemySpawnPoints = new List<Vector2>();
-
-            Texture2D fontTex = Content.Load<Texture2D>("font");
-
-            font = new Font(fontTex, playerSettings.characterHeight, playerSettings.characterWidth, false);
-            spriteFont2 = Content.Load<SpriteFont>("console font");
 
             menu = new Menu();
 
@@ -1040,16 +1045,13 @@ namespace Irbis
             bossSpawn = thisLevel.BossSpawn;
 
             enemy0Tex = Content.Load<Texture2D>("enemy0");
-            Texture2D shieldBarTex = Content.Load<Texture2D>("shieldBar");
             Texture2D centerTex = Content.Load<Texture2D>("centerTexture");
 
             if (loadUI)
             {
-                healthBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale)), 125, 10, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
-                shieldBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 10), 75, 10, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBarTex, font, false, 0.5f);
-                energyBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 20), 50, 10, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
-                potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle((int)(32 / screenScale) + 76, (int)(32 / screenScale) + 11, 48, 8), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
-                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - (32 / screenScale)), (int)(32 / screenScale)), 250, 10, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
+                bars = new Bars(Content.Load<Texture2D>("bar health"), Content.Load<Texture2D>("bar shield"), Content.Load<Texture2D>("bar energy"), Content.Load<Texture2D>("shieldBar"), Content.Load<Texture2D>("bars"));
+
+                
 
                 if (geralt != null)
                 {
@@ -1079,19 +1081,18 @@ namespace Irbis
 
                 onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
                 onslaughtDisplay.Update("Onslaught Wave " + onslaughtSpawner.wave, true);
-                timerDisplay = null;
             }
             else
             {
-                timerDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
                 onslaughtDisplay = null;
                 onslaughtSpawner = null;
             }
+            timerDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
 
             for (int i = 0; i < thisLevel.squareTextures.Count; i++)
             {
                 Texture2D squareTex = Content.Load<Texture2D>(thisLevel.squareTextures[i]);
-                Square tempSquare = new Square(squareTex, squareSpawns[i], true, thisLevel.squareDepth);
+                Square tempSquare = new Square(squareTex, (squareSpawns[i].ToVector2() * (20f/16f)).ToPoint(), screenScale, false, thisLevel.squareDepth);
                 collisionObjects.Add(tempSquare);
                 squareList.Add(tempSquare);
             }
@@ -1099,12 +1100,11 @@ namespace Irbis
             for (int i = 0; i < thisLevel.backgroundSquareDepths.Count; i++)                                                                                              //backgrounds
             {
                 Texture2D squareTex = Content.Load<Texture2D>(thisLevel.backgroundTextures[i]);
-                Square tempSquare = new Square(squareTex, Color.White, BackgroundSquares[i], squareTex.Width, squareTex.Height, false, true, true, thisLevel.backgroundSquareDepths[i]);
+                Square tempSquare = new Square(squareTex, BackgroundSquares[i], screenScale, true, thisLevel.backgroundSquareDepths[i]);
                 backgroundSquareList.Add(tempSquare);
             }
 
-            camera.X = resolution.X / 2;
-            camera.Y = resolution.Y / 2;
+            mainCamera = camera = halfResolution.ToVector2();
 
             if (levelLoaded < 0) //THIS MEANS WE ARE LOADING A LEVEL FOR THE TITLESCREEN
             {
@@ -1142,62 +1142,19 @@ namespace Irbis
             mouseState = Mouse.GetState();
             if (debug > 0)
             {
-                if (!console && (gameTime.ElapsedGameTime.TotalSeconds) > (framedropfactor * DeltaTime))
+                if (useMultithreading)
                 {
-                    WriteLine("recording framedrop(1/" + framedropfactor + ")\nold fps: " + (1 / DeltaTime) + ", new fps: " + (1 / gameTime.ElapsedGameTime.TotalSeconds) + "\ntimer: " + Timer);
-                }
-                if (recordFPS)
-                {
-                    meanFPS.Update(gameTime.ElapsedGameTime.TotalSeconds);
-                    if (maxFPS < (1d / gameTime.ElapsedGameTime.TotalSeconds))
-                    {
-                        maxFPS = (1d / gameTime.ElapsedGameTime.TotalSeconds);
-                        maxFPStime = Timer;
-                    }
-                    if (minFPS > (1d / gameTime.ElapsedGameTime.TotalSeconds))
-                    {
-                        minFPS = (1d / gameTime.ElapsedGameTime.TotalSeconds);
-                        minFPStime = Timer;
-                    }
-                }
-
-                if (debug > 1)
-                {
-                    if (debug > 2)
-                    {
-                        PrintDebugInfo();
-
-                        if (geralt != null)
-                        {
-                            foreach (Square s in squareList)
-                            {
-                                if (geralt.collided.Contains(s))
-                                {
-                                    s.color = Color.Cyan;
-                                }
-                                else
-                                {
-                                    s.color = Color.White;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        debuginfo.Update("\n\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
-                    }
+                    QueueThread(new WaitCallback(DebugUpdate));
                 }
                 else
                 {
-                    debuginfo.Update("\n\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
+                    DebugUpdate(null);
                 }
             }
-            else
-            {
-                debuginfo.Update("\n\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
-            }
+
             smartFPS.Update(gameTime.ElapsedGameTime.TotalSeconds);
-            deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            elapsedTime = gameTime.ElapsedGameTime.TotalSeconds;
+            deltaTime = (float)elapsedTime * timeScale;
 
             if (!sceneIsMenu && !acceptTextInput)
             {
@@ -1208,7 +1165,15 @@ namespace Irbis
                 mouseState = Mouse.GetState();
                 if (levelEditor)
                 {
-                    LevelEditor();
+                    if (useMultithreading)
+                    {
+                        QueueThread(new WaitCallback(LevelEditor));
+                    }
+                    else
+                    {
+                        LevelEditor(null);
+                    }
+
                     if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||*/
                         (GetKeyDown(Keys.Escape) || (GetKeyDown(Keys.Pause))))
                     {
@@ -1242,17 +1207,10 @@ namespace Irbis
             {
                 UpdateConsole();
             }
-
-            if (debug > 3)
+            
+            //just don't even touch this
+            if (debug > 3)      
             {
-                //if (mouseState.LeftButton == ButtonState.Pressed)
-                //{
-                //    debugrays[0].Origin = (mouseState.Position.ToVector2() / screenScale);
-                //}
-                //if (mouseState.RightButton == ButtonState.Pressed)
-                //{
-                //    debugrays[0].Direction = (mouseState.Position.ToVector2() - halfResolution.ToVector2()) - (new Vector2(debugrays[0].Origin.X * screenScale, -debugrays[0].Origin.Y * screenScale));
-                //}
 
                 if (mouseState.LeftButton == ButtonState.Pressed)
                 {
@@ -1261,51 +1219,6 @@ namespace Irbis
                         debugrays[i] = new Ray(mouseState.Position.ToVector2() / screenScale, debugrays[i].Direction);
                     }
                 }
-                //if (mouseState != previousMouseState)
-                //{
-                //    for (int i = 0; i < debugrays.Length; i++)
-                //    {
-                //        debugrays[i] = new Ray(halfResolution.ToVector2() / screenScale, mouseState.Position.ToVector2() - (halfResolution.ToVector2()));
-                //    }
-                //}
-
-
-                //if (!console)
-                //{
-                //    if (GetKey(Keys.Y))
-                //    {
-                //        debugline.Origin += new Vector2(0.01f, 0); 
-                //    }
-                //    if (GetKey(Keys.H))
-                //    {
-                //        debugline.Origin -= new Vector2(0.01f, 0);
-                //    }
-                //    if (GetKey(Keys.U))
-                //    {
-                //        debugline.Origin += new Vector2(0, 0.01f);
-                //    }
-                //    if (GetKey(Keys.J))
-                //    {
-                //        debugline.Origin -= new Vector2(0, 0.01f);
-                //    }
-                //    if (GetKey(Keys.I))
-                //    {
-                //        projection.M41 += 0.001f;
-                //    }
-                //    if (GetKey(Keys.K))
-                //    {
-                //        projection.M41 -= 0.001f;
-                //    }
-                //    if (GetKey(Keys.O))
-                //    {
-                //        projection.M42 += 0.001f;
-                //    }
-                //    if (GetKey(Keys.L))
-                //    {
-                //        projection.M42 -= 0.001f;
-                //    }
-                //}
-
 
                 shadows.Clear();
                 for (int i = 0; i < debugrays.Length; i++)
@@ -1375,21 +1288,29 @@ namespace Irbis
                     nextFrameTimer -= 0.1f;
                 }
                 timer += gameTime.ElapsedGameTime.TotalSeconds;
-                geralt.Update();
 
-                Camera();
 
-                if (timerDisplay != null) { timerDisplay.Update(TimerText(timer), true); }
-                healthBar.UpdateValue(false, geralt.health);
-                if (geralt.shielded)
+
+                geralt.Update();    // multithread this eventually
+
+
+
+                if (useMultithreading)
                 {
-                    shieldBar.UpdateValue(true, geralt.shield);
+                    QueueThread(new WaitCallback(Camera));
                 }
                 else
                 {
-                    shieldBar.UpdateValue(false, geralt.shield);
+                    Camera(null);
                 }
-                energyBar.UpdateValue(geralt.energy);
+                                
+
+                if (timerDisplay != null) { timerDisplay.Update(TimerText(timer), true); }
+
+                Bars.healthBar.UpdateValue(geralt.health);
+                Bars.shieldBar.UpdateValue(geralt.shield, geralt.shielded);
+                Bars.shieldBar.UpdateValue(geralt.shield, false);
+                Bars.energyBar.UpdateValue(geralt.energy);
 
                 if (useMultithreading)
                 {
@@ -1397,6 +1318,7 @@ namespace Irbis
                     {
                         QueueThread(eList[i].ThreadPoolCallback);
                     }
+                    QueueThread(new WaitCallback(UpdateEnemyHealthBar));
                 }
                 else
                 {
@@ -1409,50 +1331,11 @@ namespace Irbis
                             i--;
                         }
                     }
-                }
-
-                if (true)
-                {
-                    if (enemyList.Count > 0)
-                    {
-                        IEnemy closest = enemyList[0];
-
-                        float closestSqrDistance = float.MaxValue;
-                        float thisEnemysSqrDistance = 0f;
-                        try
-                        {
-                            foreach (IEnemy e in enemyList)
-                            {
-                                thisEnemysSqrDistance = DistanceSquared(geralt.Collider.Center, e.Collider.Center);
-                                if (thisEnemysSqrDistance < closestSqrDistance)
-                                {
-                                    closestSqrDistance = thisEnemysSqrDistance;
-                                    closest = e;
-                                }
-                            }
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            WriteLine("caught: InvalidOperationException");
-                            Console.WriteLine("caught: InvalidOperationException");
-                            //just continue as normal
-                        }
-                        if (closestSqrDistance <= minSqrDetectDistance)
-                        {
-                            displayEnemyHealth = geralt.combat = true;
-                            geralt.Combat();
-                            enemyHealthBar.maxValue = closest.MaxHealth;
-                            enemyHealthBar.UpdateValue(closest.Health);
-                        }
-                        else
-                        { displayEnemyHealth = geralt.combat = false; }
-                    }
-                    else
-                    { displayEnemyHealth = geralt.combat = false; }
+                    UpdateEnemyHealthBar(null);
                 }
             }
 
-            if (onslaughtMode)
+            if (onslaughtMode)      
             {
                 if (onslaughtSpawner.enemiesLeftThisWave > 0 && eList.Count < onslaughtSpawner.maxEnemies && onslaughtSpawner.EnemySpawnTimer())
                 {
@@ -1555,6 +1438,7 @@ namespace Irbis
                 }
             }
 
+            //this will be removed, don't bother multithreading
             if (keyboardState.IsKeyDown(Keys.K) && !previousKeyboardState.IsKeyDown(Keys.K) && !acceptTextInput)
             {
                 randomTimer = 0f;
@@ -1615,132 +1499,238 @@ namespace Irbis
             }
         }
 
-        private void Camera()
-        {            
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.Camera"); }
-            //mainCamera is used for returning the camera to where it "should" be
-            //camera is what is displayed on-screen
-            if (cameraLerp)
-            {
-                if (boundingBox.Right <= screenSpacePlayerPos.X)
-                {
-                    mainCamera.X = camera.X = (Lerp(camera.X + boundingBox.Right, camera.X + (screenSpacePlayerPos.X), cameraLerpSpeed * DeltaTime) - boundingBox.Right);
-                }
-                else if (boundingBox.Left >= screenSpacePlayerPos.X)
-                {
-                    mainCamera.X = camera.X = (Lerp(camera.X + boundingBox.Left, camera.X + (screenSpacePlayerPos.X), cameraLerpSpeed * DeltaTime) - boundingBox.Left);
-                }
-                if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
-                {
-                    mainCamera.Y = camera.Y = (Lerp(camera.Y + boundingBox.Bottom, camera.Y + (screenSpacePlayerPos.Y), cameraLerpSpeed * DeltaTime) - boundingBox.Bottom);
-                }
-                else if (boundingBox.Top >= screenSpacePlayerPos.Y)
-                {
-                    mainCamera.Y = camera.Y = (Lerp(camera.Y + boundingBox.Top, camera.Y + (screenSpacePlayerPos.Y), cameraLerpSpeed * DeltaTime) - boundingBox.Top);
-                }
-            }
-            else
-            {
-                if (boundingBox.Right <= screenSpacePlayerPos.X)
-                {
-                    mainCamera.X = camera.X += screenSpacePlayerPos.X - boundingBox.Right;
-                }
-                else if (boundingBox.Left >= screenSpacePlayerPos.X)
-                {
-                    mainCamera.X = camera.X += screenSpacePlayerPos.X - boundingBox.Left;
-                }
-                if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
-                {
-                    mainCamera.Y = camera.Y += screenSpacePlayerPos.Y - boundingBox.Bottom;
-                }
-                else if (boundingBox.Top >= screenSpacePlayerPos.Y)
-                {
-                    mainCamera.Y = camera.Y += screenSpacePlayerPos.Y - boundingBox.Top;
-                }
-            }
-
-            trueCamera.X = halfResolution.X - camera.X;
-            trueCamera.Y = halfResolution.Y - camera.Y;
-
-            screenSpacePlayerPos.X = ((geralt.TrueCenter.X * screenScale) + halfResolution.X - mainCamera.X);
-            screenSpacePlayerPos.Y = ((geralt.TrueCenter.Y * screenScale) + halfResolution.Y - mainCamera.Y);
-
-            screenspace.X = (int)(-trueCamera.X);
-            screenspace.Y = (int)(-trueCamera.Y);
-
-            background.M31 = foreground.M41 = trueCamera.X;
-            background.M32 = foreground.M42 = trueCamera.Y;
-
-            if (cameraShakeSetting && cameraShakeDuration > 0) { CameraShake(); }
-            if (cameraSwingSetting && cameraSwingDuration > 0) { CameraSwing(); }
-
-            //lighting.Transform = foreground;
-            //geralt.light.Position = screenSpacePlayerPos;
-        }
-
-        private static void CameraSwing()
+        private void Camera(Object threadContext)
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraSwing"); }
-            cameraSwingDuration -= DeltaTime;
-            if (cameraSwingDuration <= 0 && cameraSwing)
+            //if (debug > 4) { methodLogger.AppendLine("Irbis.Camera"); }
+            try
             {
-                cameraSwing = false;
-                cameraSwingDuration = cameraSwingMaxDuration * 2;
-            }
+                if (cameraLerpSetting)
+                {
+                    if (boundingBox.Right <= screenSpacePlayerPos.X)
+                    {
+                        mainCamera.X += (Lerp(boundingBox.Right, (screenSpacePlayerPos.X), cameraLerpSpeed * DeltaTime) - boundingBox.Right);
+                    }
+                    else if (boundingBox.Left >= screenSpacePlayerPos.X)
+                    {
+                        mainCamera.X += (Lerp(boundingBox.Left, (screenSpacePlayerPos.X), cameraLerpSpeed * DeltaTime) - boundingBox.Left);
+                    }
+                    if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
+                    {
+                        mainCamera.Y += (Lerp(boundingBox.Bottom, (screenSpacePlayerPos.Y), cameraLerpSpeed * DeltaTime) - boundingBox.Bottom);
+                    }
+                    else if (boundingBox.Top >= screenSpacePlayerPos.Y)
+                    {
+                        mainCamera.Y += (Lerp(boundingBox.Top, (screenSpacePlayerPos.Y), cameraLerpSpeed * DeltaTime) - boundingBox.Top);
+                    }
+                }
+                else
+                {
+                    if (boundingBox.Right <= screenSpacePlayerPos.X)
+                    {
+                        mainCamera.X += screenSpacePlayerPos.X - boundingBox.Right;
+                    }
+                    else if (boundingBox.Left >= screenSpacePlayerPos.X)
+                    {
+                        mainCamera.X += screenSpacePlayerPos.X - boundingBox.Left;
+                    }
+                    if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
+                    {
+                        mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Bottom;
+                    }
+                    else if (boundingBox.Top >= screenSpacePlayerPos.Y)
+                    {
+                        mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Top;
+                    }
+                }
 
-            if (cameraSwing)
-            {
-                //background.M31 = foreground.M41 = Lerp(background.M31, background.M31 + (cameraSwingHeading.X * cameraSwingMagnitude), cameraLerpSpeed * DeltaTime);
-                camera.X = (Lerp(camera.X, camera.X + (cameraSwingHeading.X * cameraSwingMagnitude), 15f * DeltaTime));
-                camera.Y = (Lerp(camera.Y, camera.Y + (cameraSwingHeading.Y * cameraSwingMagnitude), 15f * DeltaTime));
+                screenSpacePlayerPos.X = ((geralt.TrueCenter.X * screenScale) + halfResolution.X - mainCamera.X);
+                screenSpacePlayerPos.Y = ((geralt.TrueCenter.Y * screenScale) + halfResolution.Y - mainCamera.Y);
+
+                if (cameraShakeDuration > 0)
+                {
+                    ReturnCamera(CameraShake());
+                }
+                if (cameraSwingDuration > 0)
+                {
+                    ReturnCamera(CameraSwing());
+                }
+                if (cameraReturnTime > 0)
+                {
+                    ReturnCamera();
+                }
+                else
+                {
+                    camera = mainCamera;
+                }
+
+                background.M31 = foreground.M41 = halfResolution.X - camera.X;
+                background.M32 = foreground.M42 = halfResolution.Y - camera.Y;
+
             }
-            else
+            finally
             {
-                camera.X = (Lerp(camera.X, mainCamera.X, cameraLerpSpeed * DeltaTime));
-                camera.Y = (Lerp(camera.Y, mainCamera.Y, cameraLerpSpeed * DeltaTime));
+                if (Interlocked.Decrement(ref Irbis.pendingThreads) <= 0)
+                {
+                    Irbis.doneEvent.Set();
+                }
             }
         }
 
         public static void CameraSwing(float duration, float magnitude, Vector2 heading)
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraSwing"); }
-            cameraSwingDuration = cameraSwingMaxDuration = duration;
-            cameraSwingHeading = heading;
-            cameraSwingHeading.Normalize();
-            cameraSwingMagnitude = magnitude * screenScale;
-            cameraSwing = true;
+            if (cameraSwingSetting)
+            {
+                cameraSwingDuration = cameraSwingMaxDuration = duration;
+                cameraSwingHeading = heading;
+                cameraSwingHeading.Normalize();
+                cameraSwingMagnitude = magnitude * screenScale;
+            }
         }
 
-        private static void CameraShake()
+        /// <summary>
+        /// returns how long the camera should take returning to it's original position. 
+        /// returns -1 if swinging is not done.
+        /// </summary>
+        private static float CameraSwing()
+        {
+            //cameraSwingDuration -= DeltaTime;
+
+            //camera.X = (Lerp(camera.X, camera.X + (cameraSwingHeading.X * cameraSwingMagnitude), 15f * DeltaTime));
+            //camera.Y = (Lerp(camera.Y, camera.Y + (cameraSwingHeading.Y * cameraSwingMagnitude), 15f * DeltaTime)); //cameraLerpSpeed
+
+            //if (cameraSwingDuration <= 0)
+            //{
+            //    return cameraSwingMaxDuration * 2;
+            //}
+            return -1;
+        }
+
+        public static void CameraShake(float duration, float magnitude)
+        {
+            if (cameraShakeSetting)
+            {
+                if (duration > cameraShakeDuration)
+                {
+                    cameraShakeDuration = duration;
+                }
+                GenerateCameraShakeTarget();
+                cameraShakePrevLocation = mainCamera;
+                cameraShakeMagnitude = magnitude * screenScale;
+            }
+        }
+
+        /// <summary>
+        /// returns how long the camera should take returning to it's original position. 
+        /// returns -1 if shaking is not done.
+        /// </summary>
+        private static float CameraShake()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraShake"); }
             cameraShakeDuration -= DeltaTime;
             cameraShakeLerpTime -= DeltaTime;
             if (cameraShakeLerpTime <= 0)
             {
-                cameraShakeTargetLocation.X = (halfResolution.X - mainCamera.X) + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //X
-                cameraShakeTargetLocation.Y = (halfResolution.Y - mainCamera.Y) + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //Y
-                if (debug > 0)
-                {
-                    WriteLine("               background:{X:" + background.M31 + " Y:" + background.M32 + "}\ncameraShakeTargetLocation:" + cameraShakeTargetLocation);
-                    WriteLine();
-                }
-                cameraShakeLerpTime = cameraShakeLerpTimeMax;
+                GenerateCameraShakeTarget();
             }
-            background.M31 = foreground.M41 = Lerp(background.M31, cameraShakeTargetLocation.X, (cameraShakeLerpTimeMax - cameraShakeLerpTime) / cameraShakeLerpTimeMax);       //X
-            background.M32 = foreground.M42 = Lerp(background.M32, cameraShakeTargetLocation.Y, (cameraShakeLerpTimeMax - cameraShakeLerpTime) / cameraShakeLerpTimeMax);       //Y
+            cameraShakePercentage = 1 - (cameraShakeLerpTime / cameraShakeLerpTimeMax);
+            camera.X = Lerp(cameraShakePrevLocation.X, cameraShakeTargetLocation.X, cameraShakePercentage);       //X
+            camera.Y = Lerp(cameraShakePrevLocation.Y, cameraShakeTargetLocation.Y, cameraShakePercentage);       //Y
+
+            if (cameraSwingDuration <= 0)
+            {
+                return cameraShakeLerpTimeMax;
+            }
+            return -1;
         }
 
-        public static void CameraShake(float duration, float magnitude)
+        private static void GenerateCameraShakeTarget()
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.CameraShake"); }
-            //cameraTimePerShake = 0f;
-            if (duration > cameraShakeDuration)
+            cameraShakePrevLocation = cameraShakeTargetLocation;
+            cameraShakeTargetLocation.X = (mainCamera.X) + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //X
+            cameraShakeTargetLocation.Y = (mainCamera.Y) + ((((float)RAND.NextDouble() * 2) - 1) * cameraShakeMagnitude);       //Y
+            if (debug > 0)
             {
-                cameraShakeDuration = duration;
+                WriteLine("       mainCamera:" + mainCamera +
+                        "\ncameraShakeTarget:" + cameraShakeTargetLocation);
+                WriteLine();
             }
-            cameraShakeLerpTime = 0;
-            cameraShakeMagnitude = magnitude * screenScale;
+            cameraShakeLerpTime = cameraShakeLerpTimeMax;
+        }
+
+        private static void ReturnCamera(float duration)
+        {
+            if (duration > 0)
+            { cameraReturnTime = duration; }
+        }
+
+        private static void ReturnCamera()
+        {
+            cameraReturnTime -= DeltaTime;
+            camera.X = (Lerp(camera.X, mainCamera.X, cameraLerpSpeed * DeltaTime));
+            camera.Y = (Lerp(camera.Y, mainCamera.Y, cameraLerpSpeed * DeltaTime));
+        }
+
+        private void DebugUpdate(Object threadContext)
+        {
+            try
+            {
+                if (!console && elapsedTime > (framedropfactor * elapsedTime))
+                {
+                    WriteLine("recording framedrop(1/" + framedropfactor + ")\nold fps: " + (1 / elapsedTime) + ", new fps: " + (1 / elapsedTime) + "\ntimer: " + Timer);
+                }
+                if (recordFPS)
+                {
+                    meanFPS.Update(elapsedTime);
+                    if (maxFPS < (1 / elapsedTime))
+                    {
+                        maxFPS = (1 / elapsedTime);
+                        maxFPStime = Timer;
+                    }
+                    if (minFPS > (1 / elapsedTime))
+                    {
+                        minFPS = (1 / elapsedTime);
+                        minFPStime = Timer;
+                    }
+                }
+
+                if (debug > 1)
+                {
+                    if (debug > 2)
+                    {
+                        PrintDebugInfo();
+
+                        if (geralt != null)
+                        {
+                            foreach (Square s in squareList)
+                            {
+                                if (geralt.collided.Contains(s))
+                                {
+                                    s.color = Color.Cyan;
+                                }
+                                else
+                                {
+                                    s.color = Color.White;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        debuginfo.Update("\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
+                    }
+                }
+                else
+                {
+                    debuginfo.Update("\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
+                }
+            }
+            finally
+            {
+                if (Interlocked.Decrement(ref Irbis.pendingThreads) <= 0)
+                {
+                    Irbis.doneEvent.Set();
+                }
+            }
         }
 
         public static void RemoveFromPrintList(string printStatement)
@@ -1755,6 +1745,57 @@ namespace Irbis
             }
         }
 
+        private static void UpdateEnemyHealthBar(Object threadContext)
+        {
+            try
+            {
+            if (enemyList.Count > 0)
+            {
+                IEnemy closest = enemyList[0];
+
+                float closestSqrDistance = float.MaxValue;
+                float thisEnemysSqrDistance = 0f;
+                try
+                {
+                    foreach (IEnemy e in enemyList)
+                    {
+                        thisEnemysSqrDistance = DistanceSquared(geralt.Collider.Center, e.Collider.Center);
+                        if (thisEnemysSqrDistance < closestSqrDistance)
+                        {
+                            closestSqrDistance = thisEnemysSqrDistance;
+                            closest = e;
+                        }
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    WriteLine("caught: InvalidOperationException");
+                    Console.WriteLine("caught: InvalidOperationException");
+                    //just continue as normal
+                }
+                if (closestSqrDistance <= minSqrDetectDistance)
+                {
+                    displayEnemyHealth = geralt.combat = true;
+                    geralt.Combat();
+                    Bars.enemyHealthBar.maxValue = closest.MaxHealth;
+                    Bars.enemyHealthBar.UpdateValue(closest.Health);
+                }
+                else
+                { displayEnemyHealth = geralt.combat = false; }
+            }
+            else
+            { displayEnemyHealth = geralt.combat = false; }
+
+            }
+            finally
+            {
+                if (Interlocked.Decrement(ref Irbis.pendingThreads) <= 0)
+                {
+                    Irbis.doneEvent.Set();
+                }
+            }
+        }
+
         public void EnableLevelEditor()
         {
             ClearUI();
@@ -1763,112 +1804,121 @@ namespace Irbis
 
         }
 
-        public void LevelEditor()
+        public void LevelEditor(Object threadContext)
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelEditor"); }
-            debug = 3;
-            this.IsMouseVisible = sceneIsMenu = true;
-            //PrintDebugInfo();
-            if (!acceptTextInput)
+            try
             {
-                if (GetKey(Keys.LeftShift))
+                //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelEditor"); }
+                debug = 3;
+                this.IsMouseVisible = sceneIsMenu = true;
+                //PrintDebugInfo();
+                if (!acceptTextInput)
                 {
-                    if (keyboardState.IsKeyDown(upKey))
+                    if (GetKey(Keys.LeftShift))
                     {
-                        camera.Y -= 10f * DeltaTime;
+                        if (keyboardState.IsKeyDown(upKey))
+                        {
+                            camera.Y -= 10f * DeltaTime;
+                        }
+                        if (keyboardState.IsKeyDown(downKey))
+                        {
+                            camera.Y += 10f * DeltaTime;
+                        }
+                        if (keyboardState.IsKeyDown(leftKey))
+                        {
+                            camera.X -= 10f * DeltaTime;
+                        }
+                        if (keyboardState.IsKeyDown(rightKey))
+                        {
+                            camera.X += 10f * DeltaTime;
+                        }
                     }
-                    if (keyboardState.IsKeyDown(downKey))
+                    else
                     {
-                        camera.Y += 10f * DeltaTime;
-                    }
-                    if (keyboardState.IsKeyDown(leftKey))
-                    {
-                        camera.X -= 10f * DeltaTime;
-                    }
-                    if (keyboardState.IsKeyDown(rightKey))
-                    {
-                        camera.X += 10f * DeltaTime;
+                        if (keyboardState.IsKeyDown(upKey))
+                        {
+                            camera.Y -= 1000f * DeltaTime;
+                        }
+                        if (keyboardState.IsKeyDown(downKey))
+                        {
+                            camera.Y += 1000f * DeltaTime;
+                        }
+                        if (keyboardState.IsKeyDown(leftKey))
+                        {
+                            camera.X -= 1000f * DeltaTime;
+                        }
+                        if (keyboardState.IsKeyDown(rightKey))
+                        {
+                            camera.X += 1000f * DeltaTime;
+                        }
                     }
                 }
-                else
+
+                background.M31 = foreground.M41 = halfResolution.X - camera.X;
+                background.M32 = foreground.M42 = halfResolution.Y - camera.Y;
+                screenspace.X = (int)(camera.X - halfResolution.X);
+                screenspace.Y = (int)(camera.Y - halfResolution.Y);
+
+                worldSpaceMouseLocation = (mouseState.Position.ToVector2() / screenScale).ToPoint() + (camera / screenScale).ToPoint() - (halfResolution.ToVector2() / screenScale).ToPoint();
+                if (mouseState.RightButton == ButtonState.Pressed && previousMouseState.RightButton != ButtonState.Pressed)
                 {
-                    if (keyboardState.IsKeyDown(upKey))
+                    int destroyBlock = -1;
+
+                    for (int i = 0; i < squareList.Count; i++)
                     {
-                        camera.Y -= 1000f * DeltaTime;
+                        if (squareList[i].Collider.Contains(worldSpaceMouseLocation))
+                        {
+                            destroyBlock = i;
+                        }
                     }
-                    if (keyboardState.IsKeyDown(downKey))
+                    if (destroyBlock >= 0)
                     {
-                        camera.Y += 1000f * DeltaTime;
+
+                        WriteLine("destroying block " + destroyBlock + " at " + worldSpaceMouseLocation);
+                        squareList.RemoveAt(destroyBlock);
                     }
-                    if (keyboardState.IsKeyDown(leftKey))
+                    else
                     {
-                        camera.X -= 1000f * DeltaTime;
+                        WriteLine("spawning block with defaultTex texture at " + worldSpaceMouseLocation);
+                        Texture2D defaultSquareTex = Content.Load<Texture2D>("defaultTex");
+                        Square tempSquare = new Square(defaultSquareTex, worldSpaceMouseLocation, screenScale, false, 0.3f);
+                        squareList.Add(tempSquare);
                     }
-                    if (keyboardState.IsKeyDown(rightKey))
+                }
+
+                if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton != ButtonState.Pressed)
+                {
+                    selectedBlock = -1;
+                    for (int i = 0; i < squareList.Count; i++)
                     {
-                        camera.X += 1000f * DeltaTime;
+                        if (squareList[i].Collider.Contains(worldSpaceMouseLocation))
+                        {
+                            selectedBlock = i;
+                        }
                     }
+                    if (selectedBlock >= 0)
+                    {
+                        WriteLine("moving block " + selectedBlock);
+                    }
+                }
+
+                if (mouseState.LeftButton == ButtonState.Pressed && selectedBlock >= 0)
+                {
+                    squareList[selectedBlock].Position = worldSpaceMouseLocation.ToVector2();
                 }
             }
-
-            background.M31 = foreground.M41 = halfResolution.X - camera.X;
-            background.M32 = foreground.M42 = halfResolution.Y - camera.Y;
-            screenspace.X = (int)(camera.X - halfResolution.X);
-            screenspace.Y = (int)(camera.Y - halfResolution.Y);
-
-            worldSpaceMouseLocation = (mouseState.Position.ToVector2() / screenScale).ToPoint() + (camera / screenScale).ToPoint() - (halfResolution.ToVector2() / screenScale).ToPoint();
-            if (mouseState.RightButton == ButtonState.Pressed && previousMouseState.RightButton != ButtonState.Pressed)
+            finally
             {
-                int destroyBlock = -1;
-
-                for (int i = 0; i < squareList.Count; i++)
+                if (Interlocked.Decrement(ref Irbis.pendingThreads) <= 0)
                 {
-                    if (squareList[i].Collider.Contains(worldSpaceMouseLocation))
-                    {
-                        destroyBlock = i;
-                    }
+                    Irbis.doneEvent.Set();
                 }
-                if (destroyBlock >= 0)
-                {
-
-                    WriteLine("destroying block " + destroyBlock + " at "+ worldSpaceMouseLocation);
-                    squareList.RemoveAt(destroyBlock);
-                }
-                else
-                {
-                    WriteLine("spawning block with defaultTex texture at " + worldSpaceMouseLocation);
-                    Texture2D defaultSquareTex = Content.Load<Texture2D>("defaultTex");
-                    Square tempSquare = new Square(defaultSquareTex, worldSpaceMouseLocation, true, 0.3f);
-                    squareList.Add(tempSquare);
-                }
-            }
-            
-            if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton != ButtonState.Pressed)
-            {
-                selectedBlock = -1;
-                for (int i = 0; i < squareList.Count; i++)
-                {
-                    if (squareList[i].Collider.Contains(worldSpaceMouseLocation))
-                    {
-                        selectedBlock = i;
-                    }
-                }
-                if (selectedBlock >= 0)
-                {
-                    WriteLine("moving block " + selectedBlock);
-                }
-            }
-
-            if (mouseState.LeftButton == ButtonState.Pressed && selectedBlock >= 0)
-            {
-                squareList[selectedBlock].Position = worldSpaceMouseLocation.ToVector2();
             }
         }
 
         public bool ConvertOldLevelFilesToNew()
         {
             string[] leeevelList = Directory.GetFiles(".\\levels");
-            maxButtonsOnScreen = resolution.Y / 25;
             Console.WriteLine("length pre format check: " + leeevelList.Length);
 
             if (true)
@@ -1926,7 +1976,7 @@ namespace Irbis
             for (int i = 0; i < squareList.Count; i++)
             {
                 squareSpawns.Add(squareList[i].Position.ToPoint());
-                squareTextures.Add(squareList[i].tex.Name);
+                squareTextures.Add(squareList[i].texture.Name);
             }
 
             List<Point> BackgroundSquares = new List<Point>();
@@ -1935,7 +1985,7 @@ namespace Irbis
             for (int i = 0; i < backgroundSquareList.Count; i++)
             {
                 BackgroundSquares.Add(backgroundSquareList[i].Position.ToPoint());
-                backgroundTextures.Add(backgroundSquareList[i].tex.Name);
+                backgroundTextures.Add(backgroundSquareList[i].texture.Name);
                 backgroundSquareDepths.Add(backgroundSquareList[i].depth);
             }
 
@@ -2021,11 +2071,7 @@ namespace Irbis
             printList.Clear();
             buttonList.Clear();
 
-            healthBar = null;
-            shieldBar = null;
-            energyBar = null;
-            potionBar = null;
-            enemyHealthBar = null;
+            bars = null;
         }
 
         public void PrintDebugInfo()
@@ -2041,7 +2087,7 @@ namespace Irbis
                 debuginfo.Update("\n    minFPS:" + minFPS.ToString("0000.0"));
                 debuginfo.Update("\n    maxFPS:" + maxFPS.ToString("0000.0"));
             }
-            debuginfo.Update("\n     timer:" + TimerText(timer));
+            debuginfo.Update("\n     timer:" + TimerText(timer)); 
             debuginfo.Update("\nnextFrameTimer:" + nextFrameTimer);
             if (geralt != null)
             {
@@ -2059,9 +2105,12 @@ namespace Irbis
                 debuginfo.Update("\ncolliders:" + collisionObjects.Count);
                 debuginfo.Update("\n collided:" + geralt.collided.Count);
                 debuginfo.Update("\n   walled:" + geralt.Walled);
-                debuginfo.Update("\nactivity:" + geralt.activity);
                 debuginfo.Update("\nattackin:" + geralt.attacking);
                 debuginfo.Update("\nattackID:" + geralt.attackID);
+                debuginfo.Update("\nactivity:" + geralt.activity);
+                debuginfo.Update("\n          animation:" + geralt.currentAnimation);
+                debuginfo.Update("\nanimationSourceRect:" + geralt.animationSourceRect);
+                debuginfo.Update("\n    animationNoLoop:" + geralt.animationNoLoop);
             }
             debuginfo.Update("\ncurrentLevel:" + currentLevel);
             debuginfo.Update("\n onslaught:" + onslaughtMode);
@@ -2120,7 +2169,9 @@ namespace Irbis
                     }
                 }
             }
-            debuginfo.Update("\nCamera: " + camera);
+            debuginfo.Update("\n    Camera:" + camera);
+            debuginfo.Update("\nmainCamera:" + mainCamera);
+
         }
 
         public static Texture2D[] LoadEnchantIcons()
@@ -2161,14 +2212,15 @@ namespace Irbis
         public static int RandomInt(int maxValue)
         {
             maxValue++;
-            int randomInt = RAND.Next(maxValue);
-            if (maxValue <= 1) { return randomInt; }
-            while (randomInt == lastRandomInt)
-            {
-                randomInt = RAND.Next(maxValue);
-            }
-            lastRandomInt = randomInt;
-            return randomInt;
+            //int randomInt = RAND.Next(maxValue);
+            //if (maxValue <= 1) { return randomInt; }
+            //while (randomInt == lastRandomInt)
+            //{
+            //    randomInt = RAND.Next(maxValue);
+            //}
+            //lastRandomInt = randomInt;
+            //return randomInt;
+            return RAND.Next(maxValue);
         }
 
         public static void AddPlayerEnchant(EnchantType enchant)
@@ -2283,6 +2335,35 @@ namespace Irbis
             return ((int)(timer/60)).ToString("00") + ":" + (timer % 60).ToString(timerAccuracy);
         }
 
+        public void FizzBuzz(int loops)
+        {
+            bool fizz;
+            bool buzz;
+
+            for (int i = 1; i <= loops; i++)
+            {
+                fizz = (i % 3 == 0);
+                buzz = (i % 5 == 0);
+
+                Console.WriteLine();
+                if (fizz || buzz)
+                {
+                    if (fizz)
+                    {
+                        Console.Write("fizz");
+                    }
+                    if (buzz)
+                    {
+                        Console.Write("buzz");
+                    }
+                }
+                else
+                {
+                    Console.Write(i);
+                }
+            }
+        }
+
         public static void PlayerDeath()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.PlayerDeath"); }
@@ -2391,7 +2472,7 @@ namespace Irbis
             useKey = playerSettings.useKey;
             altUseKey = playerSettings.altUseKey;
 
-            cameraLerp = playerSettings.cameraLerp;
+            cameraLerp = cameraLerpSetting = playerSettings.cameraLerpSetting;
             cameraLerpSpeed = playerSettings.cameraLerpSpeed;
         
             //debug = playerSettings.debug;
@@ -2437,11 +2518,6 @@ namespace Irbis
 
             projection.M11 = 4f / (resolution.X);
             projection.M22 = 4f / (resolution.Y);
-
-            //halfPixelOffset.M41 = -(resolution.X / (screenScale * 2));
-            //halfPixelOffset.M42 = (resolution.Y / (screenScale * 2));
-            //halfPixelOffset.M44 = (resolution.X / (screenScale * 2));
-            //halfPixelOffset.M22 = (resolution.X / (float)resolution.Y);
 
             graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = playerSettings.vSync;
             graphics.ApplyChanges();
@@ -2579,7 +2655,7 @@ namespace Irbis
             return Point.Zero;
         }
 
-        public void OpenConsole()
+        private void OpenConsole()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.OpenConsole"); }
             textInputBuffer = string.Empty;
@@ -2593,10 +2669,10 @@ namespace Irbis
             consoleMoveTimer = 1 - consoleMoveTimer;
         }
 
-        public void MoveConsole()
+        private void MoveConsole()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.MoveConsole"); }
-            consoleMoveTimer -= DeltaTime;
+            consoleMoveTimer -= (float)elapsedTime;
             if (console)
             {
                 consoleRect.Y = (int)Lerp(-halfResolution.Y, 0, 1 - consoleMoveTimer);
@@ -2613,7 +2689,7 @@ namespace Irbis
             developerConsole.Update(new Point(1, consoleRect.Bottom - (int)(20 * screenScale)));
         }
 
-        public void UpdateConsole()
+        private void UpdateConsole()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.UpdateConsole"); }
             consoleWriteline.Update(textInputBuffer, true);
@@ -2663,7 +2739,7 @@ namespace Irbis
             }
         }
 
-        public void ExportConsole()
+        public static void ExportConsole()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.ExportConsole"); }
             if (meanFPS != null)
@@ -2676,26 +2752,10 @@ namespace Irbis
                 Irbis.WriteLine(" median: " + ((minFPS + maxFPS) / 2));
             }
 
-            string timenow = (DateTime.Now).ToShortDateString() + "." + (DateTime.Now).ToString("HH:mm:ss");
-            string nameoffile = ".\\";
-
-            foreach (char c in timenow)
-            {
-                if (char.IsDigit(c) || c.Equals('.'))
-                {
-                    nameoffile += c;
-                }
-            }
-
-            nameoffile += ".txt";
-
-            Console.WriteLine("saving " + nameoffile + "...");
-            Irbis.WriteLine("saving " + nameoffile + "...");
-
-            File.WriteAllText(nameoffile, developerConsole.Konsole);
+            ExportString(developerConsole.Konsole);
         }
 
-        public void CleanConsole()
+        private void CleanConsole()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.CleanConsole"); }
             while (developerConsole.lines > 10000)
@@ -2704,7 +2764,7 @@ namespace Irbis
             }
         }
 
-        public void ExportString(string stringtoexport)
+        public static void ExportString(string stringtoexport)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.ExportString"); }
             string timenow = (DateTime.Now).ToShortDateString() + "." + (DateTime.Now).ToString("HH:mm:ss.fff");
@@ -2776,28 +2836,13 @@ namespace Irbis
             }
             else if (screenScale <= 0)
             {
-                screenScale = resolution.X / 480f;      //this decides the screen scale on load         960/480
+                screenScale = resolution.X / 480f;      //this decides the screen scale on load         change it to 640 (480)
             }
+
             //change the location of everything
-            if (enemyHealthBar != null)
+            if (bars != null)
             {
-                enemyHealthBar = new UIElementSlider(Direction.right, new Point((int)((resolution.X / screenScale) - (32 / screenScale)), (int)(32 / screenScale)), 250, 10, 100, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.5f);
-            }
-            if (healthBar != null)
-            {
-                healthBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale)), 125, 10, geralt.maxHealth, Color.Red, new Color(166, 030, 030), nullTex, nullTex, nullTex, font, false, 0.505f, 0.55f, 0.5f);
-            }
-            if (shieldBar != null)
-            {
-                shieldBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 10), 75, 10, geralt.maxShield, Color.Red, new Color(255, 170, 000), nullTex, nullTex, shieldBar.overlayTex, font, false, 0.5f);
-            }
-            if (energyBar != null)
-            {
-                energyBar = new UIElementSlider(Direction.left, new Point((int)(32 / screenScale), (int)(32 / screenScale) + 20), 50, 10, geralt.maxEnergy, Color.Red, new Color(000, 234, 255), nullTex, nullTex, nullTex, font, false, 0.5f);
-            }
-            if (potionBar != null)
-            {
-                potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle((int)(32 / screenScale) + 76, (int)(32 / screenScale) + 11, 48, 8), nullTex, nullTex, nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, geralt.maxNumberOfPotions, 3, 0.5f);
+                bars = new Bars(game.Content.Load<Texture2D>("bar health"), game.Content.Load<Texture2D>("bar shield"), game.Content.Load<Texture2D>("bar energy"), game.Content.Load<Texture2D>("shieldBar"), game.Content.Load<Texture2D>("bars"));
             }
             if ((int)(screenScale / 2) == (screenScale / 2))
             {
@@ -2807,6 +2852,8 @@ namespace Irbis
             {
                 textScale = (int)(screenScale / 2) + 1;
             }
+
+            maxButtonsOnScreen = (int)(resolution.Y / (25f * 2 * textScale));
         }
 
         public string Credits()
@@ -2942,6 +2989,7 @@ Thank you, Ze Frank, for the inspiration.";
         public void Quit()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Quit"); }
+            Crash = false;
             if (debug > 0)
             {
                 ExportConsole();
@@ -3162,7 +3210,7 @@ Thank you, Ze Frank, for the inspiration.";
                         if (float.TryParse(value, out floatResult))
                         {
                             geralt.maxHealth = floatResult;
-                            healthBar.maxValue = floatResult;
+                            Bars.healthBar.maxValue = floatResult;
                         }
                         else
                         {
@@ -3173,7 +3221,7 @@ Thank you, Ze Frank, for the inspiration.";
                         if (float.TryParse(value, out floatResult))
                         {
                             geralt.maxShield = floatResult;
-                            shieldBar.maxValue = floatResult;
+                            Bars.shieldBar.maxValue = floatResult;
                         }
                         else
                         {
@@ -3184,7 +3232,7 @@ Thank you, Ze Frank, for the inspiration.";
                         if (float.TryParse(value, out floatResult))
                         {
                             geralt.maxEnergy = floatResult;
-                            energyBar.maxValue = floatResult;
+                            Bars.energyBar.maxValue = floatResult;
                         }
                         else
                         {
@@ -3712,7 +3760,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "cameralerp":                                                                //place new "etc variable" (like vectors and rectangles) above
                         if (bool.TryParse(value, out boolResult))
                         {
-                            cameraLerp = boolResult;
+                            cameraLerpSetting = boolResult;
                         }
                         else
                         {
@@ -3920,14 +3968,14 @@ Thank you, Ze Frank, for the inspiration.";
                             {
                                 WriteLine("spawning block with defaultTex texture at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
                                 Texture2D defaultSquareTex = Content.Load<Texture2D>("defaultTex");
-                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), true, 0.3f);
+                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), screenScale, false, 0.3f);
                                 squareList.Add(tempSquare);
                             }
                             else
                             {
                                 WriteLine("spawning block with" + value + " texture at " + new Point((int)(camera.X % 32), (int)(camera.Y % 32)));
                                 Texture2D defaultSquareTex = Content.Load<Texture2D>(value);
-                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X % 32), (int)(camera.Y % 32)), false, 0.3f);
+                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X % 32), (int)(camera.Y % 32)), screenScale, false, 0.3f);
                                 squareList.Add(tempSquare);
                             }
                         }
@@ -4071,7 +4119,7 @@ Thank you, Ze Frank, for the inspiration.";
                                 float median = 0;
                                 int min = int.MaxValue;
                                 int max = int.MinValue;
-                                WriteLine(tempPoint.Y + " random ints: ");
+                                WriteLine(tempPoint.Y + " random ints between 0 and " + tempPoint.X + ": ");
                                 WriteLine();
                                 for (int i = 0; i < tempPoint.Y; i++)
                                 {
@@ -4319,7 +4367,59 @@ Thank you, Ze Frank, for the inspiration.";
                         WriteLine(shadowShape.ToString());
                         WriteLine();
                         break;
-
+                    case "fizzbuzz":
+                        if (string.IsNullOrWhiteSpace(value))
+                        {
+                            FizzBuzz(100);
+                        }
+                        else
+                        {
+                            if (int.TryParse(value, out intResult))
+                            {
+                                FizzBuzz(intResult);
+                            }
+                            else
+                            {
+                                WriteLine("error: rank \"" + value + "\" could not be parsed");
+                            }
+                        }
+                        break;
+                    case "timescale":
+                        if (string.IsNullOrWhiteSpace(value))
+                        {
+                            WriteLine("Sets the timescale");
+                        }
+                        else
+                        {
+                            if (float.TryParse(value, out floatResult))
+                            {
+                                timeScale = floatResult;
+                            }
+                            else
+                            {
+                                WriteLine("error: \"" + value + "\" could not be parsed");
+                            }
+                        }
+                        WriteLine("Current timescale: " + timeScale);
+                        WriteLine();
+                        break;
+                    case "camerashake":
+                        if (string.IsNullOrWhiteSpace(value))
+                        {
+                            WriteLine("Causes the camera to shake for (magnitude, duration)");
+                        }
+                        else
+                        {
+                            Point tempppoint = PointParser(value);
+                            CameraShake(tempppoint.Y, tempppoint.X);
+                            WriteLine("Shaking the camera at " + tempppoint.X + " magnitude for " + tempppoint.Y + " seconds");
+                        }
+                        WriteLine();
+                        break;
+                    case "onslaught":
+                        onslaughtMode = !onslaughtMode;
+                        WriteLine();
+                        break;
 
 
 
@@ -4422,6 +4522,26 @@ Thank you, Ze Frank, for the inspiration.";
             }
         }
 
+        public static Texture2D ResizeTexture(Texture2D TextureToResize, float Scale, bool PointClamp)
+        {
+            RenderTarget2D renderTarget = new RenderTarget2D(game.GraphicsDevice, (int)(TextureToResize.Bounds.Size.X / Scale), (int)(TextureToResize.Bounds.Size.Y / Scale));
+            game.GraphicsDevice.SetRenderTarget(renderTarget);
+            game.GraphicsDevice.Clear(Color.Transparent);
+            if (PointClamp)
+            {
+                spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Matrix.Identity);
+            }
+            else
+            {
+                spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Matrix.Identity);
+            }
+            spriteBatch.Draw(TextureToResize, new Rectangle(0, 0, (int)(TextureToResize.Bounds.Size.X / Scale), (int)(TextureToResize.Bounds.Size.Y / Scale)), Color.White);
+            spriteBatch.End();
+            game.GraphicsDevice.SetRenderTarget(null);
+
+            return (Texture2D)renderTarget;
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Draw"); }
@@ -4458,10 +4578,10 @@ Thank you, Ze Frank, for the inspiration.";
                     Texture2D squareTex = Content.Load<Texture2D>("originTexture");
                     foreach (Vector2 p in enemySpawnPoints)
                     {
-                        Square tempSquare = new Square(squareTex, p.ToPoint(), true, 0.9f);
+                        Square tempSquare = new Square(squareTex, p.ToPoint(), screenScale, false, 0.9f);
                         tempSquare.Draw(spriteBatch);
                     }
-                    Square tempSquare2 = new Square(squareTex, worldSpaceMouseLocation, true, 0.9f);
+                    Square tempSquare2 = new Square(squareTex, worldSpaceMouseLocation, screenScale, false, 0.9f);
                     tempSquare2.Draw(spriteBatch);
 
                 }
@@ -4501,14 +4621,13 @@ Thank you, Ze Frank, for the inspiration.";
             }
             else
             {
-                if (healthBar != null) { healthBar.Draw(spriteBatch); }
-                if (shieldBar != null) { shieldBar.Draw(spriteBatch); }
-                if (energyBar != null) { energyBar.Draw(spriteBatch); }
-                if (potionBar != null) { potionBar.Draw(spriteBatch); }
-                if (displayEnemyHealth) { enemyHealthBar.Draw(spriteBatch); }
+                if (bars != null) { bars.Draw(spriteBatch); }
             }
-            if (timerDisplay != null) { timerDisplay.Draw(spriteBatch); }
-            if (onslaughtDisplay != null)
+            if (!onslaughtMode)
+            {
+                timerDisplay.Draw(spriteBatch);
+            }
+            else
             {
                 onslaughtDisplay.Draw(spriteBatch);
             }
@@ -4595,6 +4714,7 @@ Thank you, Ze Frank, for the inspiration.";
                         printList[i].Draw(spriteBatch);
                     }
                 }
+
                 foreach (Square s in sList)
                 {
                     s.Draw(spriteBatch);

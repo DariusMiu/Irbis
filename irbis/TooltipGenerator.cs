@@ -1,11 +1,5 @@
 ﻿using Irbis;
-using System;
-using System.IO;
-using System.Text;
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 
 public class TooltipGenerator
@@ -43,7 +37,7 @@ public class TooltipGenerator
         Print popup = new Print(Irbis.Irbis.halfResolution.X, Irbis.Irbis.font, Color.White, false, Location, Direction.forward, depth);
         popup.Update(Text, true);
         Point size = popup.PrintSize(Text);
-        size.X += (topleft.Width + bottomright.Width);
+        size.X += (topleft.Width + bottomright.Width) * Irbis.Irbis.textScale;
         size.Y += (topleft.Height + bottomright.Height);
 
         return new Tooltip(popup, CreateTooltipTexture(size, false), Location);
@@ -102,6 +96,6 @@ public class TooltipGenerator
         spriteBatch.End();
         Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(null);
 
-        return renderTarget;
+        return (Texture2D)renderTarget;
     }
 }

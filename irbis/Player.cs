@@ -49,9 +49,12 @@ public class Player
     public int YcolliderOffset;
     public int colliderWidth;
     public int colliderHeight;
+    public Vector2 shieldOffset;
+    public Print animationFrame;
 
     public Vector2 position;
     public Vector2 velocity;
+    public Vector2 maxVelocity;
     public float terminalVelocity;
 
     public Vector2 hurtVelocity;
@@ -100,17 +103,20 @@ public class Player
     float timeSinceLastFrame;
     float idleTime;
     public float idleTimeMax;
+    float specialTime;
+    float specialIdleTime;
     int currentFrame;
     int currentShieldFrame;
     public bool combat;
 
     float stunTime;
 
-    int currentAnimation;
+    public int currentAnimation;
     int previousAnimation;
     public float[] animationSpeed = new float[20];
     public int[] animationFrames = new int[20];
-    bool animationNoLoop;
+    public bool animationNoLoop;
+    int nextAnimation = -1;
 
     public float shieldAnimationSpeed;
     bool shieldDepleted;
@@ -141,6 +147,7 @@ public class Player
 
     public Location location;
     public Activity activity;
+    public Activity previousActivity;
 
     public float rollTime;
     float rollSpeed;
@@ -196,10 +203,15 @@ public class Player
     public Player(Texture2D t, Texture2D t3, PlayerSettings playerSettings, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Player"); }
-        Load(playerSettings);
+        position = playerSettings.initialPosition;
+        displayRect = new Rectangle((int)position.X, (int)position.Y, 80, 80);
+        animationSourceRect = new Rectangle(0, 0, 80, 80);
+        shieldSourceRect = new Rectangle(0, 0, 128, 128);
+        animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.left, 0.9f);
+        currentFrame = 0;
+        currentAnimation = 0;
 
-        //light = new PointLight();
-        //light.Scale = new Vector2(1000f, 1000f);
+        Load(playerSettings);
 
         stunTime = 0f;
         isRunning = false;
@@ -214,7 +226,6 @@ public class Player
         frameInput = false;
         tex = t;
         shieldTex = t3;
-        position = playerSettings.initialPosition;
         direction = Direction.right;
         location = Location.air;
         activity = Activity.idle;
@@ -232,6 +243,7 @@ public class Player
         attackMovementSpeed = 0.3f * speed;
         jumpTime = 0;
         idleTime = 0f;
+        specialIdleTime = 5f;
         animationNoLoop = false;
 
         position.X -= XcolliderOffset;
@@ -258,12 +270,6 @@ public class Player
         rollTimeMax = 0.25f;
         rollSpeed = 1500f;
         rollTime = 0f;
-
-        displayRect = new Rectangle((int)position.X, (int)position.Y, 128, 128);
-        animationSourceRect = new Rectangle(0, 0, 128, 128);
-        shieldSourceRect = new Rectangle(0, 0, 128, 128);
-        currentFrame = 0;
-        currentAnimation = 0;
 
         shieldtimeSinceLastFrame = 0f;
 
@@ -363,7 +369,7 @@ public class Player
                         potionTime = potionRechargeTime;
                     }
                     potions--;
-                    Irbis.Irbis.potionBar.Update(potions);
+                    Bars.potionBar.Update(potions);
                 }
                 if (Irbis.Irbis.GetJumpKey)
                 {
@@ -565,7 +571,7 @@ public class Player
         energy = maxEnergy;
         shield = maxShield;
         potions = maxNumberOfPotions;
-        if (Irbis.Irbis.potionBar != null) { Irbis.Irbis.potionBar.Update(potions); }
+        if (Bars.potionBar != null) { Bars.potionBar.Update(potions); }
     }
 
     public void Movement()
@@ -769,60 +775,12 @@ public class Player
             timeSinceLastFrame -= animationSpeed[currentAnimation];
         }
 
-        if (currentFrame > animationFrames[currentAnimation])
-        {
-            currentFrame = 0;
-            if (animationNoLoop)
-            {
-                animationNoLoop = false;
-                switch (currentAnimation)
-                {
-                    case 1:
-                        currentAnimation = 0;
-                        break;
-                    case 2:
-                        currentAnimation = 0;
-                        break;
-                    default:
-                        //do nothing
-                        break;
-                }
-            }
-            if (attacking != Attacking.no)
-            {
-                if (attackImmediately)
-                {
-                    attackImmediately = false;
-                    attackID = attackIDtracker++;
-                }
-                else
-                {
-                    attacking = Attacking.no;
-                }
-            }
-        }
-
         if (attacking != Attacking.no)
         {
             activity = Activity.attacking;
         }
         else
         {
-
-            //if (input.X != 0 || input.Y != 0)
-            //{
-            //    if (!inputDown)
-            //    {
-            //        currentFrame = 0;
-            //    }
-
-            //    inputDown = true;
-            //}
-            //else
-            //{
-            //    inputDown = false;
-            //}
-
             if (input != Point.Zero)
             {
                 idleTime = 0;
@@ -892,73 +850,50 @@ public class Player
                 activity = Activity.rolling;
             }
         }
-        switch (activity)
+
+        if (activity == Activity.idle)
         {
-            case Activity.idle:
-                if (direction == Direction.forward)
-                {
-                    if (idleTime > idleTimeMax && idleTimeMax > 0)
-                    {
-                        idleTime = 0;
-                        currentAnimation = 1;
-                        currentFrame = 0;
-                        animationNoLoop = true;
-                    }
-                    else if (!animationNoLoop)
-                    {
-                        currentAnimation = 0;
-                    }
-                }
-                else
-                {
-                    if (idleTime > idleTimeMax && idleTimeMax > 0)
-                    {
-                        idleTime = 0;
-                        currentAnimation = 0;
-                        currentFrame = 0;
-                        direction = Direction.forward;
-                    }
-                    else
-                    {
-                        currentAnimation = 3;
-                    }
-                }
-                if (frameInput || combat)
-                {
-                    idleTime = 0;
-                }
-                else
-                {
-                    idleTime += Irbis.Irbis.DeltaTime;
-                }
-
-                break;
-            case Activity.running:
-                currentAnimation = 5;
-                break;
-            case Activity.jumping:
-                currentAnimation = 5;                                                           //normally 7
-                break;
-            case Activity.rolling:
-                currentAnimation = 5;
-                break;
-            case Activity.falling:
-                currentAnimation = 5;
-                break;
-            case Activity.landing:
-                currentAnimation = 5;
-                break;
-            case Activity.attacking:
-                //Random RAND = new Random();                 //current attack animations are 7 and 9
-                //USE GAME.RAND!
-
-                currentAnimation = 7;
-                break;
-            default:
-                currentAnimation = 5;                                                           //run
-                break;
+            idleTime += Irbis.Irbis.DeltaTime;
+            specialTime += Irbis.Irbis.DeltaTime;
         }
-        if (direction == Direction.right)
+
+        if (currentFrame > animationFrames[currentAnimation])
+        {
+            if (attacking != Attacking.no)
+            {
+                if (attackImmediately)
+                {
+                    attackImmediately = false;
+                    attackID = attackIDtracker++;
+                }
+                else
+                {
+                    attacking = Attacking.no;
+                }
+            }
+            if (animationNoLoop)
+            {
+                switch (currentAnimation)
+                {
+                    case 0:
+                        SetAnimation(1, false);
+                        break;
+                    default:
+                        SetAnimation();
+                        break;
+                }
+            }
+            else
+            {
+                SetAnimation();
+            }
+        }
+        else if (previousActivity != activity)
+        {
+            SetAnimation();
+        }
+
+        if (direction == Direction.right && currentAnimation % 2 != 0)
         {
             currentAnimation++;
         }
@@ -974,8 +909,8 @@ public class Player
 
         //animationSourceRect = new Rectangle(128 * currentFrame, 128 * currentAnimation, 128, 128);
         
-        animationSourceRect.X = 128 * currentFrame;
-        animationSourceRect.Y = 128 * currentAnimation;
+        animationSourceRect.X = 80 * currentFrame;
+        animationSourceRect.Y = 80 * currentAnimation;
         
 
         //abilities
@@ -999,6 +934,101 @@ public class Player
             shieldtimeSinceLastFrame = 0;
         }
         previousAnimation = currentAnimation;
+        previousActivity = activity;
+    }
+
+    public void SetAnimation()
+    {
+        switch (activity)
+        {
+            case Activity.idle:
+                if (direction == Direction.forward)
+                {
+                    if (idleTime >= idleTimeMax && idleTimeMax > 0)
+                    {
+                        idleTime = 0;
+                        SetAnimation(1, false);
+                    }
+                    else
+                    {
+                        SetAnimation(1, false);
+                    }
+                }
+                else
+                {
+                    if (idleTime >= idleTimeMax && idleTimeMax > 0)
+                    {
+                        idleTime -= idleTimeMax;
+                        SetAnimation(0, true);
+                        direction = Direction.forward;
+                    }
+                    else if (specialTime >= specialIdleTime)
+                    {
+                        //currentAnimation = 3;
+                        specialTime -= specialIdleTime;
+                        switch (Irbis.Irbis.RandomInt(1))
+                        {
+                            case 0:
+                                SetAnimation(5, true);
+                                break;
+                            case 1:
+                                SetAnimation(7, true);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        SetAnimation(3, false);
+                    }
+                }
+                if (frameInput || combat)
+                {
+                    idleTime = 0;
+                }
+                else
+                {
+                    //idleTime += Irbis.Irbis.DeltaTime;
+                }
+
+                break;
+            case Activity.running:
+                SetAnimation(9, false);
+                break;
+            case Activity.jumping:
+                SetAnimation(9, false);
+                break;
+            case Activity.rolling:
+                SetAnimation(9, false);
+                break;
+            case Activity.falling:
+                SetAnimation(9, false);
+                break;
+            case Activity.landing:
+                SetAnimation(9, false);
+                break;
+            case Activity.attacking:
+                //Random RAND = new Random();                 //current attack animations are 11 and 13
+                //USE GAME.RAND!
+
+                SetAnimation(11, true);
+                break;
+            default:
+                SetAnimation(9, false);                                                           //run
+                break;
+        }
+        
+        if (nextAnimation >= 0)
+        {
+            SetAnimation(nextAnimation, false);
+        }
+    }
+
+    public void SetAnimation(int animation, bool noLoop)
+    {
+        currentAnimation = animation;
+        currentFrame = 0;
+        nextAnimation = -1;
+        animationNoLoop = noLoop;
     }
 
     public void Noclip()
@@ -1534,6 +1564,7 @@ public class Player
         YcolliderOffset = playerSettings.YcolliderOffset;
         colliderWidth = playerSettings.colliderWidth;
         colliderHeight = playerSettings.colliderHeight;
+        shieldOffset = new Vector2((XcolliderOffset + (colliderWidth / 2f)) - (shieldSourceRect.Width / 2f), (YcolliderOffset + (colliderHeight / 2f)) - (shieldSourceRect.Height / 2f));
         attackColliderWidth = playerSettings.attackColliderWidth;
         attackColliderHeight = playerSettings.attackColliderHeight;
         health = maxHealth = playerSettings.maxHealth;
@@ -1584,10 +1615,21 @@ public class Player
 
     public void Draw(SpriteBatch sb)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Draw"); }
-        if (Irbis.Irbis.debug > 1) { RectangleBorder.Draw(sb, collider, Color.Magenta, 0.9f); }
+        RectangleBorder.Draw(sb, collider, Color.Magenta, true);
+        if (Irbis.Irbis.debug > 1)
+        {
+            animationFrame.Update(currentFrame.ToString(), true);
+            animationFrame.Draw(sb, (position * Irbis.Irbis.screenScale).ToPoint());
+        }
         if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, 0.9f); }
-        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, (Irbis.Irbis.screenScale / 2f), SpriteEffects.None, depth);
-        if (shielded) { sb.Draw(shieldTex, (position - new Vector2(32, 32)) * Irbis.Irbis.screenScale, shieldSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
+        if (shielded)
+        {
+            sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, new Color(255, 240, 209), 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+            sb.Draw(shieldTex, (position + shieldOffset) * Irbis.Irbis.screenScale, shieldSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f);
+        }
+        else
+        {   //ffaa00
+            sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+        }
     }
 }

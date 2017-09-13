@@ -16,9 +16,7 @@ public class Button
     public string buttonStatement;
     public string data;
     Color buttonBorderColor;
-    Color buttonFillColor;
-    bool buttonFill;
-    Print text;
+    public Print text;
 
     bool drawBorder;
 
@@ -30,16 +28,33 @@ public class Button
 
     float depth;
 
-    public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, float drawDepth)
+    public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool AlignRectangle, float drawDepth)
 	{
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Irbis.Button"); }
-        bounds = new Rectangle((int)(buttonBounds.X - ((buttonBounds.Width * Irbis.Irbis.screenScale) - buttonBounds.Width)), (int)(buttonBounds.Y - ((buttonBounds.Height * Irbis.Irbis.screenScale) - buttonBounds.Height)), (int)(buttonBounds.Width * Irbis.Irbis.screenScale), (int)(buttonBounds.Height * Irbis.Irbis.screenScale));
+        if (AlignRectangle)
+        {
+            if (align == Direction.left)
+            {
+                bounds = buttonBounds;
+            }
+            else if (align == Direction.right)
+            {
+                bounds = new Rectangle(new Point(buttonBounds.X - buttonBounds.Width, buttonBounds.Y), buttonBounds.Size);
+            }
+            else
+            {
+                bounds = new Rectangle(new Point(buttonBounds.X - (buttonBounds.Width / 2), buttonBounds.Y), buttonBounds.Size);
+            }
+        }
+        else
+        {
+            bounds = buttonBounds;
+        }
+
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
         buttonBorderColor = borderColor;
         highlightStatement = highlightText;
-        buttonFillColor = fillColor;
-        buttonFill = fill;
         depth = drawDepth;
 
         borderTex = borderTexture;
@@ -52,17 +67,35 @@ public class Button
         drawBorder = true;
     }
 
-    public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, bool dBorder, float drawDepth)
+    public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool AlignRectangle, bool dBorder, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Irbis.Button"); }
-        bounds = buttonBounds;//new Rectangle((int)(buttonBounds.X - ((buttonBounds.Width * Irbis.Irbis.screenScale) - buttonBounds.Width)), (int)(buttonBounds.Y - ((buttonBounds.Height * Irbis.Irbis.screenScale) - buttonBounds.Height)), (int)(buttonBounds.Width * Irbis.Irbis.screenScale), (int)(buttonBounds.Height * Irbis.Irbis.screenScale));
+
+        if (AlignRectangle)
+        {
+            if (align == Direction.left)
+            {
+                bounds = buttonBounds;
+            }
+            else if (align == Direction.right)
+            {
+                bounds = new Rectangle(new Point(buttonBounds.X - buttonBounds.Width, buttonBounds.Y), buttonBounds.Size);
+            }
+            else
+            {
+                bounds = new Rectangle(new Point(buttonBounds.X - (buttonBounds.Width / 2), buttonBounds.Y), buttonBounds.Size);
+            }
+        }
+        else
+        {
+            bounds = buttonBounds;
+        }
+
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
         highlightStatement = highlightText;
 
         buttonBorderColor = borderColor;
-        buttonFillColor = fillColor;
-        buttonFill = fill;
         depth = drawDepth;
 
         borderTex = borderTexture;
@@ -74,17 +107,34 @@ public class Button
         drawBorder = dBorder;
     }
 
-    public Button(Rectangle buttonBounds, Direction align, Side side, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool fill, bool dBorder, float drawDepth)
+    public Button(Rectangle buttonBounds, Direction align, Side side, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool AlignRectangle, bool dBorder, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Button"); }
-        bounds = buttonBounds;// new Rectangle((int)(buttonBounds.X - ((buttonBounds.Width * Irbis.Irbis.screenScale) - buttonBounds.Width)), (int)(buttonBounds.Y - ((buttonBounds.Height * Irbis.Irbis.screenScale) - buttonBounds.Height)), (int)(buttonBounds.Width * Irbis.Irbis.screenScale), (int)(buttonBounds.Height * Irbis.Irbis.screenScale));
+        if (AlignRectangle)
+        {
+            if (align == Direction.left)
+            {
+                bounds = buttonBounds;
+            }
+            else if (align == Direction.right)
+            {
+                bounds = new Rectangle(new Point(buttonBounds.X - buttonBounds.Width, buttonBounds.Y), buttonBounds.Size);
+            }
+            else
+            {
+                bounds = new Rectangle(new Point(buttonBounds.X - (buttonBounds.Width / 2), buttonBounds.Y), buttonBounds.Size);
+            }
+        }
+        else
+        {
+            bounds = buttonBounds;
+        }
+
         alignSide = align;
         data = originalStatement = buttonStatement = buttonText;
         highlightStatement = highlightText;
 
         buttonBorderColor = borderColor;
-        buttonFillColor = fillColor;
-        buttonFill = fill;
         depth = drawDepth;
 
         borderTex = borderTexture;

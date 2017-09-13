@@ -21,7 +21,7 @@ public struct PlayerSettings
     public float minSqrDetectDistance;
     public Vector2 initialPosition;
     public Rectangle boundingBox;
-    public bool cameraLerp;
+    public bool cameraLerpSetting;
     public float cameraLerpSpeed;
     public float shieldRechargeRate;
     public float energyRechargeRate;
@@ -53,7 +53,7 @@ public struct PlayerSettings
     public int attackColliderWidth;
     public int attackColliderHeight;
     public bool fullscreen;
-    public int screenScale;
+    public float screenScale;
     public Point resolution;
     public bool vSync;
     public float masterAudioLevel;
@@ -130,13 +130,13 @@ public struct PlayerSettings
             boundingBox = Rectangle.Empty;
 
             //Do you want the camera to smoothly trail the player?
-            cameraLerp = true;
+            cameraLerpSetting = true;
 
             //How fast should the camera lerp?
             cameraLerpSpeed = 15f;
 
             //Turn off camera "swing" (the motion the camera makes when you attack and miss)
-            cameraSwingSetting = true;
+            cameraSwingSetting = false;
             
             //How far should the camera swing?
             swingMagnitude = 10f;
@@ -180,7 +180,7 @@ public struct PlayerSettings
 
             //This is the time it takes to "charge" the super shockwave (seconds)
             //Basically, how long you have to hold the shockwaveKey to use
-            superShockwaveHoldtime = 0.1f;
+            superShockwaveHoldtime = 0.15f;
 
             //The amount of time the player can hold down the left or right movement key
             //during a wall jump before they drift away from the wall (seconds)
@@ -205,9 +205,9 @@ public struct PlayerSettings
 
             //highly unrecommended to not mess with these unless you really know what you're doing
             //collider size and placement relative to the 128x128 player sprite
-            XcolliderOffset = 24;
-            YcolliderOffset = 16;
-            colliderWidth = 16;
+            XcolliderOffset = 30;
+            YcolliderOffset = 31;
+            colliderWidth = 20;
             colliderHeight = 48;
 
             //this is the size of the rectangle used as the main attack hitbox
@@ -273,15 +273,15 @@ public struct PlayerSettings
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
             animationFrames = new int[20];
-            animationFrames[00] = 7;            //idleforward1
-            animationFrames[01] = 4;            //idleforward2
-            animationFrames[02] = 2;            //idleforward3
-            animationFrames[03] = 7;            //idleleft
-            animationFrames[04] = 7;            //idleright
-            animationFrames[05] = 6;            //runleft
-            animationFrames[06] = 6;            //runright
-            animationFrames[07] = 2;            //attack1left
-            animationFrames[08] = 2;            //attack1right
+            animationFrames[00] = 3;            //idleforward1
+            animationFrames[01] = 15;           //idleforward2
+            animationFrames[02] = 3;            //idleforward3
+            animationFrames[03] = 2;            //idleleft
+            animationFrames[04] = 15;           //idleright
+            animationFrames[05] = 2;            //runleft
+            animationFrames[06] = 15;           //runright
+            animationFrames[07] = 6;            //attack1left
+            animationFrames[08] = 9;            //attack1right
             animationFrames[09] = 2;            //
             animationFrames[10] = 2;            //
             animationFrames[10] = 2;            //
@@ -412,7 +412,7 @@ public struct PlayerSettings
             boundingBox = Rectangle.Empty;
 
             //Do you want the camera to smoothly trail the player?
-            cameraLerp = false;
+            cameraLerpSetting = false;
 
             //How fast should the camera lerp?
             cameraLerpSpeed = 0f;
@@ -613,7 +613,7 @@ public struct PlayerSettings
         boundingBox = settings.boundingBox;
 
         //Do you want the camera to smoothly trail the player?
-        cameraLerp = settings.cameraLerp;
+        cameraLerpSetting = settings.cameraLerpSetting;
 
         //How fast should the camera lerp?
         cameraLerpSpeed = settings.cameraLerpSpeed;
@@ -816,7 +816,7 @@ public struct PlayerSettings
         writer.WriteLine("boundingBox={X:" + settings.boundingBox.Center.X + " Y:" + settings.boundingBox.Center.Y + " Width:" + settings.boundingBox.Width + " Height:" + settings.boundingBox.Height + "}");
         writer.WriteLine("");
         writer.WriteLine(";Do you want the camera to smoothly trail the player?");
-        writer.WriteLine("cameraLerp=" + settings.cameraLerp);
+        writer.WriteLine("cameraLerpSetting=" + settings.cameraLerpSetting);
         writer.WriteLine("");
         writer.WriteLine(";How fast should the camera lerp?");
         writer.WriteLine("cameraLerpSpeed=" + settings.cameraLerpSpeed);
@@ -1065,7 +1065,7 @@ public struct PlayerSettings
         writer.WriteLine("boundingBox={X:" + Irbis.Irbis.boundingBox.Center.X + " Y:" + Irbis.Irbis.boundingBox.Center.Y + " Width:" + Irbis.Irbis.boundingBox.Width + " Height:" + Irbis.Irbis.boundingBox.Height + "}");
         writer.WriteLine("");
         writer.WriteLine(";Do you want the camera to smoothly trail the player?");
-        writer.WriteLine("cameraLerp=" + Irbis.Irbis.cameraLerp);
+        writer.WriteLine("cameraLerpSetting=" + Irbis.Irbis.cameraLerpSetting);
         writer.WriteLine("");
         writer.WriteLine(";How fast should the camera lerp?");
         writer.WriteLine("cameraLerpSpeed=" + Irbis.Irbis.cameraLerpSpeed);
@@ -1090,7 +1090,10 @@ public struct PlayerSettings
         writer.WriteLine("fullscreen=" + Irbis.Irbis.graphics.IsFullScreen);
         writer.WriteLine("");
         writer.WriteLine(";the scale of the window");
-        writer.WriteLine("screenScale=" + Irbis.Irbis.screenScale);
+        if (Irbis.Irbis.screenScale != Irbis.Irbis.resolution.X / 480f)
+        { writer.WriteLine("screenScale=" + Irbis.Irbis.screenScale); }
+        else
+        { writer.WriteLine("screenScale=" + 0); }
         writer.WriteLine("");
         writer.WriteLine(";how much of the world will be drawn");
         writer.WriteLine("resolution=" + Irbis.Irbis.tempResolution);
@@ -1870,9 +1873,12 @@ public struct PlayerSettings
 
                             break;
                         case "screenscale":
-                            if (int.TryParse(value, out intResult))
+                            if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.screenScale = intResult;
+                                if (floatResult > 0)
+                                { playerSettings.screenScale = floatResult; }
+                                else
+                                { playerSettings.screenScale = 0; }
                             }
                             else
                             {
@@ -2209,7 +2215,7 @@ public struct PlayerSettings
                         case "cameralerp":                                                                //place new "etc variable" (like vectors and rectangles) above
                             if (bool.TryParse(value, out boolResult))
                             {
-                                playerSettings.cameraLerp = boolResult;
+                                playerSettings.cameraLerpSetting = boolResult;
                             }
                             else
                             {

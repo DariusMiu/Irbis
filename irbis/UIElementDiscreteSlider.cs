@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Input;
 public class UIElementDiscreteSlider
 {
     Texture2D borderTex;
-    Texture2D overlayTex;
+    Texture2D overlayTexture;
     Texture2D fillTex;
 
     Rectangle[] bounds;
@@ -33,7 +33,7 @@ public class UIElementDiscreteSlider
         sliderArea = areaForSlider;
 
         borderTex = bordertex;
-        overlayTex = overlaytex;
+        overlayTexture = overlaytex;
         fillTex = filltex;
 
         fillColor = fillcolor;
@@ -74,7 +74,7 @@ public class UIElementDiscreteSlider
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.Draw"); }
         for (int i = bounds.Length - 1; i >= 0; i--)
         {
-            if (value >= i) { sb.Draw(overlayTex, locations[i] * Irbis.Irbis.screenScale, bounds[i], overlayColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
+            if (value >= i) { sb.Draw(overlayTexture, locations[i] * Irbis.Irbis.screenScale, bounds[i], overlayColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
             sb.Draw(fillTex, locations[i] * Irbis.Irbis.screenScale, bounds[i], fillColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
             RectangleBorder.Draw(sb, bounds[i], borderColor, true);
         }

@@ -82,6 +82,8 @@ public class VendingMenu
         //infoPrint.statement = "Some bullshit";
         pricePrint = new Print(itemInfo.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(itemInfoVector.X + itemInfo.Width - (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)((itemInfoVector.Y + itemInfo.Height) - (Irbis.Irbis.font.charHeight * 2 * (Irbis.Irbis.textScale)))), Direction.right, 0.9f);
         //pricePrint.statement = "Cost: 200";
+
+        mainBackground = MergeWindows();
     }
 
     public void Update(int selection, long price, string iteminfo, string itemname)
@@ -176,12 +178,30 @@ public class VendingMenu
         return cols;
     }
 
+    public Texture2D MergeWindows()
+    {
+        SpriteBatch sb = new SpriteBatch(Irbis.Irbis.game.GraphicsDevice); ;
+        RenderTarget2D renderTarget = new RenderTarget2D(Irbis.Irbis.game.GraphicsDevice, mainBackground.Bounds.Size.X, mainBackground.Bounds.Size.Y);
+        Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(renderTarget);
+        Irbis.Irbis.game.GraphicsDevice.Clear(Color.Transparent);
+        sb.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, Matrix.Identity);
+
+        sb.Draw(mainBackground, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
+        sb.Draw(itemWindow, itemWindowVector - mainBackgroundVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
+        sb.Draw(itemInfo, itemInfoVector - mainBackgroundVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
+        sb.Draw(pointsWindow, pointsWindowVector - mainBackgroundVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
+        sb.End();
+        Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(null);
+
+        return (Texture2D)renderTarget;
+    }
+
     public void Draw(SpriteBatch sb)
     {
         sb.Draw(mainBackground, mainBackgroundVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
-        sb.Draw(itemWindow, itemWindowVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
-        sb.Draw(itemInfo, itemInfoVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
-        sb.Draw(pointsWindow, pointsWindowVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
+        //sb.Draw(itemWindow, itemWindowVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
+        //sb.Draw(itemInfo, itemInfoVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
+        //sb.Draw(pointsWindow, pointsWindowVector, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.3f);
         pointsPrint.statement = "Points: " + Irbis.Irbis.onslaughtSpawner.Points.ToString();
         pointsPrint.Draw(sb);
         infoTitlePrint.Draw(sb);

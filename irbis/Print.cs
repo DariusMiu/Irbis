@@ -114,6 +114,71 @@ public class Print
     {
         int maxUsedWidth = 0;
         int maxUsedHeight = 0;
+        int tempWidth = 0;
+
+        if (monoSpace)
+        {
+            foreach (char c in StringToMeasure)
+            {
+                if (c.Equals('\n') || c.Equals('\u000D'))
+                {
+                    if (tempWidth > maxUsedWidth)
+                    { maxUsedWidth = tempWidth; }
+                    tempWidth = 0;
+                    maxUsedHeight++;
+                }
+                else
+                {
+                    if (tempWidth >= maxWidth)
+                    {
+                        if (tempWidth > maxUsedWidth)
+                        { maxUsedWidth = tempWidth; }
+                        tempWidth = 0;
+                        maxUsedHeight++;
+                    }
+
+                    tempWidth += (int)(characterHeight * textScale);
+                }
+            }
+        }
+        else
+        {
+            foreach (char c in StringToMeasure)
+            {
+                if (c.Equals('\n'))
+                {
+                    if (tempWidth > maxUsedWidth)
+                    { maxUsedWidth = tempWidth; }
+                    tempWidth = 0;
+                    maxUsedHeight++;
+                }
+                else
+                {
+                    if (tempWidth >= maxWidth)
+                    {
+                        tempWidth = 0;
+                        maxUsedHeight++;
+                    }
+                    if (tempWidth > maxUsedWidth)
+                    { maxUsedWidth = tempWidth; }
+                    tempWidth += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1) * textScale);
+                }
+            }
+        }
+
+        if (maxUsedHeight <= 0)
+        {
+            return new Point(maxUsedWidth, (int)(characterHeight * textScale));
+        }
+
+        return new Point(maxUsedWidth, (maxUsedHeight + 1) * (int)(characterHeight * textScale));
+    }
+
+    public Point PrintSizeNoScale(string StringToMeasure)
+    {
+        int maxUsedWidth = 0;
+        int maxUsedHeight = 0;
+        int tempWidth = 0;
 
         if (monoSpace)
         {
@@ -136,7 +201,7 @@ public class Print
                         maxUsedHeight++;
                     }
 
-                    width += (int)(characterHeight * textScale);
+                    width += (int)(characterHeight);
                 }
             }
         }
@@ -146,31 +211,31 @@ public class Print
             {
                 if (c.Equals('\n'))
                 {
-                    if (width > maxUsedWidth)
-                    { maxUsedWidth = width; }
-                    width = 0;
+                    if (tempWidth > maxUsedWidth)
+                    { maxUsedWidth = tempWidth; }
+                    tempWidth = 0;
                     maxUsedHeight++;
                 }
                 else
                 {
-                    if (width >= maxWidth)
+                    if (tempWidth >= maxWidth)
                     {
-                        if (width > maxUsedWidth)
-                        { maxUsedWidth = width; }
-                        width = 0;
+                        if (tempWidth > maxUsedWidth)
+                        { maxUsedWidth = tempWidth; }
+                        tempWidth = 0;
                         maxUsedHeight++;
                     }
-                    width += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1) * textScale);
+                    tempWidth += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1));
                 }
             }
         }
 
-        if (maxUsedWidth <= 0 || maxUsedHeight <= 0)
+        if (maxUsedHeight <= 0)
         {
-            return new Point(width + (int)(characterHeight * textScale), (height + 1) * (int)(characterHeight * textScale));
+            return new Point(maxUsedWidth, (int)(characterHeight));
         }
 
-        return new Point(maxUsedWidth, (maxUsedHeight + 1) * (int)(characterHeight * textScale));
+        return new Point(maxUsedWidth, (maxUsedHeight + 1) * (int)(characterHeight));
     }
 
     public void Clear()
@@ -856,41 +921,33 @@ public class Print
             }
             else if (align == Direction.right)
             {
-                width = 0;
-                int maxUsedHeight = 0;
-                foreach (char c in statement)
-                {
-                    if (c.Equals('\n'))
-                    {
-                        maxUsedHeight++;
-                    }
-                }
-                height = maxUsedHeight;
+                int MaxUsedWidth = width = PrintSizeNoScale(statement).X;
+                height = 0;
+                displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
                 for (int i = statement.Length - 1; i >= 0; i--)
                 {
                     if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
                     {
-                        width = 0;
-                        height--;
+                        width = MaxUsedWidth;
+                        height++;
+                        displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
                     }
                     else
                     {
                         if (width >= maxWidth)
                         {
-                            width = 0;
-                            height--;
+                            width = MaxUsedWidth;
+                            height++;
+                            displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
                         }
                         Char c = statement[i];
                         int charIndex = ReturnCharacterIndex(c);
                         width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
                         displayPosition.X = origin.X - width;
-                        displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                        //displayRect.Height = characterHeight;
                         if (true)
                         {
                             sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
                         }
-                        //else { return; }
                     }
                 }
             }
