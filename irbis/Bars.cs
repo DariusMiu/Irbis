@@ -15,28 +15,60 @@ public class Bars
     public static UIElementDiscreteSlider potionBar;
     public static UIElementSlider enemyHealthBar;
     public static Texture2D backgroundTexture;
+    public static Texture2D enemyBackgroundTexture;
     public static Vector2 backgroundTextureLocation;
+    public static Vector2 enemyBackgroundTextureLocation;
+    public static Print enemyName;
 
-    public Bars(Texture2D HealthTexture, Texture2D ShieldTexture, Texture2D EnergyTexture, Texture2D ShieldBarOverlay, Texture2D BackgroundTexture)
+    public Bars(Texture2D HealthTexture, Texture2D ShieldTexture, Texture2D EnergyTexture, Texture2D PotionTexture, Texture2D EnemyHealthTexture,
+        Texture2D ShieldBarOverlay,Texture2D BackgroundTexture, Texture2D EnemyBackgroundTexture, Texture2D[] PotionBackgroundTextures)
     {
         int scale = (int)Irbis.Irbis.screenScale;
+        float resizefactor = 16f / scale;
 
-        backgroundTexture = Irbis.Irbis.ResizeTexture(BackgroundTexture, 16f / scale, false);
-        HealthTexture = Irbis.Irbis.ResizeTexture(HealthTexture, 16f / scale, false);
-        ShieldTexture = Irbis.Irbis.ResizeTexture(ShieldTexture, 16f / scale, false);
-        EnergyTexture = Irbis.Irbis.ResizeTexture(EnergyTexture, 16f / scale, false);
+        backgroundTexture = Irbis.Irbis.ResizeTexture(BackgroundTexture, resizefactor, false);
+        enemyBackgroundTexture = Irbis.Irbis.ResizeTexture(EnemyBackgroundTexture, resizefactor, false);
+        HealthTexture = Irbis.Irbis.ResizeTexture(HealthTexture, resizefactor, false);
+        ShieldTexture = Irbis.Irbis.ResizeTexture(ShieldTexture, resizefactor, false);
+        EnergyTexture = Irbis.Irbis.ResizeTexture(EnergyTexture, resizefactor, false);
+        EnemyHealthTexture = Irbis.Irbis.ResizeTexture(EnemyHealthTexture, resizefactor, false);
         backgroundTextureLocation = new Vector2((int)(32), (int)(32));
-        healthBar = new UIElementSlider(Direction.left, new Rectangle(                    (int)(32 + scale),                     (int)(32 + scale), HealthTexture.Width, HealthTexture.Height), new Point((int)(scale), 0), Irbis.Irbis.geralt.maxHealth, Color.White, null, null, null, HealthTexture, null,             null, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
-        shieldBar = new UIElementSlider(Direction.left, new Rectangle((int)(32 + scale) + (int)(15 * scale), (int)(32 + scale) + (int)(10 * scale), ShieldTexture.Width, ShieldTexture.Height), new Point((int)(scale), 0), Irbis.Irbis.geralt.maxShield, Color.White, null, null, null, ShieldTexture, null, ShieldBarOverlay, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
-        energyBar = new UIElementSlider(Direction.left, new Rectangle(                    (int)(32 + scale), (int)(32 + scale) + (int)(16 * scale), EnergyTexture.Width, EnergyTexture.Height), new Point((int)(scale), 0), Irbis.Irbis.geralt.maxEnergy, Color.White, null, null, null, EnergyTexture, null,             null, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
+        enemyBackgroundTextureLocation = new Vector2((int)((Irbis.Irbis.resolution.X) - (enemyBackgroundTexture.Width + 32)), (int)(32));
+
+        for (int i = 0; i < PotionBackgroundTextures.Length; i++)
+        {
+            PotionBackgroundTextures[i] = Irbis.Irbis.ResizeTexture(PotionBackgroundTextures[i], resizefactor, false);
+        }
+        PotionTexture = Irbis.Irbis.ResizeTexture(PotionTexture, resizefactor, false);
+
+        healthBar = new UIElementSlider(Direction.Left, new Rectangle(                    (int)(32 + scale),                     (int)(32 + scale), HealthTexture.Width, HealthTexture.Height),
+            new Point((int)(scale), 0), Irbis.Irbis.jamie.maxHealth, Color.White, null, null, null, HealthTexture, null,             null, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
+        shieldBar = new UIElementSlider(Direction.Left, new Rectangle((int)(32 + scale) + (int)(15 * scale), (int)(32 + scale) + (int)(10 * scale), ShieldTexture.Width, ShieldTexture.Height),
+            new Point((int)(scale), 0), Irbis.Irbis.jamie.maxShield, Color.White, null, null, null, ShieldTexture, null, ShieldBarOverlay, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
+        energyBar = new UIElementSlider(Direction.Left, new Rectangle(                    (int)(32 + scale), (int)(32 + scale) + (int)(16 * scale), EnergyTexture.Width, EnergyTexture.Height),
+            new Point((int)(scale), 0), Irbis.Irbis.jamie.maxEnergy, Color.White, null, null, null, EnergyTexture, null,             null, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
         energyBar.drawOverlay = false;
-        potionBar = new UIElementDiscreteSlider(Direction.left, new Rectangle((int)(32 / scale) + 76, (int)(32 / scale) + 11, 48, 8), Irbis.Irbis.nullTex, Irbis.Irbis.nullTex, Irbis.Irbis.nullTex, Color.DarkSlateGray, Color.DarkRed, Color.DarkSlateBlue, Irbis.Irbis.geralt.maxNumberOfPotions, 3, 0.5f);
-        enemyHealthBar = new UIElementSlider(Direction.right, new Rectangle((int)((Irbis.Irbis.resolution.X / scale) - (32 / scale)), (int)(32 / scale), 250, 10), Point.Zero, 100, new Color(108, 003, 003), Color.White, Color.White, Color.Red, Irbis.Irbis.nullTex, null, null, true, Irbis.Irbis.font, true, 0.5f, 0.499f, 0.501f, 0.502f);
+
+        int maxpots = 3;
+        if (Irbis.Irbis.jamie.maxNumberOfPotions / 2 > 3)
+        {
+            maxpots = Irbis.Irbis.jamie.maxNumberOfPotions / 2;
+        }
+
+        potionBar = new UIElementDiscreteSlider(Direction.Left, (backgroundTextureLocation + (new Vector2(1040, 176) / resizefactor)).ToPoint(),
+            (backgroundTextureLocation + (new Vector2(800, 336) / resizefactor)).ToPoint(), new[] { PotionTexture }, PotionBackgroundTextures, null, Color.White, Color.White,
+            null, Irbis.Irbis.jamie.maxNumberOfPotions, maxpots, (new Vector2(222, 96) / resizefactor).ToPoint(), (new Vector2(272,128) / resizefactor).ToPoint(), scale,  0.5f);
+
+        enemyHealthBar = new UIElementSlider(Direction.Right, new Rectangle((int)((Irbis.Irbis.resolution.X) - (32 + scale)), (int)(32 + scale), EnemyHealthTexture.Width, EnemyHealthTexture.Height),
+            new Point((scale / 2) * -1, 0), 100, new Color(108, 003, 003), null, null, null, EnemyHealthTexture, null, null, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
+        enemyName = new Print(EnemyHealthTexture.Width, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - (int)(32 + (18 * scale)),
+            (int)(40 + (10 * scale))), Direction.Right, 0.6f);
+        enemyName.Update("default", true);
 
         //For crappy computers?
-        //healthBar = new UIElementSlider(Direction.left, new Rectangle((int)(32 / screenScale), (int)(32 / screenScale),     125, 10), geralt.maxHealth, new Color(166, 030, 030), Color.White, Color.White, Color.Red, nullTex, null,         null, true, font, true, 0.5f, 0.499f, 0.501f, 0.502f);
-        //shieldBar = new UIElementSlider(Direction.left, new Rectangle((int)(32 / screenScale), (int)(32 / screenScale) + 10, 75, 10), geralt.maxShield, new Color(255, 170, 000), Color.White, Color.White, Color.Red, nullTex, null, shieldBarTex, true, font, true, 0.5f, 0.499f, 0.501f, 0.502f);
-        //energyBar = new UIElementSlider(Direction.left, new Rectangle((int)(32 / screenScale), (int)(32 / screenScale) + 20, 50, 10), geralt.maxEnergy, new Color(000, 234, 255), Color.White, Color.White, Color.Red, nullTex, null,         null, true, font, true, 0.5f, 0.499f, 0.501f, 0.502f);
+        //healthBar = new UIElementSlider(Direction.Left, new Rectangle((int)(32 / screenScale), (int)(32 / screenScale),     125, 10), jamie.maxHealth, new Color(166, 030, 030), Color.White, Color.White, Color.Red, nullTex, null,         null, true, font, true, 0.5f, 0.499f, 0.501f, 0.502f);
+        //shieldBar = new UIElementSlider(Direction.Left, new Rectangle((int)(32 / screenScale), (int)(32 / screenScale) + 10, 75, 10), jamie.maxShield, new Color(255, 170, 000), Color.White, Color.White, Color.Red, nullTex, null, shieldBarTex, true, font, true, 0.5f, 0.499f, 0.501f, 0.502f);
+        //energyBar = new UIElementSlider(Direction.Left, new Rectangle((int)(32 / screenScale), (int)(32 / screenScale) + 20, 50, 10), jamie.maxEnergy, new Color(000, 234, 255), Color.White, Color.White, Color.Red, nullTex, null,         null, true, font, true, 0.5f, 0.499f, 0.501f, 0.502f);
     }
 
     public void Draw(SpriteBatch sb)
@@ -46,6 +78,11 @@ public class Bars
         if (shieldBar != null) { shieldBar.Draw(sb); }
         if (energyBar != null) { energyBar.Draw(sb); }
         if (potionBar != null) { potionBar.Draw(sb); }
-        if (Irbis.Irbis.displayEnemyHealth) { enemyHealthBar.Draw(sb); }
+        if (Irbis.Irbis.displayEnemyHealth)
+        {
+            sb.Draw(enemyBackgroundTexture, enemyBackgroundTextureLocation, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.499f);
+            enemyHealthBar.Draw(sb);
+            enemyName.Draw(sb);
+        }
     }
 }

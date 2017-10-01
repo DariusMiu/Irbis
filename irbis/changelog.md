@@ -1,18 +1,29 @@
-## Build Version: 0.1.4.1
-## |Menus
+## Build Version: 0.1.5.0
+## |Long time no see
 
-### Change Log (new changes since 0.1.4.0)
+### Change Log (new changes since 0.1.4.0) 
 `01.` Background textures now center properly  
 `02.` Screenscale is not saved if it is automatically generated (so that if you change window size it doesn't use the larger scale)  
 `03.` Vending Machine only uses one texture for the background instead of four (slightly more efficient)  
 `04.` New bars mocked up  
+`05.` New bars implemented  
+`06.` New logo  
+`07.` Added Lizard Boss (control with O and P)  
+`08.` Collision updated to work properly with moving objects  
+`09.` Updated player animation system  
+`10.` Updated player spritesheet  
+`11.` Improved debugging modes  
+`12.` Fixed camera shake  
+`13.` Other minor changes  
 
-### Known Bug List
+
+### Known Bug List 
 `01.` Background textures aren't centered properly (top left corner of the texture is in the center of the screen)  
 `02.` Multithreading breaks down when too many enemies are being updated. (off by default)  
 `03.` Vending Machine menu still slows the game down a lot (~30%) I think this is due to the transparency  
+`04.` Camera swing has been disabled until a fix is found  
 
-### Controls
+### Controls 
 `         A:` Move left  
 `         D:` Move right  
 `         Q:` Shield  

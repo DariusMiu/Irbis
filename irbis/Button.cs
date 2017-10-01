@@ -33,11 +33,11 @@ public class Button
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Irbis.Button"); }
         if (AlignRectangle)
         {
-            if (align == Direction.left)
+            if (align == Direction.Left)
             {
                 bounds = buttonBounds;
             }
-            else if (align == Direction.right)
+            else if (align == Direction.Right)
             {
                 bounds = new Rectangle(new Point(buttonBounds.X - buttonBounds.Width, buttonBounds.Y), buttonBounds.Size);
             }
@@ -61,7 +61,7 @@ public class Button
         buttonLocation = bounds.Center;
 
 
-        text = new Print(bounds.Width, font, Color.White, false, buttonLocation, Direction.forward, depth);
+        text = new Print(bounds.Width, font, Color.White, false, buttonLocation, Direction.Forward, depth);
         text.Update(originalStatement);
 
         drawBorder = true;
@@ -73,11 +73,11 @@ public class Button
 
         if (AlignRectangle)
         {
-            if (align == Direction.left)
+            if (align == Direction.Left)
             {
                 bounds = buttonBounds;
             }
-            else if (align == Direction.right)
+            else if (align == Direction.Right)
             {
                 bounds = new Rectangle(new Point(buttonBounds.X - buttonBounds.Width, buttonBounds.Y), buttonBounds.Size);
             }
@@ -112,11 +112,11 @@ public class Button
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Button.Button"); }
         if (AlignRectangle)
         {
-            if (align == Direction.left)
+            if (align == Direction.Left)
             {
                 bounds = buttonBounds;
             }
-            else if (align == Direction.right)
+            else if (align == Direction.Right)
             {
                 bounds = new Rectangle(new Point(buttonBounds.X - buttonBounds.Width, buttonBounds.Y), buttonBounds.Size);
             }
@@ -140,19 +140,19 @@ public class Button
         borderTex = borderTexture;
         buttonLocation = bounds.Center;
 
-        if (side == Side.left)
+        if (side == Side.Left)
         {
             text = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Left, bounds.Center.Y), align, depth);
         }
-        else if (side == Side.right)
+        else if (side == Side.Right)
         {
             text = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Right, bounds.Center.Y), align, depth);
         }
-        else if(side == Side.top)
+        else if(side == Side.Top)
         {
             text = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Center.X, bounds.Top), align, depth);
         }
-        else if (side == Side.bottom)
+        else if (side == Side.Bottom)
         {
             text = new Print(bounds.Width, font, Color.White, false, new Point(bounds.Center.X, bounds.Bottom), align, depth);
         }

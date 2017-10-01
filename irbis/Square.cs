@@ -31,9 +31,22 @@ public class Square : ICollisionObject
             position.Y = value.Y - 16;
         }
     }
+    private Vector2 position;
+
+    public Vector2 Velocity
+    {
+        get
+        {
+            return velocity;
+        }
+        set
+        {
+            velocity = value;
+        }
+    }
+    private Vector2 velocity;
 
     public Texture2D texture;
-    private Vector2 position;
     public bool drawTex;
     public float depth;
     public Color color;

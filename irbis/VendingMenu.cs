@@ -25,13 +25,13 @@ public class VendingMenu
     Texture2D[] icons;
     Vector2[] iconPositions;
     string[] itemNames;
-    public long[] cost;
+    public ulong[] cost;
     int[] iconrows;
     int iconsPerRow;
     int currentSelection;
     Rectangle currentSelectionRect;
 
-    public VendingMenu(Texture2D[] Icons, string[] ItemNames, long[] Prices)
+    public VendingMenu(Texture2D[] Icons, string[] ItemNames, ulong[] Prices)
     {
         mainBackground = Irbis.Irbis.tooltipGenerator.CreateTooltipTexture(Irbis.Irbis.resolution - (new Vector2(32 * Irbis.Irbis.screenScale, 32 * Irbis.Irbis.screenScale)).ToPoint() , true);
         mainBackgroundVector = new Vector2((int)(16 * Irbis.Irbis.screenScale), (int)(16 * Irbis.Irbis.screenScale));
@@ -42,7 +42,7 @@ public class VendingMenu
         itemInfoVector = new Vector2((int)(Irbis.Irbis.resolution.X - (itemInfo.Width + (32 * Irbis.Irbis.screenScale))), (int)(32 * Irbis.Irbis.screenScale));
         pointsWindowVector = new Vector2(Irbis.Irbis.resolution.X - (itemInfo.Width + (32 * Irbis.Irbis.screenScale)), itemInfoVector.Y + (24 * Irbis.Irbis.screenScale) + itemInfo.Height);
 
-        pointsPrint = new Print(pointsWindow.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(pointsWindowVector.X + (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)(pointsWindowVector.Y + (pointsWindow.Height / 2f) /*- ((Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale) / 2f)*/)), Direction.left, 0.9f);
+        pointsPrint = new Print(pointsWindow.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(pointsWindowVector.X + (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)(pointsWindowVector.Y + (pointsWindow.Height / 2f) /*- ((Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale) / 2f)*/)), Direction.Left, 0.9f);
 
         icons = Icons;
         //iconPositions = IconPositions;
@@ -75,18 +75,18 @@ public class VendingMenu
         currentSelection = 0;
         currentSelectionRect = new Rectangle(iconPositions[currentSelection].ToPoint(), new Point((int)(icons[currentSelection].Width * Irbis.Irbis.screenScale), (int)(icons[currentSelection].Height * Irbis.Irbis.screenScale)));
 
-        infoTitlePrint = new Print(pointsWindow.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(pointsWindowVector.X + (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)(itemInfoVector.Y + (Irbis.Irbis.font.charHeight * (Irbis.Irbis.textScale + 1)))), Direction.left, 0.9f);
+        infoTitlePrint = new Print(pointsWindow.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(pointsWindowVector.X + (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)(itemInfoVector.Y + (Irbis.Irbis.font.charHeight * (Irbis.Irbis.textScale + 1)))), Direction.Left, 0.9f);
         infoTitlePrint.textScale = Irbis.Irbis.textScale + 1;
         //infoTitlePrint.statement = "Fire";
-        infoPrint = new Print(itemInfo.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(itemInfoVector.X + (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)(itemInfoVector.Y + (Irbis.Irbis.font.charHeight * 2.5f * (Irbis.Irbis.textScale + 1)))), Direction.left, 0.9f);
+        infoPrint = new Print(itemInfo.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(itemInfoVector.X + (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)(itemInfoVector.Y + (Irbis.Irbis.font.charHeight * 2.5f * (Irbis.Irbis.textScale + 1)))), Direction.Left, 0.9f);
         //infoPrint.statement = "Some bullshit";
-        pricePrint = new Print(itemInfo.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(itemInfoVector.X + itemInfo.Width - (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)((itemInfoVector.Y + itemInfo.Height) - (Irbis.Irbis.font.charHeight * 2 * (Irbis.Irbis.textScale)))), Direction.right, 0.9f);
+        pricePrint = new Print(itemInfo.Width - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, false, new Point((int)(itemInfoVector.X + itemInfo.Width - (Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale)), (int)((itemInfoVector.Y + itemInfo.Height) - (Irbis.Irbis.font.charHeight * 2 * (Irbis.Irbis.textScale)))), Direction.Right, 0.9f);
         //pricePrint.statement = "Cost: 200";
 
         mainBackground = MergeWindows();
     }
 
-    public void Update(int selection, long price, string iteminfo, string itemname)
+    public void Update(int selection, ulong price, string iteminfo, string itemname)
     {
         currentSelection = selection;
         currentSelectionRect = new Rectangle(iconPositions[currentSelection].ToPoint(), new Point((int)(icons[currentSelection].Width * Irbis.Irbis.screenScale), (int)(icons[currentSelection].Height * Irbis.Irbis.screenScale)));

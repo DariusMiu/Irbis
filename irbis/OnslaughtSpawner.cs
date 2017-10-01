@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Input;
 
 public class OnslaughtSpawner
 {
-    public long Points
+    public ulong Points
     {
         get
         {
@@ -21,7 +21,7 @@ public class OnslaughtSpawner
             points = value;
         }
     }
-    private long points;
+    private ulong points;
     private float timer;
     public float timeUntilNextSpawn;
     public int maxEnemies;
@@ -33,8 +33,8 @@ public class OnslaughtSpawner
     public float enemySpeed;
     public bool waveStarted;
     public int enemiesKilled;
-    public int pointsPerKill;
-    public int pointsPerWave;
+    public uint pointsPerKill;
+    public uint pointsPerWave;
 
     public List<VendingMachine> vendingMachineList;
 

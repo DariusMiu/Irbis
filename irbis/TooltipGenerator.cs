@@ -34,7 +34,7 @@ public class TooltipGenerator
 
     public Tooltip CreateTooltip(string Text, Point Location, float depth)
     {
-        Print popup = new Print(Irbis.Irbis.halfResolution.X, Irbis.Irbis.font, Color.White, false, Location, Direction.forward, depth);
+        Print popup = new Print(Irbis.Irbis.halfResolution.X, Irbis.Irbis.font, Color.White, false, Location, Direction.Forward, depth);
         popup.Update(Text, true);
         Point size = popup.PrintSize(Text);
         size.X += (topleft.Width + bottomright.Width) * Irbis.Irbis.textScale;

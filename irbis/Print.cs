@@ -84,7 +84,7 @@ public class Print
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Print"); }
         konsole = new StringBuilder();
-        align = Direction.left;
+        align = Direction.Left;
         depth = 1f;
         tex = CONSOLE.tex;
         width = 0;
@@ -577,6 +577,15 @@ public class Print
             case '\u007e': //~
                 return 78;
 
+            case '\u20af': //₯
+                return 96;
+
+            //case '\u007e': //~
+                //return 97;
+
+            //case '\u007e': //~
+                //return 98;
+
             default:
                 return 95;
 
@@ -665,7 +674,7 @@ public class Print
         //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||MONOSPACE
         if (monoSpace)
         {
-            if (align == Direction.left)
+            if (align == Direction.Left)
             {
                 width = 0;
                 if (scrollDown)
@@ -759,7 +768,7 @@ public class Print
                 }
 
             }
-            else if (align == Direction.right)
+            else if (align == Direction.Right)
             {
                 width = -1;
                 if (scrollDown)
@@ -880,7 +889,7 @@ public class Print
         //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||NON MONOSPACE
         else
         {
-            if (align == Direction.left)
+            if (align == Direction.Left)
             {
                 width = 0;
                 if (scrollDown)
@@ -919,7 +928,7 @@ public class Print
                     }
                 }
             }
-            else if (align == Direction.right)
+            else if (align == Direction.Right)
             {
                 int MaxUsedWidth = width = PrintSizeNoScale(statement).X;
                 height = 0;
@@ -1027,7 +1036,7 @@ public class Print
 
         if (monoSpace)
         {
-            if (align == Direction.left)
+            if (align == Direction.Left)
             {
                 width = 0;
                 if (scrollDown)
@@ -1121,7 +1130,7 @@ public class Print
                 }
 
             }
-            else if (align == Direction.right)
+            else if (align == Direction.Right)
             {
                 width = -1;
                 if (scrollDown)
@@ -1242,7 +1251,7 @@ public class Print
         //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||NON MONOSPACE
         else
         {
-            if (align == Direction.left)
+            if (align == Direction.Left)
             {
                 width = 0;
                 if (scrollDown)
@@ -1281,7 +1290,7 @@ public class Print
                     }
                 }
             }
-            else if (align == Direction.right)
+            else if (align == Direction.Right)
             {
                 width = 0;
                 int maxUsedHeight = 0;

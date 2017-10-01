@@ -12,48 +12,48 @@ namespace Irbis
 {
     public enum Side
     {
-        top = 0,
-        right = 1,
-        bottom = 2,
-        left = 3,
+        Top = 0,
+        Right = 1,
+        Bottom = 2,
+        Left = 3,
     }
     public enum Direction
     {
-        forward = 0,
-        left = 1,
-        right = 2,
+        Forward = 0,
+        Left = 1,
+        Right = 2,
     }
     public enum Location
     {
-        ground = 0,
-        air = 1,
-        water = 2,
+        Ground = 0,
+        Air = 1,
+        Water = 2,
     }
     public enum Activity
     {
-        idle = 0,
-        running = 1,
-        jumping = 2,
-        rolling = 3,
-        falling = 4,
-        landing = 5,
-        attacking = 6,
+        Idle = 0,
+        Running = 1,
+        Jumping = 2,
+        Rolling = 3,
+        Falling = 4,
+        Landing = 5,
+        Attacking = 6,
     }
     public enum Attacking
     {
-        no = 0,
-        attack1 = 1,
-        attack2 = 2,
+        No = 0,
+        Attack1 = 1,
+        Attack2 = 2,
 
     }
     public enum AI
     {
-        wander = 0,
-        patrol = 1,
-        seek = 2,
-        combat = 3,
-        stunned = 4,
-        persue = 5,
+        Wander = 0,
+        Patrol = 1,
+        Seek = 2,
+        Combat = 3,
+        Stunned = 4,
+        Persue = 5,
     }
     public enum EnchantType
     {
@@ -83,7 +83,6 @@ namespace Irbis
         }
         void Draw(SpriteBatch sb);
     }
-
     public interface ICollisionObject
     {
         Rectangle Collider
@@ -91,9 +90,12 @@ namespace Irbis
             get;
             set;
         }
+        Vector2 Velocity
+        {
+            get;
+        }
     }
-
-    public interface IEnemy
+    public interface IEnemy : ICollisionObject
     {
         Rectangle Collider
         {
@@ -124,52 +126,32 @@ namespace Irbis
         {
             get;
         }
+        string EnemyName
+        {
+            get;
+        }
+        bool AIenabled
+        {
+            get;
+            set;
+        }
+        float Mass
+        {
+            get;
+        }
+        float ShockwaveMaxEffectDistanceSquared
+        {
+            get;
+        }
+        bool Update();
+        void ThreadPoolCallback(Object threadContext);
         void AddEffect(Enchant effect);
         void UpgradeEffect(int index, float duration);
         void Knockback(Direction knockbackDirection, float strength);
         void Hurt(float damage);
         void Stun(float duration);
-    }
-
-    public interface IBoss
-    {
-        Rectangle Collider
-        {
-            get;
-            set;
-        }
-        bool HurtLeft
-        {
-            get;
-        }
-        bool HurtRight
-        {
-            get;
-        }
-        bool HurtTop
-        {
-            get;
-        }
-        bool HurtBottom
-        {
-            get;
-        }
-        float MaxHealth
-        {
-            get;
-            set;
-        }
-        float Health
-        {
-            get;
-            set;
-        }
-        Vector2 Position
-        {
-            get;
-            set;
-        }
-
+        void Draw(SpriteBatch sb);
+        void Shockwave(float distance, float power, Vector2 heading);
     }
 
     public class Irbis : Game
@@ -177,7 +159,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.4.2";
+        static string versionNo = "0.1.5.0";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
@@ -563,14 +545,13 @@ namespace Irbis
         public static List<Square> sList;
         public static List<Square> squareList;
         public static List<Button> buttonList;
-        public static List<Enemy> eList;
         public static List<IEnemy> enemyList;
-        public static List<Print> printList;
+        public static List<Print> printList;    //₯
         public static List<UIElementSlider> sliderList;
         public static string[] levelList;
 
                                                                                                     //player
-        public static Player geralt;
+        public static Player jamie;
         public static Vector2 initialPos;
 
                                                                                                     //onslaught
@@ -754,7 +735,6 @@ namespace Irbis
             squareList = new List<Square>();
             backgroundSquareList = new List<Square>();
             buttonList = new List<Button>();
-            eList = new List<Enemy>();
             enemyList = new List<IEnemy>();
             printList = new List<Print>();
             sliderList = new List<UIElementSlider>();
@@ -847,8 +827,8 @@ namespace Irbis
             Texture2D playerTex = Content.Load<Texture2D>("player");
             Texture2D shieldTex = Content.Load<Texture2D>("shield");
 
-            geralt = new Player(playerTex, shieldTex, playerSettings, 0.5f);
-            geralt.Respawn(new Vector2(-1000f, -1000f));
+            jamie = new Player(playerTex, shieldTex, playerSettings, 0.5f);
+            jamie.Respawn(new Vector2(-1000f, -1000f));
 
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -870,8 +850,8 @@ namespace Irbis
 
             menu = new Menu();
 
-            debuginfo = new Print(resolution.X, font2, Color.White, true, new Point(1, 3), Direction.left, 0.95f);
-            consoleWriteline = new Print(resolution.X, font2, Color.White, true, new Point(1, 5), Direction.left, 1f);
+            debuginfo = new Print(resolution.X, font2, Color.White, true, new Point(1, 3), Direction.Left, 0.95f);
+            consoleWriteline = new Print(resolution.X, font2, Color.White, true, new Point(1, 5), Direction.Left, 1f);
             developerConsole.Update(resolution.X);
             developerConsole.scrollDown = false;
             consoleMoveTimer = 0f;
@@ -993,7 +973,7 @@ namespace Irbis
         public void LoadMenu(int Scene, int startMenuLocation, bool loadSettings)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.LoadMenu"); }
-            //geralt.inputEnabled = false;
+            //jamie.inputEnabled = false;
             this.IsMouseVisible = true;
             scene = Scene;
             sceneIsMenu = true;
@@ -1007,7 +987,7 @@ namespace Irbis
             //sList.Add(new Square(menuTex[scene], Color.White, Point.Zero, menuTex[scene].Width, menuTex[scene].Height, false, true, true, 0.5f));
             if (resetRequired)
             {
-                Print resettt = new Print(resolution.X - 132, font, Color.White, false, new Point(resolution.X - 32, resolution.Y - 26), Direction.right, 0.5f);
+                Print resettt = new Print(resolution.X - 132, font, Color.White, false, new Point(resolution.X - 32, resolution.Y - 26), Direction.Right, 0.5f);
                 resettt.Update("Restart the game to apply resolution changes!");
                 printList.Add(resettt);
             }
@@ -1049,21 +1029,21 @@ namespace Irbis
 
             if (loadUI)
             {
-                bars = new Bars(Content.Load<Texture2D>("bar health"), Content.Load<Texture2D>("bar shield"), Content.Load<Texture2D>("bar energy"), Content.Load<Texture2D>("shieldBar"), Content.Load<Texture2D>("bars"));
+                bars = new Bars(Content.Load<Texture2D>("bar health"), Content.Load<Texture2D>("bar shield"), Content.Load<Texture2D>("bar energy"), Content.Load<Texture2D>("bar potion fill 1"), Content.Load<Texture2D>("bar enemy fill"), Content.Load<Texture2D>("shieldBar"), Content.Load<Texture2D>("bars"), Content.Load<Texture2D>("bar enemy"), new[] { Content.Load<Texture2D>("bar potion 1"), Content.Load<Texture2D>("bar potion 2"), Content.Load<Texture2D>("bar potion 3")});
 
                 
 
-                if (geralt != null)
+                if (jamie != null)
                 {
-                    geralt.Respawn(initialPos);
-                    //lighting.Lights.Add(geralt.light);
+                    jamie.Respawn(initialPos);
+                    //lighting.Lights.Add(jamie.light);
                 }
             }
             else
             {
-                if (geralt != null)
+                if (jamie != null)
                 {
-                    geralt.Respawn(new Vector2(-1000f, -1000f));
+                    jamie.Respawn(new Vector2(-1000f, -1000f));
                 }
             }
 
@@ -1076,10 +1056,10 @@ namespace Irbis
                 string[] vendingMachineTextures = thisLevel.VendingMachineTextures;
                 for (int i = 0; i < vendingMachineTextures.Length; i++)
                 {
-                    onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i], new Point(64, 64)), Content.Load<Texture2D>(vendingMachineTextures[i]), 0.35f));
+                    onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i] + new Point(0,52), new Point(64, 64)), Content.Load<Texture2D>(vendingMachineTextures[i]), 0.35f));
                 }
 
-                onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
+                onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.Left, 0.6f);
                 onslaughtDisplay.Update("Onslaught Wave " + onslaughtSpawner.wave, true);
             }
             else
@@ -1087,7 +1067,7 @@ namespace Irbis
                 onslaughtDisplay = null;
                 onslaughtSpawner = null;
             }
-            timerDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.left, 0.6f);
+            timerDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.Left, 0.6f);
 
             for (int i = 0; i < thisLevel.squareTextures.Count; i++)
             {
@@ -1118,6 +1098,9 @@ namespace Irbis
                 savefile.Save(autosave);
                 WriteLine("for a list of all squares, enter: squareList");
             }
+
+
+            SummonLizardGuy();
         }
 
         
@@ -1256,15 +1239,14 @@ namespace Irbis
         protected void LevelUpdate(GameTime gameTime)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelUpdate"); }
-            if ((keyboardState.IsKeyDown(Keys.T) && !acceptTextInput) || geralt.health <= 0)                            //RESPAWN
+            if ((keyboardState.IsKeyDown(Keys.T) && !acceptTextInput) || jamie.health <= 0)                            //RESPAWN
             {
-                geralt.Respawn(initialPos);
+                jamie.Respawn(initialPos);
 
-                foreach (Enemy e in eList)
+                foreach (IEnemy e in enemyList)
                 {
                     collisionObjects.Remove(e);
                 }
-                eList.Clear();
                 enemyList.Clear();
             }
 
@@ -1291,7 +1273,7 @@ namespace Irbis
 
 
 
-                geralt.Update();    // multithread this eventually
+                jamie.Update();    // multithread this eventually
 
 
 
@@ -1307,27 +1289,27 @@ namespace Irbis
 
                 if (timerDisplay != null) { timerDisplay.Update(TimerText(timer), true); }
 
-                Bars.healthBar.UpdateValue(geralt.health);
-                Bars.shieldBar.UpdateValue(geralt.shield, geralt.shielded);
-                Bars.shieldBar.UpdateValue(geralt.shield, false);
-                Bars.energyBar.UpdateValue(geralt.energy);
+                Bars.healthBar.UpdateValue(jamie.health);
+                Bars.shieldBar.UpdateValue(jamie.shield, jamie.shielded);
+                Bars.shieldBar.UpdateValue(jamie.shield, false);
+                Bars.energyBar.UpdateValue(jamie.energy);
 
                 if (useMultithreading)
                 {
-                    for (int i = 0; i < eList.Count; i++)
+                    for (int i = 0; i < enemyList.Count; i++)
                     {
-                        QueueThread(eList[i].ThreadPoolCallback);
+                        QueueThread(enemyList[i].ThreadPoolCallback);
                     }
                     QueueThread(new WaitCallback(UpdateEnemyHealthBar));
                 }
                 else
                 {
-                    for (int i = 0; i < eList.Count; i++)
+                    for (int i = 0; i < enemyList.Count; i++)
                     {
-                        eList[i].Update();
-                        if (eList[i].Health <= 0 || eList[i].Position.Y > 5000f)
+                        enemyList[i].Update();
+                        if (enemyList[i].Health <= 0 || enemyList[i].Position.Y > 5000f)
                         {
-                            KillEnemy(eList[i]);
+                            KillEnemy(enemyList[i]);
                             i--;
                         }
                     }
@@ -1337,11 +1319,11 @@ namespace Irbis
 
             if (onslaughtMode)      
             {
-                if (onslaughtSpawner.enemiesLeftThisWave > 0 && eList.Count < onslaughtSpawner.maxEnemies && onslaughtSpawner.EnemySpawnTimer())
+                if (onslaughtSpawner.enemiesLeftThisWave > 0 && enemyList.Count < onslaughtSpawner.maxEnemies && onslaughtSpawner.EnemySpawnTimer())
                 {
                     SummonGenericEnemy(onslaughtSpawner.enemyHealth, onslaughtSpawner.enemyDamage, onslaughtSpawner.enemySpeed);
                 }
-                if (eList.Count <= 0 && onslaughtSpawner.enemiesKilled >= onslaughtSpawner.enemiesThisWave)
+                if (enemyList.Count <= 0 && onslaughtSpawner.enemiesKilled >= onslaughtSpawner.enemiesThisWave)
                 {
                     onslaughtSpawner.NextWave();
                 }
@@ -1358,11 +1340,11 @@ namespace Irbis
                 {
                     for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
                     {
-                        if (DistanceSquared(onslaughtSpawner.vendingMachineList[i].collider.Center, geralt.Collider.Center) <= vendingMachineUseDistanceSqr) //add collider to vending machine
+                        if (DistanceSquared(onslaughtSpawner.vendingMachineList[i].collider.Center, jamie.Collider.Center) <= vendingMachineUseDistanceSqr) //add collider to vending machine
                         {
                             onslaughtSpawner.vendingMachineList[i].LoadMenu();
-                            geralt.inputEnabled = !onslaughtSpawner.vendingMachineList[i].drawMenu;
-                            if (!geralt.inputEnabled)
+                            jamie.inputEnabled = !onslaughtSpawner.vendingMachineList[i].drawMenu;
+                            if (!jamie.inputEnabled)
                             {
                                 vendingMenu = i;
                                 IsMouseVisible = true;
@@ -1380,7 +1362,7 @@ namespace Irbis
 
                 if (vendingMenu >= 0)
                 {
-                    if (geralt.inputEnabled)
+                    if (jamie.inputEnabled)
                     {
                         onslaughtSpawner.vendingMachineList[vendingMenu].LoadMenu();
                         vendingMenu = -1;
@@ -1426,7 +1408,7 @@ namespace Irbis
                 if (vendingMenu >= 0)
                 {
                     onslaughtSpawner.vendingMachineList[vendingMenu].LoadMenu();
-                    geralt.inputEnabled = true;
+                    jamie.inputEnabled = true;
                     vendingMenu = -1;
                     IsMouseVisible = false;
                     WriteLine("vending machine menu close");
@@ -1543,8 +1525,8 @@ namespace Irbis
                     }
                 }
 
-                screenSpacePlayerPos.X = ((geralt.TrueCenter.X * screenScale) + halfResolution.X - mainCamera.X);
-                screenSpacePlayerPos.Y = ((geralt.TrueCenter.Y * screenScale) + halfResolution.Y - mainCamera.Y);
+                screenSpacePlayerPos.X = ((jamie.TrueCenter.X * screenScale) + halfResolution.X - mainCamera.X);
+                screenSpacePlayerPos.Y = ((jamie.TrueCenter.Y * screenScale) + halfResolution.Y - mainCamera.Y);
 
                 if (cameraShakeDuration > 0)
                 {
@@ -1636,7 +1618,7 @@ namespace Irbis
             camera.X = Lerp(cameraShakePrevLocation.X, cameraShakeTargetLocation.X, cameraShakePercentage);       //X
             camera.Y = Lerp(cameraShakePrevLocation.Y, cameraShakeTargetLocation.Y, cameraShakePercentage);       //Y
 
-            if (cameraSwingDuration <= 0)
+            //if (cameraSwingDuration <= 0)     // uncomment when camera swing is fixed
             {
                 return cameraShakeLerpTimeMax;
             }
@@ -1699,11 +1681,11 @@ namespace Irbis
                     {
                         PrintDebugInfo();
 
-                        if (geralt != null)
+                        if (jamie != null)
                         {
                             foreach (Square s in squareList)
                             {
-                                if (geralt.collided.Contains(s))
+                                if (jamie.collided.Contains(s))
                                 {
                                     s.color = Color.Cyan;
                                 }
@@ -1749,42 +1731,43 @@ namespace Irbis
         {
             try
             {
-            if (enemyList.Count > 0)
-            {
-                IEnemy closest = enemyList[0];
-
-                float closestSqrDistance = float.MaxValue;
-                float thisEnemysSqrDistance = 0f;
-                try
+                if (enemyList.Count > 0)
                 {
-                    foreach (IEnemy e in enemyList)
+                    IEnemy closest = enemyList[0];
+
+                    float closestSqrDistance = float.MaxValue;
+                    float thisEnemysSqrDistance = 0f;
+                    try
                     {
-                        thisEnemysSqrDistance = DistanceSquared(geralt.Collider.Center, e.Collider.Center);
-                        if (thisEnemysSqrDistance < closestSqrDistance)
+                        foreach (IEnemy e in enemyList)
                         {
-                            closestSqrDistance = thisEnemysSqrDistance;
-                            closest = e;
+                            thisEnemysSqrDistance = DistanceSquared(jamie.Collider.Center, e.Collider.Center);
+                            if (thisEnemysSqrDistance < closestSqrDistance)
+                            {
+                                closestSqrDistance = thisEnemysSqrDistance;
+                                closest = e;
+                            }
                         }
                     }
-                }
-                catch (InvalidOperationException)
-                {
-                    WriteLine("caught: InvalidOperationException");
-                    Console.WriteLine("caught: InvalidOperationException");
-                    //just continue as normal
-                }
-                if (closestSqrDistance <= minSqrDetectDistance)
-                {
-                    displayEnemyHealth = geralt.combat = true;
-                    geralt.Combat();
-                    Bars.enemyHealthBar.maxValue = closest.MaxHealth;
-                    Bars.enemyHealthBar.UpdateValue(closest.Health);
+                    catch (InvalidOperationException)
+                    {
+                        WriteLine("caught: InvalidOperationException");
+                        Console.WriteLine("caught: InvalidOperationException");
+                        //just continue as normal
+                    }
+                    if (closestSqrDistance <= minSqrDetectDistance)
+                    {
+                        displayEnemyHealth = jamie.combat = true;
+                        jamie.Combat();
+                        Bars.enemyHealthBar.maxValue = closest.MaxHealth;
+                        Bars.enemyHealthBar.UpdateValue(closest.Health);
+                        Bars.enemyName.Update(closest.EnemyName, true);
+                    }
+                    else
+                    { displayEnemyHealth = jamie.combat = false; }
                 }
                 else
-                { displayEnemyHealth = geralt.combat = false; }
-            }
-            else
-            { displayEnemyHealth = geralt.combat = false; }
+                { displayEnemyHealth = jamie.combat = false; }
 
             }
             finally
@@ -1800,7 +1783,7 @@ namespace Irbis
         {
             ClearUI();
             levelEditor = sceneIsMenu = true;
-            geralt = null;
+            jamie = null;
 
         }
 
@@ -2044,7 +2027,7 @@ namespace Irbis
             printList.Add(developerConsole);
             sList.Clear();
             buttonList.Clear();
-            eList.Clear();
+            //eList.Clear();
             enemyList.Clear();
             squareList.Clear();
             collisionObjects.Clear();
@@ -2089,28 +2072,29 @@ namespace Irbis
             }
             debuginfo.Update("\n     timer:" + TimerText(timer)); 
             debuginfo.Update("\nnextFrameTimer:" + nextFrameTimer);
-            if (geralt != null)
+            if (jamie != null)
             {
-                debuginfo.Update("\n     input:" + geralt.input + "  isRunning:" + geralt.isRunning);
-                debuginfo.Update("\n prevInput:" + geralt.prevInput);
-                debuginfo.Update("\n\nwallJumpTimer:" + geralt.wallJumpTimer);
+                debuginfo.Update("\n     input:" + jamie.input + "  isRunning:" + jamie.isRunning);
+                debuginfo.Update("\n prevInput:" + jamie.prevInput);
+                debuginfo.Update("\n\nwallJumpTimer:" + jamie.wallJumpTimer);
                 debuginfo.Update("\n\n  player info");
-                debuginfo.Update("\nHealth:" + geralt.health + "\nShield:" + geralt.shield + "\nEnergy:" + geralt.energy);
-                debuginfo.Update("\n  Xpos:" + geralt.position.X + "\n  Ypos:" + geralt.position.Y);
-                debuginfo.Update("\n  Xvel:" + geralt.velocity.X + "\n  Yvel:" + geralt.velocity.Y);
-                debuginfo.Update("\n   col:" + geralt.Collider);
-                debuginfo.Update("\nmaxspeed:" + geralt.debugspeed);
-                debuginfo.Update("\ninvulner:" + geralt.invulnerableTime);
-                debuginfo.Update("\nShielded:" + geralt.shielded);
+                debuginfo.Update("\nHealth:" + jamie.health + "\nShield:" + jamie.shield + "\nEnergy:" + jamie.energy);
+                debuginfo.Update("\n    pos:" + jamie.position);
+                debuginfo.Update("\n    vel:" + jamie.velocity);
+                debuginfo.Update("\nbaseVel:" + jamie.baseVelocity);
+                debuginfo.Update("\n   col:" + jamie.Collider);
+                debuginfo.Update("\nmaxspeed:" + jamie.debugspeed);
+                debuginfo.Update("\ninvulner:" + jamie.invulnerableTime);
+                debuginfo.Update("\nShielded:" + jamie.shielded);
                 debuginfo.Update("\ncolliders:" + collisionObjects.Count);
-                debuginfo.Update("\n collided:" + geralt.collided.Count);
-                debuginfo.Update("\n   walled:" + geralt.Walled);
-                debuginfo.Update("\nattackin:" + geralt.attacking);
-                debuginfo.Update("\nattackID:" + geralt.attackID);
-                debuginfo.Update("\nactivity:" + geralt.activity);
-                debuginfo.Update("\n          animation:" + geralt.currentAnimation);
-                debuginfo.Update("\nanimationSourceRect:" + geralt.animationSourceRect);
-                debuginfo.Update("\n    animationNoLoop:" + geralt.animationNoLoop);
+                debuginfo.Update("\n collided:" + jamie.collided.Count);
+                debuginfo.Update("\n   walled:" + jamie.Walled);
+                debuginfo.Update("\nattackin:" + jamie.attacking);
+                debuginfo.Update("\nattackID:" + jamie.attackID);
+                debuginfo.Update("\nactivity:" + jamie.activity);
+                debuginfo.Update("\n          animation:" + jamie.currentAnimation);
+                debuginfo.Update("\nanimationSourceRect:" + jamie.animationSourceRect);
+                debuginfo.Update("\n    animationNoLoop:" + jamie.animationNoLoop);
             }
             debuginfo.Update("\ncurrentLevel:" + currentLevel);
             debuginfo.Update("\n onslaught:" + onslaughtMode);
@@ -2128,50 +2112,55 @@ namespace Irbis
                 debuginfo.Update("\nFrame-by-frame mode:" + framebyframe);
             }
             //debuginfo.Update("\n01234567890ABCDEFGHIJKLMNOPQRSTUVWQYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+><~" + '\u001b' + "{}|.`,:;/@'[\\]\"ᴥ");  //every character in print class
-            if (eList.Count > 0)
-            { 
-            debuginfo.Update("\n\nTotal of " + eList.Count + " enemies");
-            debuginfo.Update("\nEnemy Info:");
-
-            float avghp = 0;
-            for (int i = eList.Count - 1; i >= 0; i--)
+            if (enemyList.Count > 0)
             {
-                avghp += eList[i].Health;
-            }
-            avghp = avghp / eList.Count;
-            debuginfo.Update("\n  avg health: " + avghp);
-                for (int i = 0; i < eList.Count; i++)
+                debuginfo.Update("\n\nTotal of " + enemyList.Count + " enemies");
+                debuginfo.Update("\nEnemy Info:");
+
+                float avghp = 0;
+                for (int i = enemyList.Count - 1; i >= 0; i--)
                 {
-                    debuginfo.Update("\n    enemy " + i);
-                    debuginfo.Update("\n  collided: " + eList[i].collided.Count);
-                    debuginfo.Update("\n   effects: " + eList[i].ActiveEffects.Count);
-                    for (int j = 0; j < eList[i].ActiveEffects.Count; j++)
-                    {
-                        debuginfo.Update("\n effect[" + j + "]: " + eList[i].ActiveEffects[j].enchantType + ", str: " + eList[i].ActiveEffects[j].strength);
-                    }
-                    debuginfo.Update("\n    health: " + eList[i].Health);
-                    debuginfo.Update("\n     input: " + eList[i].input);
-                    debuginfo.Update("\n  jumptime: " + eList[i].jumpTime);
-                    debuginfo.Update("\n  activity: " + eList[i].AIactivity);
-                    if (eList[i].AIactivity == AI.persue || eList[i].AIactivity == AI.combat)
-                    {
-                        debuginfo.Update("\nattackCD: " + eList[i].attackCooldownTimer);
-                    }
-                    else if (eList[i].AIactivity == AI.wander)
-                    {
-                        debuginfo.Update("\nwandtime: " + eList[i].wanderTime);
-                    }
-                    debuginfo.Update("\n  Xpos:" + eList[i].Position.X + "\n  Ypos:" + eList[i].Position.Y);
-                    debuginfo.Update("\n  Xvel:" + eList[i].velocity.X + "\n  Yvel:" + eList[i].velocity.Y);
-                    if (i > 3)
-                    {
-                        i = eList.Count;
-                    }
+                    avghp += enemyList[i].Health;
                 }
+                avghp = avghp / enemyList.Count;
+                debuginfo.Update("\n  avg health: " + avghp);
+
+                debuginfo.Update("enemy[0] distance: " + Distance(jamie.Collider, enemyList[0].Collider));
+
+                //for (int i = 0; i < enemyList.Count; i++)
+                //{
+                //    debuginfo.Update("\n    enemy " + i);
+                //    debuginfo.Update("\n  collided: " + enemyList[i].collided.Count);
+                //    debuginfo.Update("\n   effects: " + enemyList[i].ActiveEffects.Count);
+                //    for (int j = 0; j < enemyList[i].ActiveEffects.Count; j++)
+                //    {
+                //        debuginfo.Update("\n effect[" + j + "]: " + enemyList[i].ActiveEffects[j].enchantType + ", str: " + enemyList[i].ActiveEffects[j].strength);
+                //    }
+                //    debuginfo.Update("\n    health: " + enemyList[i].Health);
+                //    debuginfo.Update("\n     input: " + enemyList[i].input);
+                //    debuginfo.Update("\n  jumptime: " + enemyList[i].jumpTime);
+                //    debuginfo.Update("\n  activity: " + enemyList[i].AIactivity);
+                //    if (enemyList[i].AIactivity == AI.Persue || enemyList[i].AIactivity == AI.Combat)
+                //    {
+                //        debuginfo.Update("\nattackCD: " + enemyList[i].attackCooldownTimer);
+                //    }
+                //    else if (enemyList[i].AIactivity == AI.Wander)
+                //    {
+                //        debuginfo.Update("\nwandtime: " + enemyList[i].wanderTime);
+                //    }
+                //    debuginfo.Update("\n  Xpos:" + enemyList[i].Position.X + "\n  Ypos:" + enemyList[i].Position.Y);
+                //    debuginfo.Update("\n  Xvel:" + enemyList[i].velocity.X + "\n  Yvel:" + enemyList[i].velocity.Y);
+                //    if (i > 3)
+                //    {
+                //        i = enemyList.Count;
+                //    }
+                //}
             }
+
             debuginfo.Update("\n    Camera:" + camera);
             debuginfo.Update("\nmainCamera:" + mainCamera);
-
+            //debuginfo.Update("\n Dp:₯");
+            
         }
 
         public static Texture2D[] LoadEnchantIcons()
@@ -2226,21 +2215,21 @@ namespace Irbis
         public static void AddPlayerEnchant(EnchantType enchant)
         {
             int hasEnchant = -1;
-            for (int i = 0; i < geralt.enchantList.Count; i++)
+            for (int i = 0; i < jamie.enchantList.Count; i++)
             {
-                if (geralt.enchantList[i].enchantType == enchant)
+                if (jamie.enchantList[i].enchantType == enchant)
                 {
                     hasEnchant = i;
                 }
             }
             if (hasEnchant >= 0)
             {
-                geralt.enchantList[hasEnchant].Upgrade();
-                WriteLine(geralt.enchantList[hasEnchant].enchantType + " upgraded");
+                jamie.enchantList[hasEnchant].Upgrade();
+                WriteLine(jamie.enchantList[hasEnchant].enchantType + " upgraded");
             }
             else
             {
-                geralt.enchantList.Add(new Enchant(enchant, 1));
+                jamie.enchantList.Add(new Enchant(enchant, 1));
                 WriteLine(enchant + " added");
             }
         }
@@ -2260,25 +2249,25 @@ namespace Irbis
             //if (debug > 4) { methodLogger.AppendLine("Irbis.IsTouching"); }
             switch (side)
             {
-                case Side.bottom:
+                case Side.Bottom:
                     if (rect1.Right > rect2.Left && rect1.Top < rect2.Bottom && rect1.Bottom >= rect2.Top && rect1.Left < rect2.Right)
                     {
                         return true;
                     }
                     break;
-                case Side.right:
+                case Side.Right:
                     if (rect1.Right >= rect2.Left && rect1.Top < rect2.Bottom && rect1.Bottom > rect2.Top && rect1.Left < rect2.Right)
                     {
                         return true;
                     }
                     break;
-                case Side.left:
+                case Side.Left:
                     if (rect1.Right > rect2.Left && rect1.Top < rect2.Bottom && rect1.Bottom > rect2.Top && rect1.Left <= rect2.Right)
                     {
                         return true;
                     }
                     break;
-                case Side.top:
+                case Side.Top:
                     if (rect1.Right > rect2.Left && rect1.Top <= rect2.Bottom && rect1.Bottom > rect2.Top && rect1.Left < rect2.Right)
                     {
                         return true;
@@ -2292,11 +2281,52 @@ namespace Irbis
 
         public static float DistanceSquared(Point p1, Point p2)
         {
-            ////if (debug > 4) { methodLogger.AppendLine("Irbis.DistanceSquared"); }
             int tempX = (p2.X - p1.X);
             int tempY = (p2.Y - p1.Y);
             return (tempX * tempX) + (tempY * tempY);
-            //return ((p2.X - p1.X) * (p2.X - p1.X)) + ((p2.Y - p1.Y) * (p2.Y - p1.Y));
+        }
+
+        public static float Distance(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            return (float)Math.Sqrt(DistanceSquared(rectangle1, rectangle2));
+        }
+
+        public static float DistanceSquared(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            Point p1 = Point.Zero;
+            Point p2 = Point.Zero;
+
+            if (rectangle1.Left > rectangle2.Right)
+            {//rectangle1 is to the right of rectangle2
+                p1.X = rectangle1.Left;
+                p2.X = rectangle2.Right;
+            }
+            else if (rectangle2.Left > rectangle1.Right)
+            {//rectangle2 is to the right of rectangle1
+                p1.X = rectangle1.Right;
+                p2.X = rectangle2.Left;
+            }
+            else
+            {//X values overlap
+                //leave as zero
+            }
+
+            if (rectangle1.Bottom < rectangle2.Top)
+            {//rectangle1 is above rectangle2
+                p1.Y = rectangle1.Bottom;
+                p2.Y = rectangle2.Top;
+            }
+            else if (rectangle2.Bottom < rectangle1.Top)
+            {//rectangle1 is below rectangle2
+                p1.Y = rectangle1.Top;
+                p2.Y = rectangle2.Bottom;
+            }
+            else
+            {//Y values overlap
+                //leave as zero
+            }
+
+            return DistanceSquared(p1, p2);
         }
 
         private static bool GetKey(Keys key)
@@ -2404,7 +2434,7 @@ namespace Irbis
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
                 Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], 100f, 10f, 200f, 0.4f);
-                eList.Add(tempEnemy);
+                //eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
                 WriteLine("enemy spawned at " + enemySpawnPoints[spawnpoint] + ". health:100 damage:10 speed:300. timer:" + Timer);
@@ -2422,7 +2452,7 @@ namespace Irbis
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
                 Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], health, damage, speed, 0.4f);
-                eList.Add(tempEnemy);
+                //eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
                 WriteLine("enemy spawned at " + enemySpawnPoints[spawnpoint] + ". health:" + health + " damage:" + damage + " speed:" + speed + ". timer:" + Timer);
@@ -2433,15 +2463,28 @@ namespace Irbis
             }
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public static void KillEnemy(Enemy killMe)
+        public void SummonLizardGuy()
         {
-            WriteLine("removing enemy. index:" + eList.IndexOf(killMe));
-            //collisionObjects.Remove(eList[i]);
-            enemyList.Remove(killMe);
-            eList.Remove(killMe);
+            LizardGuy tempLizardGuy = new LizardGuy(Content.Load<Texture2D>("Lizard Guy Spritesheet"), new Vector2(250, 100), 999, 50, 500, 0.4f);
+                   enemyList.Add(tempLizardGuy);
+            collisionObjects.Add(tempLizardGuy);
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static void KillEnemy(IEnemy killMe)
+        {
+            WriteLine("removing enemy. index:" + enemyList.IndexOf(killMe));
+            if (collisionObjects.Contains(killMe))
+            {
+                collisionObjects.Remove(killMe);
+                WriteLine("successfully removed from collisionObjects.");
+            }
+            if (enemyList.Contains(killMe))
+            {
+                enemyList.Remove(killMe);
+                WriteLine("successfully removed from enemyList.");
+            }
             if (onslaughtMode) { onslaughtSpawner.EnemyKilled(); }
-            WriteLine("success.");
         }
 
         public PlayerSettings Load(string filename)
@@ -2528,9 +2571,9 @@ namespace Irbis
                 boundingBox = new Rectangle((resolution.ToVector2() * 0.3f).ToPoint(), (resolution.ToVector2() * 0.4f).ToPoint());
             }
 
-            if (geralt != null)
+            if (jamie != null)
             {
-                geralt.Load(playerSettings);
+                jamie.Load(playerSettings);
             }
 
             return playerSettings;
@@ -2577,6 +2620,10 @@ namespace Irbis
                 return value2;
             }
             return value1 + (value2 - value1) * amount;
+        }
+        public static Vector2 Lerp(Vector2 value1, Vector2 value2, float amount)
+        {
+            return new Vector2(Lerp(value1.X, value2.X, amount), Lerp(value1.Y, value2.Y, amount));
         }
 
         public static bool IsDefaultLevelFormat(string level)
@@ -2660,9 +2707,9 @@ namespace Irbis
             //if (debug > 4) { methodLogger.AppendLine("Irbis.OpenConsole"); }
             textInputBuffer = string.Empty;
             acceptTextInput = console = !console;
-            if (geralt != null)
+            if (jamie != null)
             {
-                geralt.inputEnabled = !console;
+                jamie.inputEnabled = !console;
                 //framebyframe = console;
             }
             consoleLine = developerConsole.lines + 1;
@@ -2842,7 +2889,7 @@ namespace Irbis
             //change the location of everything
             if (bars != null)
             {
-                bars = new Bars(game.Content.Load<Texture2D>("bar health"), game.Content.Load<Texture2D>("bar shield"), game.Content.Load<Texture2D>("bar energy"), game.Content.Load<Texture2D>("shieldBar"), game.Content.Load<Texture2D>("bars"));
+                bars = new Bars(game.Content.Load<Texture2D>("bar health"), game.Content.Load<Texture2D>("bar shield"), game.Content.Load<Texture2D>("bar energy"), game.Content.Load<Texture2D>("bar potion fill 1"), game.Content.Load<Texture2D>("bar enemy fill"), game.Content.Load<Texture2D>("shieldBar"), game.Content.Load<Texture2D>("bars"), game.Content.Load<Texture2D>("bar enemy"), new[] { game.Content.Load<Texture2D>("bar potion 1"), game.Content.Load<Texture2D>("bar potion 2"), game.Content.Load<Texture2D>("bar potion 3")});
             }
             if ((int)(screenScale / 2) == (screenScale / 2))
             {
@@ -2866,7 +2913,7 @@ namespace Irbis
 
                        Art Design:
                           Flea
-                      lordpulex.com
+                      pulexart.com
 
                       Play Testers:
                           Flea
@@ -3159,7 +3206,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "attack1damage":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.attack1Damage = floatResult;
+                            jamie.attack1Damage = floatResult;
                         }
                         else
                         {
@@ -3169,7 +3216,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "attack2damage":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.attack2Damage = floatResult;
+                            jamie.attack2Damage = floatResult;
                         }
                         else
                         {
@@ -3179,7 +3226,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "speed":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.speed = floatResult;
+                            jamie.speed = floatResult;
                         }
                         else
                         {
@@ -3189,7 +3236,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "jumptimemax":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.jumpTimeMax = floatResult;
+                            jamie.jumpTimeMax = floatResult;
                         }
                         else
                         {
@@ -3199,7 +3246,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "idletimemax":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.idleTimeMax = floatResult;
+                            jamie.idleTimeMax = floatResult;
                         }
                         else
                         {
@@ -3209,7 +3256,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "maxhealth":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.maxHealth = floatResult;
+                            jamie.maxHealth = floatResult;
                             Bars.healthBar.maxValue = floatResult;
                         }
                         else
@@ -3220,7 +3267,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "maxshield":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.maxShield = floatResult;
+                            jamie.maxShield = floatResult;
                             Bars.shieldBar.maxValue = floatResult;
                         }
                         else
@@ -3231,7 +3278,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "maxenergy":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.maxEnergy = floatResult;
+                            jamie.maxEnergy = floatResult;
                             Bars.energyBar.maxValue = floatResult;
                         }
                         else
@@ -3242,7 +3289,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "superShockwaveHoldtime":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.superShockwaveHoldtime = floatResult;
+                            jamie.superShockwaveHoldtime = floatResult;
                         }
                         else
                         {
@@ -3252,7 +3299,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "shockwavemaxeffectdistance":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.shockwaveMaxEffectDistance = floatResult;
+                            jamie.shockwaveMaxEffectDistance = floatResult;
                         }
                         else
                         {
@@ -3262,7 +3309,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "shockwaveeffectivedistance":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.shockwaveEffectiveDistance = floatResult;
+                            jamie.shockwaveEffectiveDistance = floatResult;
                         }
                         else
                         {
@@ -3272,7 +3319,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "shockwavestuntime":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.shockwaveStunTime = floatResult;
+                            jamie.shockwaveStunTime = floatResult;
                         }
                         else
                         {
@@ -3282,7 +3329,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "invulnerablemaxtime":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.invulnerableMaxTime = floatResult;
+                            jamie.invulnerableMaxTime = floatResult;
                         }
                         else
                         {
@@ -3292,7 +3339,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "shieldrechargerate":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.shieldRechargeRate = floatResult;
+                            jamie.shieldRechargeRate = floatResult;
                         }
                         else
                         {
@@ -3302,7 +3349,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "energyrechargerate":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.energyRechargeRate = floatResult;
+                            jamie.energyRechargeRate = floatResult;
                         }
                         else
                         {
@@ -3312,7 +3359,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "healthrechargerate":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.healthRechargeRate = floatResult;
+                            jamie.healthRechargeRate = floatResult;
                         }
                         else
                         {
@@ -3322,7 +3369,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "energyusablemargin":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.energyUsableMargin = floatResult;
+                            jamie.energyUsableMargin = floatResult;
                         }
                         else
                         {
@@ -3343,7 +3390,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "shieldanimationspeed":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.shieldAnimationSpeed = floatResult;
+                            jamie.shieldAnimationSpeed = floatResult;
                         }
                         else
                         {
@@ -3353,7 +3400,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "shieldhealingpercentage":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.shieldHealingPercentage = floatResult;
+                            jamie.shieldHealingPercentage = floatResult;
                         }
                         else
                         {
@@ -3373,7 +3420,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "terminalvelocity":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.terminalVelocity = floatResult;
+                            jamie.terminalVelocity = floatResult;
                         }
                         else
                         {
@@ -3413,7 +3460,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "potionrechargerate":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.potionRechargeRate = floatResult;
+                            jamie.potionRechargeRate = floatResult;
                         }
                         else
                         {
@@ -3423,7 +3470,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "potionrechargetime":
                         if (float.TryParse(value, out floatResult))
                         {
-                            geralt.potionRechargeTime = floatResult;
+                            jamie.potionRechargeTime = floatResult;
                         }
                         else
                         {
@@ -3440,7 +3487,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "xcollideroffset":                                                         //place new floats above
                         if (int.TryParse(value, out intResult))
                         {
-                            geralt.XcolliderOffset = intResult;
+                            jamie.XcolliderOffset = intResult;
                         }
                         else
                         {
@@ -3450,7 +3497,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "ycollideroffset":
                         if (int.TryParse(value, out intResult))
                         {
-                            geralt.YcolliderOffset = intResult;
+                            jamie.YcolliderOffset = intResult;
                         }
                         else
                         {
@@ -3460,7 +3507,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "colliderwidth":
                         if (int.TryParse(value, out intResult))
                         {
-                            geralt.colliderWidth = intResult;
+                            jamie.colliderWidth = intResult;
                         }
                         else
                         {
@@ -3470,7 +3517,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "colliderheight":
                         if (int.TryParse(value, out intResult))
                         {
-                            geralt.colliderHeight = intResult;
+                            jamie.colliderHeight = intResult;
                         }
                         else
                         {
@@ -3480,7 +3527,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "attackcolliderwidth":
                         if (int.TryParse(value, out intResult))
                         {
-                            geralt.attackColliderWidth = intResult;
+                            jamie.attackColliderWidth = intResult;
                         }
                         else
                         {
@@ -3490,7 +3537,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "attackcolliderheight":
                         if (int.TryParse(value, out intResult))
                         {
-                            geralt.attackColliderHeight = intResult;
+                            jamie.attackColliderHeight = intResult;
                         }
                         else
                         {
@@ -3511,7 +3558,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "maxnumberofpotions":
                         if (int.TryParse(value, out intResult))
                         {
-                            geralt.maxNumberOfPotions = intResult;
+                            jamie.maxNumberOfPotions = intResult;
                         }
                         else
                         {
@@ -3840,16 +3887,16 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "notarget":
                         AIenabled = !AIenabled;
-                        foreach (Enemy e in eList)
+                        foreach (IEnemy e in enemyList)
                         {
                             e.AIenabled = AIenabled;
                         }
                         break;
                     case "noclip":
-                        geralt.Noclip();
+                        jamie.Noclip();
                         break;
                     case "killall":
-                        eList.Clear();
+                        //eList.Clear();
                         enemyList.Clear();
                         break;
                     case "savelevel":
@@ -3989,7 +4036,7 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         else
                         {
-                            if (Enum.TryParse(value, out enchantResult) && geralt != null)
+                            if (Enum.TryParse(value, out enchantResult) && jamie != null)
                             {
                                 AddPlayerEnchant(enchantResult);
                             }
@@ -4008,7 +4055,7 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         else
                         {
-                            if (Enum.TryParse(value, out enchantResult) && geralt != null)
+                            if (Enum.TryParse(value, out enchantResult) && jamie != null)
                             {
                                 int vendingmachine = -1;
                                 for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
@@ -4036,15 +4083,15 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         break;
                     case "disenchant":
-                        geralt.enchantList.Clear();
+                        jamie.enchantList.Clear();
                         WriteLine("removed all enchants");
                         break;
                     case "enchants":
-                        if (geralt.enchantList.Count <= 0)
+                        if (jamie.enchantList.Count <= 0)
                         {
                             WriteLine("no enchants");
                         }
-                        foreach (Enchant e in geralt.enchantList)
+                        foreach (Enchant e in jamie.enchantList)
                         {
                             WriteLine("Enchant: " + e.enchantType + ", str: " + e.strength + ", val: " + e.effectValue + ", dur: " + e.effectDuration + ", maxStack: " + e.maxStack);
                         }
@@ -4065,7 +4112,7 @@ Thank you, Ze Frank, for the inspiration.";
                         savefile.Print(autosave);
                         break;
                     case "unstuck":
-                        geralt.ClearCollision();
+                        jamie.ClearCollision();
                         break;
                     case "fps":
                         WriteLine("smart fps: " + smartFPS.Framerate + ", raw fps: " + (1 / DeltaTime));
@@ -4098,10 +4145,10 @@ Thank you, Ze Frank, for the inspiration.";
                         if (PointParser(value) != Point.Zero)
                         {
                             Point tempPoint = PointParser(value);
-                            geralt.position.X += tempPoint.X;
-                            geralt.position.Y += tempPoint.X;
+                            jamie.position.X += tempPoint.X;
+                            jamie.position.Y += tempPoint.X;
 
-                            WriteLine("moved player to " + geralt.position);
+                            WriteLine("moved player to " + jamie.position);
                         }
                         break;
                     case "random":
@@ -4276,7 +4323,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "removevendingmachine":
                         goto case "removevending";
                     case "player":
-                        WriteLine(geralt.ToString());
+                        WriteLine(jamie.ToString());
                         WriteLine();
                         break;
                     case "debugonslaught":
@@ -4295,8 +4342,8 @@ Thank you, Ze Frank, for the inspiration.";
                     case "recordframerate":
                         goto case "recordfps";
                     case "god":
-                        geralt.invulnerableTime = float.MaxValue;
-                        geralt.invulnerable = true;
+                        jamie.invulnerableTime = float.MaxValue;
+                        jamie.invulnerable = true;
                         WriteLine("godmode on");
                         break;
                     case "addpoints":
@@ -4304,7 +4351,7 @@ Thank you, Ze Frank, for the inspiration.";
                         {
                             if (onslaughtSpawner != null)
                             {
-                                onslaughtSpawner.Points += intResult;
+                                onslaughtSpawner.Points += (uint)intResult;
                                 WriteLine("added " + intResult + " points");
                             }
                         }
@@ -4562,14 +4609,14 @@ Thank you, Ze Frank, for the inspiration.";
             {
                 s.Draw(spriteBatch);
             }
-            foreach (Enemy e in eList)
+            foreach (IEnemy e in enemyList)
             {
                 if (e != null)
                 {
                     e.Draw(spriteBatch);
                 }
             }
-            if (geralt != null) { geralt.Draw(spriteBatch); }
+            if (jamie != null) { jamie.Draw(spriteBatch); }
             if (debug > 1)
             {
                 RectangleBorder.Draw(spriteBatch, new Rectangle(Point.Zero, screenspace.Size), Color.Magenta, false);

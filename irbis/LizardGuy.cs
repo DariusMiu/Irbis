@@ -1,17 +1,66 @@
 ﻿using Irbis;
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-
-
-public class Player
+namespace Irbis
 {
+    public enum LizardManAI
+    {
+          Wander = 0,
+            Roll = 1,
+           Swipe = 2,
+        Tailwhip = 3,
+            Bury = 4,
+    }
+
+}
+class LizardGuy : IEnemy
+{
+    public Rectangle Collider
+    {
+        get
+        {
+            return collider;
+        }
+        set
+        {
+            collider = value;
+        }
+    }
+    private Rectangle collider;
+
+    public Vector2 Position
+    {
+        get
+        {
+            return position;
+        }
+        set
+        {
+            position = value;
+        }
+    }
+    private Vector2 position;
+
+    public Vector2 Velocity
+    {
+        get
+        {
+            return velocity;
+        }
+        set
+        {
+            velocity = value;
+        }
+    }
+    private Vector2 velocity;
+
     public Wall Walled
     {
         get
@@ -21,22 +70,75 @@ public class Player
     }
     private Wall walled;
 
-    public Rectangle Collider
+    public float Health
     {
         get
         {
-            return collider;
+            return health;
+        }
+        set
+        {
+            health = value;
         }
     }
-    private Rectangle collider;
+    private float health;
 
-    public Vector2 TrueCenter
+    public float MaxHealth
     {
         get
         {
-            return new Vector2(position.X+XcolliderOffset+(colliderWidth/2), position.Y+YcolliderOffset+(colliderHeight/2));
+            return maxHealth;
+        }
+        set
+        {
+            maxHealth = value;
         }
     }
+    private float maxHealth;
+
+    public float SpeedModifier
+    {
+        get
+        {
+            return speedModifier;
+        }
+        set
+        {
+            speedModifier = value;
+        }
+    }
+    private float speedModifier;
+
+    public List<Enchant> ActiveEffects
+    {
+        get
+        {
+            return activeEffects;
+        }
+    }
+    private List<Enchant> activeEffects;
+
+    public string EnemyName
+    {
+        get
+        {
+            return enemyName;
+        }
+    }
+    private string enemyName = "Lizard Guy Boss (rawr)";
+
+    public bool AIenabled
+    {
+        get
+        {
+            return aiEnabled;
+        }
+        set
+        {
+            aiEnabled = value;
+        }
+    }
+    public bool aiEnabled;
 
     public float Mass
     {
@@ -45,255 +147,229 @@ public class Player
             return mass;
         }
     }
-    private float mass = 1f;
+    private float mass = 1.5f;
 
-    private Wall prevWalled;
+    public float ShockwaveMaxEffectDistanceSquared
+    {
+        get
+        {
+            return shockwaveMaxEffectDistanceSquared;
+        }
+    }
+    private float shockwaveMaxEffectDistanceSquared;
+
+    private bool collidedContains;
+    public float speed;
+    public float defaultSpeed;
+    int climbablePixels;
+    public float specialTime;
+    public float specialIdleTime;
+    public float rollTimeMax;
+    public float rollTime;
+    public float rollSpeed;
+    public Activity previousActivity;
+    public Point prevInput;
+    public int nextAnimation;
+    public bool isRunning;
+    public bool invulnerable;
+    public bool interruptAttack;
+    public bool inputEnabled;
+    public float idleTimeMax;
+    public float idleTime;
+    public float debugspeed;
+    public float attackMovementSpeed;
+    public int attackMovementFrames;
+    public bool attackImmediately;
+    public Print animationFrame;
+    public float airSpeed;
+
     Texture2D tex;
-    Texture2D shieldTex;
-
-    public Vector2 baseVelocity;
-
     public Rectangle displayRect;
-    public Rectangle shieldSourceRect;
     public Rectangle animationSourceRect;
-    public Rectangle testCollider;
+    Rectangle testCollider;
     public int XcolliderOffset;
     public int YcolliderOffset;
     public int colliderWidth;
     public int colliderHeight;
-    public Vector2 shieldOffset;
-    public Print animationFrame;
+    public float terminalVelocity = 5000f;
 
-    public Vector2 position;
-    public Vector2 velocity;
-    public Vector2 maxVelocity;
-    public float terminalVelocity;
+    float depth;
 
-    public Vector2 hurtVelocity;
+    public float stunned;
+    float wanderSpeed;
+    bool previouslyWandered;
+    public float wanderTime;
+    public float jumpTime;
+    float jumpTimeMax;
+    float timeSinceLastFrame;
+    int currentFrame;
+    int currentAnimation;
+    int previousAnimation;
+    float[] animationSpeed = new float[20];
+    int[] animationFrames = new int[20];
+    bool animationNoLoop;
+    public Point input;
+    public bool frameInput;
 
-    public float health;
-    public float maxHealth;
-    public float shield;
-    public float maxShield;
-    public float energy;
-    public float maxEnergy;
-
-    public bool invulnerable;
-    public float invulnerableTime; 
-    public float invulnerableMaxTime;
-
-    public bool shielded;
-    public bool energyed;                                                                       //just for testing
-    public float energyUsableMargin;
-
-    public bool attackHit;  //used to determine if the camera should swing or shake after an attack
-
-    public float shieldRechargeRate;
-    public float energyRechargeRate;
-    public float healthRechargeRate;
-    public float potionRechargeRate;
-    public float potionRechargeTime;
-    public int maxNumberOfPotions;
-    public float baseHealing;
-    int potions;
-    float potionTime;
-
-    public float shieldHealingPercentage;
-
-    public float shockwaveEffectiveDistance;
     public float shockwaveMaxEffectDistance;
+    public float shockwaveEffectiveDistance;
     public float shockwaveStunTime;
 
     public Vector2 shockwaveKnockback;
 
-    public float speed;
-    public float airSpeed;
-    public float attackMovementSpeed;
-
-    float jumpTime;
-    public float jumpTimeMax;
-    float timeSinceLastFrame;
-    float idleTime;
-    public float idleTimeMax;
-    float specialTime;
-    float specialIdleTime;
-    int currentFrame;
-    int currentShieldFrame;
-    public bool combat;
-
-    float stunTime;
-
-    public int currentAnimation;
-    int previousAnimation;
-    public float[] animationSpeed = new float[20];
-    public int[] animationFrames = new int[20];
-    public bool animationNoLoop;
-    int nextAnimation = -1;
-
-    public float shieldAnimationSpeed;
-    bool shieldDepleted;
-    float shieldtimeSinceLastFrame;
-
-    //float enableInput;
-
-    public float depth;
-    public float shieldDepth;
-
-    float superShockwave;
-
-    public float superShockwaveHoldtime;
-    public float walljumpHoldtime;
-
-    public Point input;
-    public Point prevInput;
-    public bool isRunning;
-
-    bool frameInput;
-    public bool inputEnabled;                                                                          //use this to turn player control on/off
-
-    int climbablePixels;
-
-    //public Vector2 currentLocation;
-    public Direction direction;
-    public Direction attackDirection;
-
-    public Location location;
-    public Activity activity;
-    public Activity previousActivity;
-
-    public float rollTime;
-    float rollSpeed;
-    float rollTimeMax;
-
     public Attacking attacking;
     public Attacking prevAttacking;
-    public float attackDamage;
-    public float attack1Damage;
-    public float attack2Damage;
-    public int attackID;
-    public int lastAttackID;
-    int attackIDtracker;
-    int attackMovementFrames;
 
-    //public int attackXcolliderOffset;
-    //public int attackYcolliderOffset;
-    public int attackColliderWidth;
-    public int attackColliderHeight;
-
-    public float wallJumpTimer;
-
-    public bool attackImmediately;
-    public bool interruptAttack;
-
-    public float debugspeed;
-
-    //public bool attackKeyIsDown;
-    public static float movementLerpBuildup = 10f;
-    public static float movementLerpSlowdown = 100f;
-    public static float movementLerpAir = 5f;
-
-    public List<Enchant> enchantList;
+    public Direction direction;
+    public Location location;
+    public Activity activity;
+    public AI AIactivity;
 
     Vector2 amountToMove;
     Vector2 negAmountToMove;
     Vector2 testPos;
 
-    private bool collidedContains;
-
-    public List<ICollisionObject> collided;
-    public List<Side> sideCollided;
-
-    public Vector2 heading;
-
-    public Rectangle attackCollider;
+    public int lastHitByAttackID;
 
     public float collisionCheckDistanceSqr;
 
-    private bool collision;
-    private bool noclip;
+    public float distanceToPlayerSqr;
+    public int combatCheckDistanceSqr;
+    public int persueCheckDistanceSqr;
+    public bool combat;
 
-    private Color shieldedColor = new Color(255, 240, 209);
-    private Color   normalColor = Color.White;
-    private Color renderColor;
+    public static float movementLerpBuildup = 10f;
+    public static float movementLerpSlowdown = 100f;
+    public static float movementLerpAir = 5f;
 
-    public Player(Texture2D t, Texture2D t3, PlayerSettings playerSettings, float drawDepth)
+    public Rectangle attackCollider;
+
+    public int attackColliderWidth;
+    public int attackColliderHeight;
+
+    public int attackID;
+    public int lastAttackID;
+    int attackIDtracker;
+
+    public float attackDamage;
+    public float attack1Damage;
+
+    public float attackCooldown;
+    public float attackCooldownTimer;
+
+    public float freezeTimer;
+
+    private object attackPlayerLock;
+    private object collidedLock;
+
+    public List<ICollisionObject> collided;
+    List<Side> sideCollided;
+
+    public LizardGuy(Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, float drawDepth)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Player"); }
-        position = playerSettings.initialPosition;
-        displayRect = new Rectangle((int)position.X, (int)position.Y, 80, 80);
-        animationSourceRect = new Rectangle(0, 0, 80, 80);
-        shieldSourceRect = new Rectangle(0, 0, 128, 128);
+        rollTimeMax = 0.25f;
+        rollSpeed = 1500f;
+        rollTime = 0f;
+        jumpTime = 0;
+        idleTime = 0f;
+        airSpeed = 0.6f * enemySpeed;
+        attackMovementSpeed = 0.3f * enemySpeed;
+        attackImmediately = false;
+        interruptAttack = false;
+        climbablePixels = 3;
+
         animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.Left, 0.9f);
-        currentFrame = 0;
-        currentAnimation = 0;
 
-        Load(playerSettings);
-
-        baseVelocity = Vector2.Zero;
-
-        stunTime = 0f;
-        isRunning = false;
-
-        walled = Wall.Zero;
+        tex = t;
+        attackPlayerLock = new object();
+        collidedLock = new object();
+        AIenabled = true;
 
         depth = drawDepth;
-        shieldDepth = 0.51f;
-
-        heading = Vector2.Zero;
-        inputEnabled = true;
-        frameInput = false;
-        tex = t;
-        shieldTex = t3;
-        direction = Direction.Right;
-        location = Location.Air;
-        activity = Activity.Idle;
-        prevAttacking = attacking = Attacking.No;
-
-        attackID = attackIDtracker = 0;
-        lastAttackID = -1;
 
         climbablePixels = 3;
 
-        attackImmediately = false;
-        interruptAttack = false;
+        position = iPos;
+        direction = Direction.Forward;
+        location = Location.Air;
+        activity = Activity.Idle;
+        AIactivity = AI.Wander;
+        wanderSpeed = (2f / 3f) * enemySpeed;
+        wanderTime = 0f;
+        previouslyWandered = false;
 
-        airSpeed = 0.6f * speed;
-        attackMovementSpeed = 0.3f * speed;
+        speed = defaultSpeed = enemySpeed;
         jumpTime = 0;
-        idleTime = 0f;
-        specialIdleTime = 5f;
+        jumpTimeMax = 0.06f;
         animationNoLoop = false;
+        XcolliderOffset = 14;
+        YcolliderOffset = 28;
+        colliderWidth = 100;
+        colliderHeight = 100;
 
         position.X -= XcolliderOffset;
         position.Y -= YcolliderOffset;
 
-        superShockwave = 0;
+        maxHealth = health = enemyHealth;
+        lastHitByAttackID = -1;
 
-        hurtVelocity = new Vector2(50f, -100f);
-        invulnerableTime = 0f;
-        invulnerable = false;
+        stunned = 0;
+        speedModifier = 1f;
 
-        shieldDepleted = false;
-        shielded = false;
-        energyed = false;
+        attackCollider = Rectangle.Empty;
 
-        potionTime = 0f;
+        attackColliderWidth = 30;
+        attackColliderHeight = 30;
 
-        attackMovementFrames = 1;
+        attackID = attackIDtracker = 0;
+        lastAttackID = -1;
+
+        attackDamage = 0f;
+        attack1Damage = enemyDamage;
+
+        attackCooldown = 2f;        //how quickly enemies can attack
+        attackCooldownTimer = 3f;
+
+        combatCheckDistanceSqr = attackColliderWidth * attackColliderWidth;
+        persueCheckDistanceSqr = 40000;
+        combat = false;
+
+        activeEffects = new List<Enchant>();
+
+        shockwaveMaxEffectDistance = Irbis.Irbis.jamie.shockwaveEffectiveDistance;
+        shockwaveMaxEffectDistanceSquared = shockwaveMaxEffectDistance * shockwaveMaxEffectDistance;
+        shockwaveEffectiveDistance = 200;
+        shockwaveStunTime = 0.25f;
+        shockwaveKnockback = new Vector2(2f, 1f);
+
+        displayRect = new Rectangle((int)Position.X, (int)Position.Y, 128, 128);
+        animationSourceRect = new Rectangle(0, 0, 128, 128);
+        currentFrame = 0;
+        currentAnimation = 0;
+        animationSpeed[0] = 0.1f;
+        for (int i = 1; i < 20; i++)
+        {
+            animationSpeed[i] = animationSpeed[0];
+        }
+
+        animationFrames[0] = 2;             //idleforward1
+        animationFrames[1] = 4;             //idleforward2
+        animationFrames[2] = 2;             //idleforward3
+        animationFrames[3] = 2;             //idleleft
+        animationFrames[4] = 2;             //idleright
+        animationFrames[5] = 2;             //runleft
+        animationFrames[6] = 2;             //runright
+        animationFrames[7] = 2;             //jumpleft
+        animationFrames[8] = 2;             //jumpright
+        //animationFrames[9] = 2;             //fallleft
+        //animationFrames[10] = 2;            //fallright
+
+        animationSourceRect = new Rectangle(128 * currentFrame, 128 * currentAnimation, 128, 128);
 
         collided = new List<ICollisionObject>();
         sideCollided = new List<Side>();
-        enchantList = new List<Enchant>();
 
-        rollTimeMax = 0.25f;
-        rollSpeed = 1500f;
-        rollTime = 0f;
-
-        shieldtimeSinceLastFrame = 0f;
-
-        collision = true;
-        noclip = false;
-
+        CalculateMovement();
         if (colliderHeight > colliderWidth)
         {
             collisionCheckDistanceSqr = (colliderHeight * colliderHeight);
@@ -302,320 +378,55 @@ public class Player
         {
             collisionCheckDistanceSqr = (colliderWidth * colliderWidth);
         }
-        //collisionCheckDistanceSqr *= 5;
     }
 
     public bool Update()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Update"); }
         prevInput = input;
         prevAttacking = attacking;
-        prevWalled = walled;
         input = Point.Zero;
         frameInput = false;
 
-        if (!Irbis.Irbis.GetJumpKey && !Irbis.Irbis.GetLeftKey && !Irbis.Irbis.GetRightKey)
+        if (Irbis.Irbis.GetKeyboardState.IsKeyDown(Keys.P))
         {
-            wallJumpTimer = 0f;
+            input.X++;
         }
-        if (inputEnabled)
+        if (Irbis.Irbis.GetKeyboardState.IsKeyDown(Keys.O))
         {
-            if (Irbis.Irbis.GetLeftKey) //left
-            {
-                if (walled.Bottom > 0 || !walled.Horizontal || wallJumpTimer > walljumpHoldtime)
-                {
-                    input.X--;
-                    direction = Direction.Left;
-                }
-                wallJumpTimer += Irbis.Irbis.DeltaTime;
-            }
-            if (Irbis.Irbis.GetRightKey) //right
-            {
-                if (walled.Bottom > 0 || !walled.Horizontal || wallJumpTimer > walljumpHoldtime)
-                {
-                    input.X++;
-                    direction = Direction.Right;
-                }
-                wallJumpTimer += Irbis.Irbis.DeltaTime;
-            }
-
-            if (direction != Direction.Forward)
-            {
-                if (Irbis.Irbis.GetUpKey) //up
-                {
-                    input.Y++;
-                }
-                if (Irbis.Irbis.GetDownKey) //down
-                {
-                    input.Y--;
-                }
-                if (Irbis.Irbis.GetShieldKey) //shield
-                {
-                    if (shield <= 0)
-                    {
-                        shieldDepleted = true;
-                        shielded = false;
-                    }
-                    else if (!shieldDepleted)
-                    {
-                        shielded = true;
-                    }
-                }
-                else
-                {
-                    shieldDepleted = shielded = false;
-                }
-                if (Irbis.Irbis.GetShockwaveKey && energy > maxShield * energyUsableMargin)
-                //shockwave key held
-                {
-                    superShockwave += Irbis.Irbis.DeltaTime;
-                }
-                else if (superShockwave > 0)
-                //activate shockwave
-                {
-                    Shockwave(this, Irbis.Irbis.enemyList);
-                    interruptAttack = true;
-                    superShockwave = 0; //shockwave was just used, reset to zero
-                }
-                if ((Irbis.Irbis.GetPotionKeyDown) && potions > 0) //potions
-                {
-                    healthRechargeRate += potionRechargeRate;
-                    if (potionTime >= potionRechargeTime / 2)
-                    {
-                        potionTime += potionRechargeTime / 2;
-                    }
-                    else
-                    {
-                        potionTime = potionRechargeTime;
-                    }
-                    potions--;
-                    Bars.potionBar.Update(potions);
-                }
-                if (Irbis.Irbis.GetJumpKey)
-                {
-                    if (wallJumpTimer <= walljumpHoldtime && walled.Bottom <= 0 && walled.Horizontal && (Irbis.Irbis.GetRightKey || Irbis.Irbis.GetLeftKey))
-                    //horizontal input
-                    {
-                        if (walled.Left > 0)
-                        {
-                            velocity.X = speed;
-                            position.X = position.X + 1;
-                            direction = Direction.Right;
-                            input.X = prevInput.X = 1;
-                        }
-                        else if (walled.Right > 0)
-                        {
-                            velocity.X = -speed;
-                            position.X = position.X - 1;
-                            direction = Direction.Left;
-                            input.X = prevInput.X = -1;
-                        }
-                        wallJumpTimer = 1f;
-                        jumpTime += Irbis.Irbis.DeltaTime;
-                        isRunning = true;
-                    }
-                    else if (walled.Top <= 0 && jumpTime < jumpTimeMax)
-                    //normal jump
-                    {
-                        if (jumpTime > 0)
-                        {
-                            jumpTime += Irbis.Irbis.DeltaTime;
-                        }
-                        else if (walled.Bottom > 0)
-                        {
-                            jumpTime += Irbis.Irbis.DeltaTime;
-                            wallJumpTimer = 1f;
-                        }
-                        wallJumpTimer += Irbis.Irbis.DeltaTime;
-                    }
-                    else //just jumped, reset to zero
-                    {
-                        jumpTime = 0;
-                    }
-                }
-                else //just jumped, reset to zero
-                {
-                    jumpTime = 0;
-                }
-                if (Irbis.Irbis.GetJumpKeyDown && walled.Bottom <= 0)
-                //jump key was just pressed, interrupt an attack (this is here so that attacks in-air are not interrupted)
-                {
-                    interruptAttack = true;
-                }
-                if (rollTime <= 0 && walled.Bottom > 0 && (Irbis.Irbis.GetRollKeyDown))
-                //roll
-                {
-                    invulnerable = true;
-                    inputEnabled = false;
-                    rollTime = rollTimeMax;
-                }
-
-                if (Irbis.Irbis.GetAttackKeyDown) //&& if attack is interruptable
-                //attack!
-                {
-                    if (attacking == Attacking.No /*&& walled.Bottom > 0*/)
-                    {
-                        attacking = Attacking.Attack1;
-                        attackID = attackIDtracker++;
-                        //attackKeyIsDown = true;
-                    }
-                    else //if (attacking != Attacking.No && walled.Bottom > 0)
-                    {
-                        attackImmediately = true;
-                        //attackKeyIsDown = true;
-                    }
-                }
-            }
-            else //in case the player goes idle while jumping/shielding/shockwaving (somehow)
-            {
-                shielded = false;
-                jumpTime = 0;
-                superShockwave = 0;
-            }
+            input.X--;
         }
 
-        if (Irbis.Irbis.GetKeyboardState != Irbis.Irbis.GetPreviousKeyboardState)
-        {
-            frameInput = true;
-        }
-
-        if (input != prevInput && input != Point.Zero)
-        {
-            interruptAttack = true;
-        }
-
-        if (interruptAttack)
-        {
-            attacking = Attacking.No;
-            interruptAttack = false;
-        }
-
-        if (stunTime > 0)
-        {
-            stunTime -= Irbis.Irbis.DeltaTime;
-            if (stunTime <= 0)
-            {
-                inputEnabled = true;
-                stunTime = 0;
-            }
-        }
-
-        if (invulnerableTime > 0)
-        {
-            invulnerableTime -= Irbis.Irbis.DeltaTime;
-            if (invulnerableTime <= 0)
-            {
-                invulnerable = false;
-                invulnerableTime = 0;
-            }
-        }
-
+        //PlayerAttackCollision();
         Movement();
         CalculateMovement();
-        if (collision)
-        { Collision(Irbis.Irbis.collisionObjects); }
         Animate();
-
-        if (attacking != Attacking.No)
-        {
-            Hitbox();
-        }
-        else
-        {
-            attackCollider = Rectangle.Empty;
-            attackDamage = 0f;
-            attackID = 0;
-        }
-
-        if (potionTime > 0)
-        {
-            potionTime -= Irbis.Irbis.DeltaTime;
-        }
-        else
-        {
-            potionTime = 0;
-            healthRechargeRate = baseHealing;
-        }
-
-        if (!shielded)
-        {
-            if (shield < maxShield)
-            {
-                shield += shieldRechargeRate * Irbis.Irbis.DeltaTime;
-                if (shield >= maxShield)
-                {
-                    shield = maxShield;
-                }
-            }
-        }
-
-        if (!energyed)
-        {
-            if (energy < maxEnergy)
-            {
-                energy += energyRechargeRate * Irbis.Irbis.DeltaTime;
-                if (energy >= maxEnergy)
-                {
-                    energy = maxEnergy;
-                }
-            }
-        }
-
-        if (true)
-        {
-            if (health < maxHealth)
-            {
-                health += healthRechargeRate * Irbis.Irbis.DeltaTime;
-                if (health >= maxHealth)
-                {
-                    health = maxHealth;
-                }
-            }
-        }
-
-        //light.Position = new Vector2(position.X + XcolliderOffset + (collider.Width/2), position.Y + YcolliderOffset + (collider.Height / 2));
+        Collision(Irbis.Irbis.collisionObjects);
         return true;
     }
 
-    public void Respawn(Vector2 initialPos)
+    public void ThreadPoolCallback(Object threadContext)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Respawn"); }
-        position = initialPos;
-        position.X -= XcolliderOffset;
-        position.Y -= YcolliderOffset;
-        velocity = Vector2.Zero;
-        CalculateMovement();
-        health = maxHealth;
-        energy = maxEnergy;
-        shield = maxShield;
-        potions = maxNumberOfPotions;
-        if (Bars.potionBar != null) { Bars.potionBar.Update(potions); }
+        try
+        {
+            Update();
+            if (health <= 0 || position.Y > 5000f)
+            {
+                Irbis.Irbis.KillEnemy(this);
+            }
+        }
+        finally
+        {
+            if (Interlocked.Decrement(ref Irbis.Irbis.pendingThreads) <= 0)
+            {
+                Irbis.Irbis.doneEvent.Set();
+            }
+        }
     }
 
     public void Movement()
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Movement"); }
-        if (rollTime > 0)
-        {
-            if (direction == Direction.Right)
-            {
-                velocity.X = Irbis.Irbis.Lerp(velocity.X, rollSpeed, movementLerpAir * Irbis.Irbis.DeltaTime);
-            }
-            else
-            {
-                velocity.X = Irbis.Irbis.Lerp(velocity.X, -rollSpeed, movementLerpAir * Irbis.Irbis.DeltaTime);
-            }
-            debugspeed = rollSpeed;
-
-            rollTime -= Irbis.Irbis.DeltaTime;
-            if (rollTime <= 0)
-            {
-                inputEnabled = true;
-                invulnerable = false;
-                rollTime = 0;
-            }
-        }
-        else if (attacking != Attacking.No)
+        if (attacking != Attacking.No)
         {
             //AttackMovement();
             isRunning = false;
@@ -707,11 +518,6 @@ public class Player
             velocity.X = 0;
         }
 
-        if (noclip)
-        {
-            velocity.Y = Irbis.Irbis.Lerp(velocity.Y, -speed * input.Y, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
-        }
-
         if (jumpTime > 0)
         {
             velocity.Y = Irbis.Irbis.Lerp(velocity.Y, -speed, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
@@ -722,7 +528,7 @@ public class Player
             velocity.Y = 0;
             jumpTime = 0;
         }
-        if (walled.Bottom <= 0 && jumpTime <= 0 && !noclip)
+        if (walled.Bottom <= 0 && jumpTime <= 0)
         {
             if (attacking != Attacking.No)
             {
@@ -750,20 +556,7 @@ public class Player
         {
             velocity.Y = -terminalVelocity;
         }
-
-        if (walled.Bottom > 0)
-        { baseVelocity = collided[sideCollided.IndexOf(Side.Bottom)].Velocity; }
-        else if (walled.Bottom <= 0)
-        {
-            if (walled.Left > 0 && walled.Right <= 0)
-            { baseVelocity = collided[sideCollided.IndexOf(Side.Left)].Velocity; }
-            else if (walled.Right > 0 && walled.Left <= 0)
-            { baseVelocity = collided[sideCollided.IndexOf(Side.Right)].Velocity; }
-        }
-        if (walled.Total <= 0)
-        { baseVelocity = Vector2.Lerp(baseVelocity, Vector2.Zero, 2.0f * Irbis.Irbis.DeltaTime); }
-
-        position += (baseVelocity + velocity) * Irbis.Irbis.DeltaTime;
+        position += velocity * Irbis.Irbis.DeltaTime;
     }
 
     public void CalculateMovement()
@@ -922,33 +715,11 @@ public class Player
 
 
         //animationSourceRect = new Rectangle(128 * currentFrame, 128 * currentAnimation, 128, 128);
-        
-        animationSourceRect.X = 80 * currentFrame;
-        animationSourceRect.Y = 80 * currentAnimation;
-        
 
-        //abilities
-        if (shielded)
-        {
-            shieldtimeSinceLastFrame += Irbis.Irbis.DeltaTime;
-            if (shieldtimeSinceLastFrame >= shieldAnimationSpeed)
-            {
-                shieldtimeSinceLastFrame -= shieldAnimationSpeed;
-                currentShieldFrame++;
-            }
-            if (currentShieldFrame * 128 >= shieldTex.Width)
-            {
-                currentShieldFrame = 0;
-            }
-            //shieldSourceRect = new Rectangle(currentShieldFrame * 128, 0, 128, 128);
-            shieldSourceRect.X = currentShieldFrame * 128;
-            renderColor = shieldedColor;
-        }
-        else
-        {
-            shieldtimeSinceLastFrame = 0;
-            renderColor = normalColor;
-        }
+        animationSourceRect.X = 128 * currentFrame;
+        animationSourceRect.Y = 128 * currentAnimation;
+
+
         previousAnimation = currentAnimation;
         previousActivity = activity;
     }
@@ -1032,7 +803,7 @@ public class Player
                 SetAnimation(9, false);                                                           //run
                 break;
         }
-        
+
         if (nextAnimation >= 0)
         {
             SetAnimation(nextAnimation, false);
@@ -1047,40 +818,6 @@ public class Player
         animationNoLoop = noLoop;
     }
 
-    public void WalljumpDebug(int variableYo)
-    {
-        Irbis.Irbis.WriteLine();
-        Irbis.Irbis.WriteLine("       walljumped " + variableYo);
-        Irbis.Irbis.WriteLine("         velocity: " + velocity);
-        Irbis.Irbis.WriteLine("        direction: " + direction);
-        Irbis.Irbis.WriteLine("wallJumpTimer: " + wallJumpTimer);
-        Irbis.Irbis.WriteLine("            input: " + input);
-        Irbis.Irbis.WriteLine("        prevInput: " + prevInput);
-        Irbis.Irbis.WriteLine("           Walled: " + Walled);
-        Irbis.Irbis.WriteLine("         position: " + position);
-        Irbis.Irbis.WriteLine("         left key: " + Irbis.Irbis.GetLeftKey);
-        Irbis.Irbis.WriteLine("        right key: " + Irbis.Irbis.GetRightKey);
-    }
-
-    public void Noclip()
-    {
-        noclip = !noclip;
-        collision = !noclip;
-        velocity = Vector2.Zero;
-        walled = Wall.Zero;
-        collided.Clear();
-        sideCollided.Clear();
-        if (noclip)
-        {
-            speed *= 25;
-            walled.Bottom = 1;
-        }
-        else
-        {
-            speed /= 25;
-        }
-    }
-
     public void Collision(List<ICollisionObject> colliderList)
     {
         amountToMove = negAmountToMove = Vector2.Zero;
@@ -1089,7 +826,7 @@ public class Player
 
         foreach (ICollisionObject s in colliderList)
         {
-            if (s.Collider != Rectangle.Empty && s.Collider != this.collider && Irbis.Irbis.DistanceSquared(collider, s.Collider) <= 0)
+            if (s.Collider != Rectangle.Empty && s.Collider != collider && Irbis.Irbis.DistanceSquared(collider, s.Collider) <= 0)
             {
                 collidedContains = collided.Contains(s);
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.Bottom))                              //DOWN
@@ -1405,262 +1142,82 @@ public class Player
         }
     }
 
+    public void AddEffect(Enchant effect)
+    {
+        activeEffects.Add(effect);
+    }
+
+    public void UpgradeEffect(int index, float duration)
+    {
+        if (activeEffects.Count > index)
+        {
+            activeEffects[index].strength++;
+            activeEffects[index].effectDuration = duration;
+        }
+    }
+
+    public void Knockback(Direction knockbackDirection, float strength)
+    {
+        if (knockbackDirection == Direction.Left)
+        {
+            velocity.Y += -25f * strength;
+            velocity.X += -200f * strength;
+        }
+        else
+        {
+            velocity.Y += -25f * strength;
+            velocity.X += 200f * strength;
+        }
+    }
+
     public void Hurt(float damage)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Hurt"); }
-        if (!invulnerable)
-        {
-            if (shielded)
-            {
-                if (damage > shield)
-                {
-                    Heal(shield * shieldHealingPercentage);
-                    damage -= shield;
-                    shield = 0;
-                    health -= damage;
-                }
-                else
-                {
-                    Heal(damage * shieldHealingPercentage);
-                    shield -= damage;
-                }
-            }
-            else
-            {
-                health -= damage;
-            }
-            invulnerable = true;
-            invulnerableTime = invulnerableMaxTime;
-        }
-    }
-
-    public void Heal(float amount)
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Heal"); }
-        if (health + amount > maxHealth)
-        {
-            health = maxHealth;
-        }
-        else
-        {
-            health += amount;
-        }
-    }
-
-    public void Shockwave(Player player, List<IEnemy> enemyList)
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Shockwave"); }
-        //energyed = true;
-        //activate shockwave animation
-        //stun for duration of animation
-        Stun(0.25f);        //the time it takes to "cast" shockwave
-        if (superShockwave < superShockwaveHoldtime)
-        {
-            energy -= 30;
-            Irbis.Irbis.CameraShake(0.1f, 5f);
-
-            float distanceSQR;
-            foreach (IEnemy e in enemyList)
-            {
-                distanceSQR = Irbis.Irbis.DistanceSquared(collider.Center, e.Collider.Center);
-                if (distanceSQR < (e.ShockwaveMaxEffectDistanceSquared)) { distanceSQR = e.ShockwaveMaxEffectDistanceSquared; }
-                if (e.Collider != Rectangle.Empty && distanceSQR <= e.ShockwaveMaxEffectDistanceSquared)
-                {
-                    heading = (e.Collider.Center - collider.Center).ToVector2();
-                    e.Shockwave((float)Math.Sqrt(distanceSQR), 1, heading);
-                }
-            }
-        }
-        else
-        {
-            energy -= 50;
-            Irbis.Irbis.CameraShake(0.15f, 10f);
-
-            float distanceSQR;
-            foreach (IEnemy e in enemyList)
-            {
-                distanceSQR = Irbis.Irbis.DistanceSquared(collider.Center, e.Collider.Center);
-                if (distanceSQR < e.ShockwaveMaxEffectDistanceSquared) { distanceSQR = e.ShockwaveMaxEffectDistanceSquared; }
-                if (e.Collider != Rectangle.Empty && distanceSQR <= e.ShockwaveMaxEffectDistanceSquared)
-                {
-                    heading = (e.Collider.Center - collider.Center).ToVector2();
-                    e.Shockwave((float)Math.Sqrt(distanceSQR), 2, heading);
-                }
-            }
-        }
-        superShockwave = 0;
-    }
-
-    public void ClearCollision()
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("ClearCollision"); }
-        collided.Clear();
-        sideCollided.Clear();
-        walled = Wall.Zero;
-    }
-
-    public void Hitbox()
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Hitbox"); }
-        //change attackCollider based on if (attacking) and current animation
-        if (lastAttackID != attackID)
-        {
-            lastAttackID = attackID;
-            attackHit = false;
-
-            switch (attacking)
-            {
-                case (Attacking.Attack1):
-                    attackDamage = attack1Damage;
-                    if (direction == Direction.Left)
-                    {
-                        attackCollider.X = collider.Center.X - attackColliderWidth;
-                        attackCollider.Y = collider.Center.Y - attackColliderHeight / 2;
-                        attackCollider.Width = attackColliderWidth;
-                        attackCollider.Height = attackColliderHeight;
-                    }
-                    else
-                    {
-                        attackCollider.X = collider.Center.X;
-                        attackCollider.Y = collider.Center.Y - attackColliderHeight / 2;
-                        attackCollider.Width = attackColliderWidth;
-                        attackCollider.Height = attackColliderHeight;
-                    }
-
-                    break;
-                //case (Attacking.Attack2):
-
-                    //break;
-                default:
-                    attackCollider = Rectangle.Empty;
-                    attackDamage = 0f;
-                    break;
-            }
-        }
-        else if (attackCollider != Rectangle.Empty)
-        {
-            if (attackHit)
-            {
-                Irbis.Irbis.CameraShake(0.075f, 0.1f * attackDamage);
-            }
-            else
-            {
-                if (direction == Direction.Left)
-                {
-                    Irbis.Irbis.CameraSwing(Irbis.Irbis.swingDuration, Irbis.Irbis.swingMagnitude, new Vector2(-5,-Irbis.Irbis.RandomFloat())); //change the Y based on which attack animation is playing
-                }
-                else
-                {
-                    Irbis.Irbis.CameraSwing(Irbis.Irbis.swingDuration, Irbis.Irbis.swingMagnitude, new Vector2(5, -Irbis.Irbis.RandomFloat()));
-                }
-            }
-            attackCollider = Rectangle.Empty;
-            attackDamage = 0f;
-        }
-        //else
-        //{
-        //    attackCollider = Rectangle.Empty;
-        //    attackDamage = 0f;
-        //}
-    }
-
-    public void AttackMovement()
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("AttackMovement"); }
-
+        health -= damage;
+        //game.CameraShake(0.075f, 0.05f * damage);
     }
 
     public void Stun(float duration)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Stun"); }
-        stunTime += duration;
-        inputEnabled = false;
-    }
-    
-    public void Load(PlayerSettings playerSettings)
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Load"); }
-        position = playerSettings.initialPosition;
-        attack1Damage = playerSettings.attack1Damage;
-        attack2Damage = playerSettings.attack2Damage;
-        speed = playerSettings.speed;
-        jumpTimeMax = playerSettings.jumpTimeMax;
-        idleTimeMax = playerSettings.idleTimeMax;
-        XcolliderOffset = playerSettings.XcolliderOffset;
-        YcolliderOffset = playerSettings.YcolliderOffset;
-        colliderWidth = playerSettings.colliderWidth;
-        colliderHeight = playerSettings.colliderHeight;
-        shieldOffset = new Vector2((XcolliderOffset + (colliderWidth / 2f)) - (shieldSourceRect.Width / 2f), (YcolliderOffset + (colliderHeight / 2f)) - (shieldSourceRect.Height / 2f));
-        attackColliderWidth = playerSettings.attackColliderWidth;
-        attackColliderHeight = playerSettings.attackColliderHeight;
-        health = maxHealth = playerSettings.maxHealth;
-        shield = maxShield = playerSettings.maxShield;
-        energy = maxEnergy = playerSettings.maxEnergy;
-        superShockwaveHoldtime = playerSettings.superShockwaveHoldtime;
-        walljumpHoldtime = playerSettings.walljumpHoldtime;
-        shockwaveMaxEffectDistance = playerSettings.shockwaveMaxEffectDistance;
-        shockwaveEffectiveDistance = playerSettings.shockwaveEffectiveDistance;
-        shockwaveStunTime = playerSettings.shockwaveStunTime;
-        shockwaveKnockback = playerSettings.shockwaveKnockback;
-        invulnerableMaxTime = playerSettings.invulnerableMaxTime;
-        shieldRechargeRate = playerSettings.shieldRechargeRate;                    //2f //4f
-        energyRechargeRate = playerSettings.energyRechargeRate;                    //5f //10f
-        baseHealing = healthRechargeRate = playerSettings.healthRechargeRate;
-        potionRechargeRate = playerSettings.potionRechargeRate;
-        potions = maxNumberOfPotions = playerSettings.maxNumberOfPotions;
-        potionRechargeTime = playerSettings.potionRechargeTime;
-        shieldHealingPercentage = playerSettings.shieldHealingPercentage;
-        energyUsableMargin = playerSettings.energyUsableMargin;
-        terminalVelocity = playerSettings.terminalVelocity;
-        animationSpeed = playerSettings.animationSpeed;
-        shieldAnimationSpeed = playerSettings.shieldAnimationSpeed;
-        animationFrames = playerSettings.animationFrames;
+        stunned += duration;
+        AIactivity = AI.Stunned;
+        attackCooldownTimer += 0.5f;
     }
 
-    public void Combat()
+    public void Shockwave(float distance, float power, Vector2 heading)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Combat"); }
-        combat = true;
-        if (direction == Direction.Forward)
-        {
-            direction = Direction.Right;
-            idleTime = 0f;
-        }
-    }
+         Irbis.Irbis.WriteLine("Lizard Guy shockwave\n precalc velocity:" + velocity);
+        Irbis.Irbis.WriteLine("shockwaveKnockback:" + shockwaveKnockback + " heading:" + heading + " shockwaveEffectiveDistance:"
+            + shockwaveEffectiveDistance + " distance:" + distance + " power:" + power + " (1 / mass):" + (1 / mass));
 
-    public override string ToString()
-    {
-        return
-            "Position:" + position +
-            " TrueCenter:" + TrueCenter +
-            " Center:" + collider.Center +
-            " Collider:" + collider +
-            " Health:" + health +
-            " MaxHealth:" + maxHealth;
+        heading.Normalize();
+        //Stun(((shockwaveEffectiveDistance - distance) * 2) / shockwaveStunTime);
+        velocity += shockwaveKnockback * heading * (shockwaveEffectiveDistance - distance) * power * (1 / mass);
+
+        Irbis.Irbis.WriteLine("postcalc velocity:" + velocity);
+        Irbis.Irbis.WriteLine("shockwaveKnockback:" + shockwaveKnockback + " heading:" + heading + " shockwaveEffectiveDistance:"
+            + shockwaveEffectiveDistance + " distance:" + distance + " power:" + power + " (1 / mass):" + (1 / mass) + "\n");
     }
 
     public void Draw(SpriteBatch sb)
     {
         switch (Irbis.Irbis.debug)
         {
-            case 5 :
+            case 5:
                 goto case 4;
-            case 4 :
+            case 4:
                 goto case 3;
-            case 3 :
+            case 3:
                 goto case 2;
-            case 2 :
+            case 2:
                 animationFrame.Update(currentFrame.ToString(), true);
                 animationFrame.Draw(sb, (position * Irbis.Irbis.screenScale).ToPoint());
                 goto case 1;
-            case 1 :
+            case 1:
                 if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, 0.9f); }
                 RectangleBorder.Draw(sb, collider, Color.Magenta, true);
                 goto default;
             default:
-                sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, renderColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                if (shielded)
-                { sb.Draw(shieldTex, (position + shieldOffset) * Irbis.Irbis.screenScale, shieldSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.01f); }
+                sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                 break;
         }
     }

@@ -21,7 +21,7 @@ public class VendingMachine
     public bool drawMenu;
     public int selection;
     VendingMenu menu;
-    long[] cost;
+    ulong[] cost;
     string[] itemDescriptions;
 
     public VendingMachine(int startingCost, VendingType vendingType, Rectangle displayRectangle, Texture2D texture, float depth)
@@ -64,7 +64,7 @@ public class VendingMachine
         }
 
 
-        cost = new long[icons.Length];
+        cost = new ulong[icons.Length];
         for (int i = 0; i < icons.Length; i++)
         {
             cost[i] = 200;
@@ -91,7 +91,7 @@ public class VendingMachine
                             Irbis.Irbis.AddPlayerEnchant(EnchantType.Bleed);
                             Irbis.Irbis.onslaughtSpawner.Points -= cost[0];
                             cost[0] *= 2;
-                            menu.Update(0, cost[0], "butts", "Bleed");
+                            menu.Update(0, cost[0], itemDescriptions[0], "Bleed");
                         }
                         break;
                     case 1: //fire
@@ -100,7 +100,7 @@ public class VendingMachine
                             Irbis.Irbis.AddPlayerEnchant(EnchantType.Fire);
                             Irbis.Irbis.onslaughtSpawner.Points -= cost[1];
                             cost[1] *= 2;
-                            menu.Update(1, cost[1], "butts", "Fire");
+                            menu.Update(1, cost[1], itemDescriptions[1], "Fire");
                         }
                         break;
                     case 2: //frost
@@ -109,7 +109,7 @@ public class VendingMachine
                             Irbis.Irbis.AddPlayerEnchant(EnchantType.Frost);
                             Irbis.Irbis.onslaughtSpawner.Points -= cost[2];
                             cost[2] *= 2;
-                            menu.Update(2, cost[2], "butts", "Frost");
+                            menu.Update(2, cost[2], itemDescriptions[2], "Frost");
                         }
                         break;
                     case 3: //knockback
@@ -118,7 +118,7 @@ public class VendingMachine
                             Irbis.Irbis.AddPlayerEnchant(EnchantType.Knockback);
                             Irbis.Irbis.onslaughtSpawner.Points -= cost[3];
                             cost[3] *= 2;
-                            menu.Update(3, cost[3], "butts", "Knockback");
+                            menu.Update(3, cost[3], itemDescriptions[3], "Knockback");
                         }
                         break;
                     case 4: //poison
@@ -127,7 +127,7 @@ public class VendingMachine
                             Irbis.Irbis.AddPlayerEnchant(EnchantType.Poison);
                             Irbis.Irbis.onslaughtSpawner.Points -= cost[4];
                             cost[4] *= 2;
-                            menu.Update(4, cost[4], "butts", "Poison");
+                            menu.Update(4, cost[4], itemDescriptions[4], "Poison");
                         }
                         break;
                     case 5: //sharpness
@@ -136,7 +136,7 @@ public class VendingMachine
                             Irbis.Irbis.AddPlayerEnchant(EnchantType.Sharpness);
                             Irbis.Irbis.onslaughtSpawner.Points -= cost[5];
                             cost[5] *= 2;
-                            menu.Update(5, cost[5], "butts", "Sharpness");
+                            menu.Update(5, cost[5], itemDescriptions[5], "Sharpness");
                         }
                         break;
                     case 6: //stun
@@ -145,7 +145,7 @@ public class VendingMachine
                             Irbis.Irbis.AddPlayerEnchant(EnchantType.Stun);
                             Irbis.Irbis.onslaughtSpawner.Points -= cost[6];
                             cost[6] *= 2;
-                            menu.Update(6, cost[6], "butts", "Stun");
+                            menu.Update(6, cost[6], itemDescriptions[6], "Stun");
                         }
                         break;
                 }
@@ -239,9 +239,9 @@ public class VendingMachine
     public void Draw(SpriteBatch sb)
     {
         sb.Draw(vendingTex, displayLocation * Irbis.Irbis.screenScale, sourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, drawDepth);
-        //if (Irbis.Irbis.geralt != null)
+        //if (Irbis.Irbis.jamie != null)
         //{
-        //    if (Irbis.Irbis.DistanceSquared(collider.Center, Irbis.Irbis.geralt.Collider.Center) <= Irbis.Irbis.vendingMachineUseDistanceSqr)
+        //    if (Irbis.Irbis.DistanceSquared(collider.Center, Irbis.Irbis.jamie.Collider.Center) <= Irbis.Irbis.vendingMachineUseDistanceSqr)
         //    {
         //        if (!drawMenu)
         //        {
@@ -254,7 +254,7 @@ public class VendingMachine
         //        Irbis.Irbis.vendingMachineMenu = null;
         //    }
         //}
-        if (!drawMenu && Irbis.Irbis.geralt != null && Irbis.Irbis.DistanceSquared(collider.Center, Irbis.Irbis.geralt.Collider.Center) <= Irbis.Irbis.vendingMachineUseDistanceSqr)
+        if (!drawMenu && Irbis.Irbis.jamie != null && Irbis.Irbis.DistanceSquared(collider.Center, Irbis.Irbis.jamie.Collider.Center) <= Irbis.Irbis.vendingMachineUseDistanceSqr)
         {
             tooltip.Draw(sb);
         }

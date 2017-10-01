@@ -1117,15 +1117,15 @@ public struct PlayerSettings
         writer.WriteLine("timerAccuracy=" + (Irbis.Irbis.timerAccuracy.Length - 3));
         writer.WriteLine("");
         writer.WriteLine(";How long before the player is considered idle (seconds)");
-        writer.WriteLine("idleTimeMax=" + Irbis.Irbis.geralt.idleTimeMax);
+        writer.WriteLine("idleTimeMax=" + Irbis.Irbis.jamie.idleTimeMax);
         writer.WriteLine("");
         writer.WriteLine(";This is the time it takes to \"charge\" the super shockwave (seconds)");
         writer.WriteLine(";Basically, how long you have to hold the shockwaveKey to use");
-        writer.WriteLine("superShockwaveHoldtime=" + Irbis.Irbis.geralt.superShockwaveHoldtime);
+        writer.WriteLine("superShockwaveHoldtime=" + Irbis.Irbis.jamie.superShockwaveHoldtime);
         writer.WriteLine("");
         writer.WriteLine(";The amount of time the player can hold down the left or right movement key");
         writer.WriteLine(";during a wall jump before they drift away from the wall (seconds)");
-        writer.WriteLine("walljumpHoldtime=" + Irbis.Irbis.geralt.walljumpHoldtime);
+        writer.WriteLine("walljumpHoldtime=" + Irbis.Irbis.jamie.walljumpHoldtime);
         writer.WriteLine("");
         writer.WriteLine(";Minimum distance(squared) for an enemy health bar to appear(bosses override this)");
         writer.WriteLine("minSqrDetectDistance=" + Irbis.Irbis.minSqrDetectDistance);
@@ -1134,68 +1134,68 @@ public struct PlayerSettings
 
         writer.WriteLine(";CHEATS");
         writer.WriteLine(";self-explanatory");
-        writer.WriteLine("attack1Damage=" + Irbis.Irbis.geralt.attack1Damage);
-        writer.WriteLine("attack2Damage=" + Irbis.Irbis.geralt.attack2Damage);
+        writer.WriteLine("attack1Damage=" + Irbis.Irbis.jamie.attack1Damage);
+        writer.WriteLine("attack2Damage=" + Irbis.Irbis.jamie.attack2Damage);
         writer.WriteLine("");
 
         writer.WriteLine(";run&jump speed");
-        writer.WriteLine("speed=" + Irbis.Irbis.geralt.speed);
+        writer.WriteLine("speed=" + Irbis.Irbis.jamie.speed);
         writer.WriteLine(";The maximum speed you can travel in any given direction");
-        writer.WriteLine("terminalVelocity=" + Irbis.Irbis.geralt.terminalVelocity);
+        writer.WriteLine("terminalVelocity=" + Irbis.Irbis.jamie.terminalVelocity);
         writer.WriteLine(";how long your jumps will maintain jump velocity (seconds)");
-        writer.WriteLine("jumpTimeMax=" + Irbis.Irbis.geralt.jumpTimeMax);
+        writer.WriteLine("jumpTimeMax=" + Irbis.Irbis.jamie.jumpTimeMax);
         writer.WriteLine("");
 
         writer.WriteLine(";highly unrecommended to not mess with these unless you really know what you're doing");
         writer.WriteLine(";collider size and placement relative to the 128x128 player sprite");
-        writer.WriteLine("XcolliderOffset=" + Irbis.Irbis.geralt.XcolliderOffset);
-        writer.WriteLine("YcolliderOffset=" + Irbis.Irbis.geralt.YcolliderOffset);
-        writer.WriteLine("colliderWidth=" + Irbis.Irbis.geralt.colliderWidth);
-        writer.WriteLine("colliderHeight=" + Irbis.Irbis.geralt.colliderHeight);
+        writer.WriteLine("XcolliderOffset=" + Irbis.Irbis.jamie.XcolliderOffset);
+        writer.WriteLine("YcolliderOffset=" + Irbis.Irbis.jamie.YcolliderOffset);
+        writer.WriteLine("colliderWidth=" + Irbis.Irbis.jamie.colliderWidth);
+        writer.WriteLine("colliderHeight=" + Irbis.Irbis.jamie.colliderHeight);
         writer.WriteLine("");
 
         writer.WriteLine(";this is the size of the rectangle used as the main attack hitbox");
-        writer.WriteLine("attackColliderWidth=" + Irbis.Irbis.geralt.attackColliderWidth);
-        writer.WriteLine("attackColliderHeight=" + Irbis.Irbis.geralt.attackColliderHeight);
+        writer.WriteLine("attackColliderWidth=" + Irbis.Irbis.jamie.attackColliderWidth);
+        writer.WriteLine("attackColliderHeight=" + Irbis.Irbis.jamie.attackColliderHeight);
         writer.WriteLine("");
 
         writer.WriteLine(";self-explanatory");
-        writer.WriteLine("maxHealth=" + Irbis.Irbis.geralt.maxHealth);
-        writer.WriteLine("maxShield=" + Irbis.Irbis.geralt.maxShield);
-        writer.WriteLine("maxEnergy=" + Irbis.Irbis.geralt.maxEnergy);
+        writer.WriteLine("maxHealth=" + Irbis.Irbis.jamie.maxHealth);
+        writer.WriteLine("maxShield=" + Irbis.Irbis.jamie.maxShield);
+        writer.WriteLine("maxEnergy=" + Irbis.Irbis.jamie.maxEnergy);
         writer.WriteLine("");
 
 
 
         writer.WriteLine(";the distance at which the shockwave stops gaining power (otherwise it would be insanely strong close-up)");
-        writer.WriteLine("shockwaveMaxEffectDistance=" + Irbis.Irbis.geralt.shockwaveMaxEffectDistance);
+        writer.WriteLine("shockwaveMaxEffectDistance=" + Irbis.Irbis.jamie.shockwaveMaxEffectDistance);
         writer.WriteLine(";distance at which shockwave has no power");
-        writer.WriteLine("shockwaveEffectiveDistance=" + Irbis.Irbis.geralt.shockwaveEffectiveDistance);
+        writer.WriteLine("shockwaveEffectiveDistance=" + Irbis.Irbis.jamie.shockwaveEffectiveDistance);
         writer.WriteLine(";shockwave multipliers");
-        writer.WriteLine("shockwaveStunTime=" + Irbis.Irbis.geralt.shockwaveStunTime);
-        writer.WriteLine("shockwaveKnockback=" + Irbis.Irbis.geralt.shockwaveKnockback);
+        writer.WriteLine("shockwaveStunTime=" + Irbis.Irbis.jamie.shockwaveStunTime);
+        writer.WriteLine("shockwaveKnockback=" + Irbis.Irbis.jamie.shockwaveKnockback);
         writer.WriteLine("");
 
         writer.WriteLine(";this how the player won't take damage after previously taking damage (seconds)");
-        writer.WriteLine("invulnerableMaxTime=" + Irbis.Irbis.geralt.invulnerableMaxTime);
+        writer.WriteLine("invulnerableMaxTime=" + Irbis.Irbis.jamie.invulnerableMaxTime);
         writer.WriteLine("");
 
         writer.WriteLine(";these are only the base. they may be modified in-game by potions and other ways (per second)");
-        writer.WriteLine("shieldRechargeRate=" + Irbis.Irbis.geralt.shieldRechargeRate);
-        writer.WriteLine("energyRechargeRate=" + Irbis.Irbis.geralt.energyRechargeRate);
-        writer.WriteLine("healthRechargeRate=" + Irbis.Irbis.geralt.baseHealing);
-        writer.WriteLine("potionRechargeRate=" + Irbis.Irbis.geralt.potionRechargeRate);
-        writer.WriteLine("potionRechargeTime=" + Irbis.Irbis.geralt.potionRechargeTime);
-        writer.WriteLine("maxNumberOfPotions=" + Irbis.Irbis.geralt.maxNumberOfPotions);
+        writer.WriteLine("shieldRechargeRate=" + Irbis.Irbis.jamie.shieldRechargeRate);
+        writer.WriteLine("energyRechargeRate=" + Irbis.Irbis.jamie.energyRechargeRate);
+        writer.WriteLine("healthRechargeRate=" + Irbis.Irbis.jamie.baseHealing);
+        writer.WriteLine("potionRechargeRate=" + Irbis.Irbis.jamie.potionRechargeRate);
+        writer.WriteLine("potionRechargeTime=" + Irbis.Irbis.jamie.potionRechargeTime);
+        writer.WriteLine("maxNumberOfPotions=" + Irbis.Irbis.jamie.maxNumberOfPotions);
         writer.WriteLine("");
 
         writer.WriteLine(";this is the percentage of the damage absorbed by the shield that is converted back into health");
         writer.WriteLine(";0.25 means 25% of damage absorbed by the shield is converted to health (if 20 damage is absorbed, 5 damage is healed)");
-        writer.WriteLine("shieldHealingPercentage=" + Irbis.Irbis.geralt.shieldHealingPercentage);
+        writer.WriteLine("shieldHealingPercentage=" + Irbis.Irbis.jamie.shieldHealingPercentage);
         writer.WriteLine("");
 
         writer.WriteLine(";how full the energy bar has to be before allowing you to use (95 == 95%)");
-        writer.WriteLine("energyUsableMargin=" + Irbis.Irbis.geralt.energyUsableMargin);
+        writer.WriteLine("energyUsableMargin=" + Irbis.Irbis.jamie.energyUsableMargin);
         writer.WriteLine("");
         //writer.WriteLine("");
 
@@ -1204,7 +1204,7 @@ public struct PlayerSettings
         writer.WriteLine(";(for each animation listed below)");
         for (int i = 00; i < 20; i++)
         {
-            writer.WriteLine("animationSpeed[" + i + "]=" + Irbis.Irbis.geralt.animationSpeed[i]);
+            writer.WriteLine("animationSpeed[" + i + "]=" + Irbis.Irbis.jamie.animationSpeed[i]);
         }
         writer.WriteLine("");
 
@@ -1213,7 +1213,7 @@ public struct PlayerSettings
         writer.WriteLine(";the number of frames in each animation, only edit this if you are remaking the default spritesheet");
         for (int i = 00; i < 20; i++)
         {
-            writer.WriteLine("animationFrames[" + i + "]=" + Irbis.Irbis.geralt.animationFrames[i]);
+            writer.WriteLine("animationFrames[" + i + "]=" + Irbis.Irbis.jamie.animationFrames[i]);
         }
         writer.WriteLine("");
 
@@ -1221,7 +1221,7 @@ public struct PlayerSettings
         writer.WriteLine(";the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)");
         writer.WriteLine(";NOTE: there is no variable for the number of frames in the shield animation, as the shield animator");
         writer.WriteLine(";uses the width of the shield sprite to determine when to loop.");
-        writer.WriteLine("shieldAnimationSpeed=" + Irbis.Irbis.geralt.shieldAnimationSpeed);
+        writer.WriteLine("shieldAnimationSpeed=" + Irbis.Irbis.jamie.shieldAnimationSpeed);
 
 
         writer.WriteLine(";FONT SETTINGS");
@@ -2151,7 +2151,7 @@ public struct PlayerSettings
 
                         case "shockwaveknockback":                                                        //place new key binds above
                             playerSettings.shockwaveKnockback = Vector2Parser(value);
-                            if (playerSettings.shockwaveKnockback == new Vector2(-3.14f, -3.14f))
+                            if (playerSettings.shockwaveKnockback == new Vector2(-0.112f, -0.112f))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
@@ -2159,7 +2159,7 @@ public struct PlayerSettings
                             checker.Add(true); break;
                         case "initialposition":
                             playerSettings.initialPosition = Vector2Parser(value);
-                            if (playerSettings.initialPosition == new Vector2(-3.14f, -3.14f))
+                            if (playerSettings.initialPosition == new Vector2(-0.112f, -0.112f))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
@@ -2167,7 +2167,7 @@ public struct PlayerSettings
                             checker.Add(true); break;
                         case "boundingbox":
                             playerSettings.boundingBox = RectangleParser(value);
-                            if (playerSettings.boundingBox == new Rectangle(-3, -3, -3, -3))
+                            if (playerSettings.boundingBox == new Rectangle(-0, -1, -1, -2))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
@@ -2201,7 +2201,7 @@ public struct PlayerSettings
                             checker.Add(true); break;
                         case "resolution":
                             playerSettings.resolution = PointParser(value);
-                            if (playerSettings.resolution == new Point(-3, -3))
+                            if (playerSettings.resolution == new Point(-0112, -0112))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
@@ -2394,7 +2394,7 @@ public struct PlayerSettings
         {
             Irbis.Irbis.WriteLine("error: Vector2 could not be parsed");
         }
-        return new Vector2(-3.14f, -3.14f);
+        return new Vector2(-0.112f, -0.112f);
     }
 
     private static Point PointParser(string value)
@@ -2448,7 +2448,7 @@ public struct PlayerSettings
         {
             Irbis.Irbis.WriteLine("error: Point could not be parsed");
         }
-        return new Point(-3, -3);
+        return new Point(-0112, -0112);
     }
 
     private static Rectangle RectangleParser(string value)
@@ -2538,6 +2538,6 @@ public struct PlayerSettings
         {
             Irbis.Irbis.WriteLine("error: Rectangle could not be parsed");
         }
-        return new Rectangle(-3, -3, -3, -3);
+        return new Rectangle(-0, -1, -1, -2);
     }
 }
