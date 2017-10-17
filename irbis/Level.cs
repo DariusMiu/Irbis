@@ -17,7 +17,7 @@ public struct Level
     private List<int> squareSpawnPointsX;
     private List<int> squareSpawnPointsY;
     public List<string> squareTextures;
-    public float squareDepth;
+    public List<float> squareDepths;
     private List<int> backgroundSquaresX;
     private List<int> backgroundSquaresY;
     public List<string> backgroundTextures;
@@ -35,6 +35,8 @@ public struct Level
     private VendingType[] vendingMachineTypes;
     private int[] vendingMachineLocationsX;
     private int[] vendingMachineLocationsY;
+
+    public string bossName;
 
     public Point[] VendingMachineLocations
     {
@@ -190,7 +192,7 @@ public struct Level
         backgroundSquaresY = new List<int>();
         backgroundTextures = new List<string>();
         backgroundSquareDepths = new List<float>();
-        squareDepth = 0f;
+        squareDepths = new List<float>();
         levelName = string.Empty;
         enemySpawnPointsX = new List<float>();
         enemySpawnPointsY = new List<float>();
@@ -205,6 +207,7 @@ public struct Level
         vendingMachineLocationsY = new int[0];
         vendingMachineTypes = new VendingType[0];
 
+        bossName = string.Empty;
     }
 
     public void Load(string filename)
@@ -263,7 +266,7 @@ public struct Level
         squareSpawnPointsX = level.squareSpawnPointsX;
         squareSpawnPointsY = level.squareSpawnPointsY;
         squareTextures = level.squareTextures;
-        squareDepth = level.squareDepth;
+        squareDepths = level.squareDepths;
         Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
         backgroundSquaresX = level.backgroundSquaresX;
         backgroundSquaresY = level.backgroundSquaresY;
@@ -282,6 +285,7 @@ public struct Level
         Irbis.Irbis.WriteLine("             player spawn: " + PlayerSpawn);
         bossSpawnX = level.bossSpawnX;
         bossSpawnY = level.bossSpawnY;
+        bossName = level.bossName;
         Irbis.Irbis.WriteLine("               boss spawn: " + BossSpawn);
         vendingMachineTextures = level.vendingMachineTextures;
         vendingMachineTypes = level.vendingMachineTypes;

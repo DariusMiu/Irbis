@@ -5,6 +5,8 @@ using System.Threading;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.CompilerServices;
 
@@ -126,7 +128,7 @@ namespace Irbis
         {
             get;
         }
-        string EnemyName
+        string Name
         {
             get;
         }
@@ -145,6 +147,7 @@ namespace Irbis
         }
         bool Update();
         void ThreadPoolCallback(Object threadContext);
+        bool Enemy_OnPlayerAttack(Rectangle attackCollider, Attacking attack);
         void AddEffect(Enchant effect);
         void UpgradeEffect(int index, float duration);
         void Knockback(Direction knockbackDirection, float strength);
@@ -159,7 +162,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.5.0";
+        static string versionNo = "0.1.5.5";
         static string versionID = "alpha";
         static string versionTy = "debug";
         /// Different version types: 
@@ -525,7 +528,20 @@ namespace Irbis
                 return (GetKeyUp(rollKey) || GetKeyUp(altRollKey));
             }
         }
-
+        public static bool RandomBool
+        {
+            get
+            {
+                return (RAND.NextDouble() > 0.5d);
+            }
+        }
+        public static float RandomFloat
+        {
+            get
+            {
+                return (float)RAND.NextDouble();
+            }
+        }
 
                                                                                                     //graphics
         public static GraphicsDeviceManager graphics;
@@ -617,7 +633,8 @@ namespace Irbis
                                                                                                     //enemy/AI variables
         public static bool AIenabled;
         Texture2D enemy0Tex;
-        public Vector2 bossSpawn;
+        private Vector2 bossSpawn;
+        private string bossName;
         public List<Vector2> enemySpawnPoints;
 
                                                                                                     //UI
@@ -693,7 +710,12 @@ namespace Irbis
         private static Shape shadowShape;
         private static List<Vector2> shadows;
         public static TooltipGenerator tooltipGenerator;
-        Point worldSpaceMouseLocation;
+        private Point worldSpaceMouseLocation;
+        public delegate bool AttackEventDelegate(Rectangle attackCollider, Attacking attack);
+        public static List<Song> music;
+        public static List<string> musicList;
+        public static List<Texture2D> logos;
+
 
 
         public Irbis()
@@ -780,7 +802,8 @@ namespace Irbis
             Console.WriteLine("loading content");
             Texture2D fontTex2 = Content.Load<Texture2D>("font2");
             Font font2 = new Font(fontTex2, 8);
-            consoleTex = Content.Load<Texture2D>("console texture");
+            //consoleTex = Content.Load<Texture2D>("console texture");
+            consoleTex = null;
             developerConsole = new Print(font2);
             PrintVersion();
             Irbis.WriteLine("Number of logical processors:" + threadCount);
@@ -906,6 +929,12 @@ namespace Irbis
 
             debugshapes[3] = new Shape(zeroScreenspace);
 
+            //loading logos
+            logos = new List<Texture2D>();
+            logos.Add(Content.Load<Texture2D>("monogame"));
+            logos.Add(Content.Load<Texture2D>("ln2"));
+            logos.Add(Content.Load<Texture2D>("patreon"));
+
             shadows = new List<Vector2>();
             WriteLine("creating shadowShape");
             shadowShape = new Shape(shadows.ToArray());
@@ -917,6 +946,9 @@ namespace Irbis
 
             LoadMenu(0, 0, false);
             sceneIsMenu = true;
+
+            LoadMusic();
+            PlaySong("bensound-relaxing", true);
 
             //WriteLine("Type 'help' for a few commands");
             Console.WriteLine("done.");
@@ -992,6 +1024,17 @@ namespace Irbis
                 printList.Add(resettt);
             }
 
+            if (levelLoaded > 0)
+            {
+                logos = null;
+            }
+            //else if (scene == 0)
+            //{ // PATREON
+            //    Print tempPrint = new Print(font.charHeight * 4 * textScale, font, Color.White, false, new Point(((logos.Count) * 72), zeroScreenspace.Height - 28 - ((textScale * font.charHeight) / 2)), Direction.Left, 0.95f);
+            //    tempPrint.Update("/Ln2", true);
+            //    printList.Add(tempPrint);
+            //}
+
             //this is where all the crazy stuff happens
             menu.Create(scene);
 
@@ -1011,18 +1054,20 @@ namespace Irbis
             Level thisLevel = new Level(true);
             thisLevel.Load(".\\levels\\" + filename + ".lvl");
 
-            List<Point> squareSpawns = thisLevel.SquareSpawnPoints;
+            Point[] squareSpawns = thisLevel.SquareSpawnPoints.ToArray();
 
-            List<Point> BackgroundSquares = thisLevel.BackgroundSquares;
+            float[] squareDepths;
+            squareDepths = thisLevel.squareDepths.ToArray();
+
+            Point[] BackgroundSquares = thisLevel.BackgroundSquares.ToArray();
 
             onslaughtMode = thisLevel.isOnslaught;
             initialPos = thisLevel.PlayerSpawn;
-            //foreach (Vector2 v in thisLevel.EnemySpawnPoints)
-            //{
-            //    enemySpawnPoints.Add(v / 2f);
-            //}
             enemySpawnPoints = thisLevel.EnemySpawnPoints;
             bossSpawn = thisLevel.BossSpawn;
+            bossName = thisLevel.bossName;
+            //bossSpawn = new Vector2(250, 100);
+            //bossName = "lizard";
 
             enemy0Tex = Content.Load<Texture2D>("enemy0");
             Texture2D centerTex = Content.Load<Texture2D>("centerTexture");
@@ -1030,21 +1075,13 @@ namespace Irbis
             if (loadUI)
             {
                 bars = new Bars(Content.Load<Texture2D>("bar health"), Content.Load<Texture2D>("bar shield"), Content.Load<Texture2D>("bar energy"), Content.Load<Texture2D>("bar potion fill 1"), Content.Load<Texture2D>("bar enemy fill"), Content.Load<Texture2D>("shieldBar"), Content.Load<Texture2D>("bars"), Content.Load<Texture2D>("bar enemy"), new[] { Content.Load<Texture2D>("bar potion 1"), Content.Load<Texture2D>("bar potion 2"), Content.Load<Texture2D>("bar potion 3")});
-
-                
-
                 if (jamie != null)
-                {
-                    jamie.Respawn(initialPos);
-                    //lighting.Lights.Add(jamie.light);
-                }
+                { jamie.Respawn(initialPos); }
             }
             else
             {
                 if (jamie != null)
-                {
-                    jamie.Respawn(new Vector2(-1000f, -1000f));
-                }
+                { jamie.Respawn(new Vector2(-1000f, -1000f)); }
             }
 
             if (onslaughtMode)
@@ -1072,7 +1109,7 @@ namespace Irbis
             for (int i = 0; i < thisLevel.squareTextures.Count; i++)
             {
                 Texture2D squareTex = Content.Load<Texture2D>(thisLevel.squareTextures[i]);
-                Square tempSquare = new Square(squareTex, (squareSpawns[i].ToVector2() * (20f/16f)).ToPoint(), screenScale, false, thisLevel.squareDepth);
+                Square tempSquare = new Square(squareTex, squareSpawns[i], screenScale, false, squareDepths[i]);
                 collisionObjects.Add(tempSquare);
                 squareList.Add(tempSquare);
             }
@@ -1099,11 +1136,11 @@ namespace Irbis
                 WriteLine("for a list of all squares, enter: squareList");
             }
 
-
-            SummonLizardGuy();
+            //if (thisLevel.bossName != null && thisLevel.BossSpawn != null)
+            SummonBoss(bossName, bossSpawn);
         }
 
-        
+
 
         /// <summary>
         /// UnloadContent will be called once per game and is the place to unload
@@ -1123,7 +1160,7 @@ namespace Irbis
             doneEvent = new ManualResetEvent(false);
             keyboardState = Keyboard.GetState();
             mouseState = Mouse.GetState();
-            if (debug > 0)
+            //if (debug > 0)
             {
                 if (useMultithreading)
                 {
@@ -1239,7 +1276,7 @@ namespace Irbis
         protected void LevelUpdate(GameTime gameTime)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelUpdate"); }
-            if ((keyboardState.IsKeyDown(Keys.T) && !acceptTextInput) || jamie.health <= 0)                            //RESPAWN
+            if ((GetKey(Keys.T) && !acceptTextInput) || jamie.health <= 0)                            //RESPAWN
             {
                 jamie.Respawn(initialPos);
 
@@ -1269,7 +1306,7 @@ namespace Irbis
                 {
                     nextFrameTimer -= 0.1f;
                 }
-                timer += gameTime.ElapsedGameTime.TotalSeconds;
+                timer += deltaTime;
 
 
 
@@ -1291,7 +1328,7 @@ namespace Irbis
 
                 Bars.healthBar.UpdateValue(jamie.health);
                 Bars.shieldBar.UpdateValue(jamie.shield, jamie.shielded);
-                Bars.shieldBar.UpdateValue(jamie.shield, false);
+                //Bars.shieldBar.UpdateValue(jamie.shield, false);
                 Bars.energyBar.UpdateValue(jamie.energy);
 
                 if (useMultithreading)
@@ -1591,7 +1628,7 @@ namespace Irbis
         {
             if (cameraShakeSetting)
             {
-                if (duration > cameraShakeDuration)
+                //if (duration > cameraShakeDuration)
                 {
                     cameraShakeDuration = duration;
                 }
@@ -1652,6 +1689,47 @@ namespace Irbis
             camera.Y = (Lerp(camera.Y, mainCamera.Y, cameraLerpSpeed * DeltaTime));
         }
 
+        private static bool LoadMusic()
+        {
+            //string[] tempMusicList = Directory.GetFiles(".\\music");
+
+            music = new List<Song>();
+            musicList = new List<string>();
+            music.Add(game.Content.Load<Song>("music/bensound-betterdays"));
+            musicList.Add("bensound-betterdays");
+
+            music.Add(game.Content.Load<Song>("music/bensound-epic"));
+            musicList.Add("bensound-epic");
+
+            music.Add(game.Content.Load<Song>("music/bensound-instinct"));
+            musicList.Add("bensound-instinct");
+
+            music.Add(game.Content.Load<Song>("music/bensound-memories"));
+            musicList.Add("bensound-memories");
+
+            music.Add(game.Content.Load<Song>("music/bensound-relaxing"));
+            musicList.Add("bensound-relaxing");
+
+            music.Add(game.Content.Load<Song>("music/bensound-slowmotion"));
+            musicList.Add("bensound-slowmotion");
+
+            return true;
+        }
+
+        public static bool PlaySong(string songName, bool repeat)
+        {
+            int songIndex = musicList.IndexOf(songName);
+            if (songIndex >= 0)
+            {
+                MediaPlayer.Volume = (masterAudioLevel * musicLevel) / 10000f;
+                MediaPlayer.Play(music[songIndex]);
+                MediaPlayer.IsRepeating = repeat;
+                //MediaPlayer.Stop();
+                return true;
+            }
+            return false;
+        }
+
         private void DebugUpdate(Object threadContext)
         {
             try
@@ -1674,13 +1752,14 @@ namespace Irbis
                         minFPStime = Timer;
                     }
                 }
-
-                if (debug > 1)
+                switch (Irbis.debug)
                 {
-                    if (debug > 2)
-                    {
+                    case 5:
+                        goto case 4;
+                    case 4:
+                        goto case 3;
+                    case 3:
                         PrintDebugInfo();
-
                         if (jamie != null)
                         {
                             foreach (Square s in squareList)
@@ -1695,15 +1774,16 @@ namespace Irbis
                                 }
                             }
                         }
-                    }
-                    else
-                    {
+                        break;
+                    case 2:
+                        goto case 1;
+                    case 1:
                         debuginfo.Update("\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
-                    }
-                }
-                else
-                {
-                    debuginfo.Update("\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
+                        break;
+                    default:
+                        //disable on release
+                        debuginfo.Update("\n\nIrbis " + versionID + " v" + versionNo, true);
+                        break;
                 }
             }
             finally
@@ -1713,6 +1793,128 @@ namespace Irbis
                     Irbis.doneEvent.Set();
                 }
             }
+        }
+
+        public void PrintDebugInfo()
+        {
+            //if (debug > 4) { methodLogger.AppendLine("Irbis.PrintDebugInfo"); }
+            debuginfo.Update("      DEBUG MODE. " + versionID.ToUpper() + " v" + versionNo, true);
+            debuginfo.Update("\n DeltaTime:" + DeltaTime);
+            debuginfo.Update("\n       FPS:" + (1 / DeltaTime).ToString("0000.0"));
+            debuginfo.Update("\n  smartFPS:" + smartFPS.Framerate.ToString("0000.0"));
+            if (meanFPS != null)
+            {
+                debuginfo.Update("\n   meanFPS:" + meanFPS.Framerate.ToString("0000.0"));
+                debuginfo.Update("\n    minFPS:" + minFPS.ToString("0000.0"));
+                debuginfo.Update("\n    maxFPS:" + maxFPS.ToString("0000.0"));
+            }
+            debuginfo.Update("\n     timer:" + TimerText(timer));
+            debuginfo.Update("\nnextFrameTimer:" + nextFrameTimer);
+            if (jamie != null)
+            {
+                debuginfo.Update("\n     input:" + jamie.input + "  isRunning:" + jamie.isRunning);
+                debuginfo.Update("\n prevInput:" + jamie.prevInput);
+                debuginfo.Update("\n\nwallJumpTimer:" + jamie.wallJumpTimer);
+                debuginfo.Update("\n\n  player info");
+                debuginfo.Update("\nHealth:" + jamie.health + "\nShield:" + jamie.shield + "\nEnergy:" + jamie.energy);
+                debuginfo.Update("\n    pos:" + jamie.position);
+                debuginfo.Update("\n    vel:" + jamie.velocity);
+                debuginfo.Update("\nbaseVel:" + jamie.baseVelocity);
+                debuginfo.Update("\n   col:" + jamie.Collider);
+                debuginfo.Update("\nmaxspeed:" + jamie.debugspeed);
+                debuginfo.Update("\ninvulner:" + jamie.invulnerable);
+                debuginfo.Update("\nShielded:" + jamie.shielded);
+                debuginfo.Update("\ncolliders:" + collisionObjects.Count);
+                debuginfo.Update("\n collided:" + jamie.collided.Count);
+                debuginfo.Update("\n   walled:" + jamie.Walled);
+                debuginfo.Update("\nattackin:" + jamie.attacking);
+                debuginfo.Update("\nattackID:" + jamie.attackID);
+                debuginfo.Update("\nactivity:" + jamie.activity);
+                debuginfo.Update("\n          animation:" + jamie.currentAnimation);
+                debuginfo.Update("\nanimationSourceRect:" + jamie.animationSourceRect);
+                debuginfo.Update("\n    animationNoLoop:" + jamie.animationNoLoop);
+            }
+            debuginfo.Update("\ncurrentLevel:" + currentLevel);
+            debuginfo.Update("\n onslaught:" + onslaughtMode);
+            if (onslaughtMode && onslaughtSpawner != null)
+            {
+                debuginfo.Update("\n      wave:" + onslaughtSpawner.wave);
+                debuginfo.Update("\nspawntimer:" + onslaughtSpawner.timeUntilNextSpawn);
+                debuginfo.Update("\n   enemies:" + onslaughtSpawner.enemiesLeftThisWave);
+                debuginfo.Update("\nmaxenemies:" + onslaughtSpawner.maxEnemies);
+                debuginfo.Update("\n   ehealth:" + onslaughtSpawner.enemyHealth);
+                debuginfo.Update("\n   edamage:" + onslaughtSpawner.enemyDamage);
+            }
+            if (framebyframe)
+            {
+                debuginfo.Update("\nFrame-by-frame mode:" + framebyframe);
+            }
+            //debuginfo.Update("\n01234567890ABCDEFGHIJKLMNOPQRSTUVWQYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+><~" + '\u001b' + "{}|.`,:;/@'[\\]\"ᴥ");  //every character in print class
+            if (enemyList.Count > 0)
+            {
+                debuginfo.Update("\n\nTotal of " + enemyList.Count + " enemies");
+                debuginfo.Update("\nEnemy Info:");
+
+                float avghp = 0;
+                for (int i = enemyList.Count - 1; i >= 0; i--)
+                {
+                    avghp += enemyList[i].Health;
+                }
+                avghp = avghp / enemyList.Count;
+                debuginfo.Update("\n  avg health: " + avghp);
+
+                if (enemyList[0].GetType() == typeof(LizardGuy))
+                {
+                    debuginfo.Update("\nBossArena XDistance:" + XDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).bossArena));
+                    debuginfo.Update("\nBossArena YDistance:" + YDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).bossArena));
+                    debuginfo.Update("\n Arena side closest:" + SideClosest(((LizardGuy)enemyList[0]).bossArena, Irbis.jamie.Collider));
+                    debuginfo.Update("\n\nLizard ActivelyAttacking:" + ((LizardGuy)enemyList[0]).ActivelyAttacking);
+                    debuginfo.Update("\nLizardGuy  ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
+                    debuginfo.Update("\nLizardGuy       velocity:" + ((LizardGuy)enemyList[0]).Velocity);
+                    debuginfo.Update("\nLizardGuy      direction:" + ((LizardGuy)enemyList[0]).direction);
+                    debuginfo.Update("\nLizardGuy   stun:" + ((LizardGuy)enemyList[0]).stunned);
+                    debuginfo.Update("\nLizardGuy   roll:" + ((LizardGuy)enemyList[0]).state[1] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[1]);
+                    debuginfo.Update("\nLizardGuy  swipe:" + ((LizardGuy)enemyList[0]).state[2] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[2]);
+                    debuginfo.Update("\nLizardGuy   bury:" + ((LizardGuy)enemyList[0]).state[4] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[4]);
+                    debuginfo.Update("\nLizardGuy emerge:" + ((LizardGuy)enemyList[0]).state[5] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[5]);
+                    debuginfo.Update("\nLizardGuy wander:" + ((LizardGuy)enemyList[0]).state[0] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[0]);
+                }
+
+
+                //for (int i = 0; i < enemyList.Count; i++)
+                //{
+                //    debuginfo.Update("\n    enemy " + i);
+                //    debuginfo.Update("\n  collided: " + enemyList[i].collided.Count);
+                //    debuginfo.Update("\n   effects: " + enemyList[i].ActiveEffects.Count);
+                //    for (int j = 0; j < enemyList[i].ActiveEffects.Count; j++)
+                //    {
+                //        debuginfo.Update("\n effect[" + j + "]: " + enemyList[i].ActiveEffects[j].enchantType + ", str: " + enemyList[i].ActiveEffects[j].strength);
+                //    }
+                //    debuginfo.Update("\n    health: " + enemyList[i].Health);
+                //    debuginfo.Update("\n     input: " + enemyList[i].input);
+                //    debuginfo.Update("\n  jumptime: " + enemyList[i].jumpTime);
+                //    debuginfo.Update("\n  activity: " + enemyList[i].AIactivity);
+                //    if (enemyList[i].AIactivity == AI.Persue || enemyList[i].AIactivity == AI.Combat)
+                //    {
+                //        debuginfo.Update("\nattackCD: " + enemyList[i].attackCooldownTimer);
+                //    }
+                //    else if (enemyList[i].AIactivity == AI.Wander)
+                //    {
+                //        debuginfo.Update("\nwandtime: " + enemyList[i].wanderTime);
+                //    }
+                //    debuginfo.Update("\n  Xpos:" + enemyList[i].Position.X + "\n  Ypos:" + enemyList[i].Position.Y);
+                //    debuginfo.Update("\n  Xvel:" + enemyList[i].velocity.X + "\n  Yvel:" + enemyList[i].velocity.Y);
+                //    if (i > 3)
+                //    {
+                //        i = enemyList.Count;
+                //    }
+                //}
+            }
+
+            debuginfo.Update("\n    Camera:" + camera);
+            debuginfo.Update("\nmainCamera:" + mainCamera);
+            //debuginfo.Update("\n Dp:₯");
+
         }
 
         public static void RemoveFromPrintList(string printStatement)
@@ -1741,7 +1943,7 @@ namespace Irbis
                     {
                         foreach (IEnemy e in enemyList)
                         {
-                            thisEnemysSqrDistance = DistanceSquared(jamie.Collider.Center, e.Collider.Center);
+                            thisEnemysSqrDistance = DistanceSquared(jamie.Collider, e.Collider);
                             if (thisEnemysSqrDistance < closestSqrDistance)
                             {
                                 closestSqrDistance = thisEnemysSqrDistance;
@@ -1761,7 +1963,7 @@ namespace Irbis
                         jamie.Combat();
                         Bars.enemyHealthBar.maxValue = closest.MaxHealth;
                         Bars.enemyHealthBar.UpdateValue(closest.Health);
-                        Bars.enemyName.Update(closest.EnemyName, true);
+                        Bars.name.Update(closest.Name, true);
                     }
                     else
                     { displayEnemyHealth = jamie.combat = false; }
@@ -1784,7 +1986,7 @@ namespace Irbis
             ClearUI();
             levelEditor = sceneIsMenu = true;
             jamie = null;
-
+            enemyList.Clear();
         }
 
         public void LevelEditor(Object threadContext)
@@ -1956,9 +2158,11 @@ namespace Irbis
 
             List<Point> squareSpawns = new List<Point>();
             List<string> squareTextures = new List<string>();
+            List<float> squareDepths = new List<float>();
             for (int i = 0; i < squareList.Count; i++)
             {
                 squareSpawns.Add(squareList[i].Position.ToPoint());
+                squareDepths.Add(squareList[i].depth);
                 squareTextures.Add(squareList[i].texture.Name);
             }
 
@@ -1973,6 +2177,7 @@ namespace Irbis
             }
 
             thisLevel.SquareSpawnPoints = squareSpawns;
+            thisLevel.squareDepths = squareDepths;
             thisLevel.squareTextures = squareTextures;
             thisLevel.BackgroundSquares = BackgroundSquares;
             thisLevel.backgroundTextures = backgroundTextures;
@@ -2010,6 +2215,7 @@ namespace Irbis
             thisLevel.isOnslaught = onslaughtMode;
             thisLevel.PlayerSpawn = initialPos;
             thisLevel.BossSpawn = bossSpawn;
+            thisLevel.bossName = bossName;
             thisLevel.EnemySpawnPoints = enemySpawnPoints;
 
 
@@ -2032,7 +2238,9 @@ namespace Irbis
             squareList.Clear();
             collisionObjects.Clear();
             backgroundSquareList.Clear();
-
+            if (jamie != null)
+            { jamie.OnPlayerAttackReset(); }
+            
             if (recordFPS)
             {
                 meanFPS = new TotalMeanFramerate(true);
@@ -2055,112 +2263,6 @@ namespace Irbis
             buttonList.Clear();
 
             bars = null;
-        }
-
-        public void PrintDebugInfo()
-        {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.PrintDebugInfo"); }
-            debuginfo.Update("      DEBUG MODE. " + versionID.ToUpper() + " v" + versionNo, true);
-            debuginfo.Update("\n DeltaTime:" + DeltaTime);
-            debuginfo.Update("\n       FPS:" + (1 / DeltaTime).ToString("0000.0"));
-            debuginfo.Update("\n  smartFPS:" + smartFPS.Framerate.ToString("0000.0"));
-            if (meanFPS != null)
-            {
-                debuginfo.Update("\n   meanFPS:" + meanFPS.Framerate.ToString("0000.0"));
-                debuginfo.Update("\n    minFPS:" + minFPS.ToString("0000.0"));
-                debuginfo.Update("\n    maxFPS:" + maxFPS.ToString("0000.0"));
-            }
-            debuginfo.Update("\n     timer:" + TimerText(timer)); 
-            debuginfo.Update("\nnextFrameTimer:" + nextFrameTimer);
-            if (jamie != null)
-            {
-                debuginfo.Update("\n     input:" + jamie.input + "  isRunning:" + jamie.isRunning);
-                debuginfo.Update("\n prevInput:" + jamie.prevInput);
-                debuginfo.Update("\n\nwallJumpTimer:" + jamie.wallJumpTimer);
-                debuginfo.Update("\n\n  player info");
-                debuginfo.Update("\nHealth:" + jamie.health + "\nShield:" + jamie.shield + "\nEnergy:" + jamie.energy);
-                debuginfo.Update("\n    pos:" + jamie.position);
-                debuginfo.Update("\n    vel:" + jamie.velocity);
-                debuginfo.Update("\nbaseVel:" + jamie.baseVelocity);
-                debuginfo.Update("\n   col:" + jamie.Collider);
-                debuginfo.Update("\nmaxspeed:" + jamie.debugspeed);
-                debuginfo.Update("\ninvulner:" + jamie.invulnerableTime);
-                debuginfo.Update("\nShielded:" + jamie.shielded);
-                debuginfo.Update("\ncolliders:" + collisionObjects.Count);
-                debuginfo.Update("\n collided:" + jamie.collided.Count);
-                debuginfo.Update("\n   walled:" + jamie.Walled);
-                debuginfo.Update("\nattackin:" + jamie.attacking);
-                debuginfo.Update("\nattackID:" + jamie.attackID);
-                debuginfo.Update("\nactivity:" + jamie.activity);
-                debuginfo.Update("\n          animation:" + jamie.currentAnimation);
-                debuginfo.Update("\nanimationSourceRect:" + jamie.animationSourceRect);
-                debuginfo.Update("\n    animationNoLoop:" + jamie.animationNoLoop);
-            }
-            debuginfo.Update("\ncurrentLevel:" + currentLevel);
-            debuginfo.Update("\n onslaught:" + onslaughtMode);
-            if (onslaughtMode && onslaughtSpawner != null)
-            {
-                debuginfo.Update("\n      wave:" + onslaughtSpawner.wave);
-                debuginfo.Update("\nspawntimer:" + onslaughtSpawner.timeUntilNextSpawn);
-                debuginfo.Update("\n   enemies:" + onslaughtSpawner.enemiesLeftThisWave);
-                debuginfo.Update("\nmaxenemies:" + onslaughtSpawner.maxEnemies);
-                debuginfo.Update("\n   ehealth:" + onslaughtSpawner.enemyHealth);
-                debuginfo.Update("\n   edamage:" + onslaughtSpawner.enemyDamage);
-            }
-            if (framebyframe)
-            {
-                debuginfo.Update("\nFrame-by-frame mode:" + framebyframe);
-            }
-            //debuginfo.Update("\n01234567890ABCDEFGHIJKLMNOPQRSTUVWQYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+><~" + '\u001b' + "{}|.`,:;/@'[\\]\"ᴥ");  //every character in print class
-            if (enemyList.Count > 0)
-            {
-                debuginfo.Update("\n\nTotal of " + enemyList.Count + " enemies");
-                debuginfo.Update("\nEnemy Info:");
-
-                float avghp = 0;
-                for (int i = enemyList.Count - 1; i >= 0; i--)
-                {
-                    avghp += enemyList[i].Health;
-                }
-                avghp = avghp / enemyList.Count;
-                debuginfo.Update("\n  avg health: " + avghp);
-
-                debuginfo.Update("enemy[0] distance: " + Distance(jamie.Collider, enemyList[0].Collider));
-
-                //for (int i = 0; i < enemyList.Count; i++)
-                //{
-                //    debuginfo.Update("\n    enemy " + i);
-                //    debuginfo.Update("\n  collided: " + enemyList[i].collided.Count);
-                //    debuginfo.Update("\n   effects: " + enemyList[i].ActiveEffects.Count);
-                //    for (int j = 0; j < enemyList[i].ActiveEffects.Count; j++)
-                //    {
-                //        debuginfo.Update("\n effect[" + j + "]: " + enemyList[i].ActiveEffects[j].enchantType + ", str: " + enemyList[i].ActiveEffects[j].strength);
-                //    }
-                //    debuginfo.Update("\n    health: " + enemyList[i].Health);
-                //    debuginfo.Update("\n     input: " + enemyList[i].input);
-                //    debuginfo.Update("\n  jumptime: " + enemyList[i].jumpTime);
-                //    debuginfo.Update("\n  activity: " + enemyList[i].AIactivity);
-                //    if (enemyList[i].AIactivity == AI.Persue || enemyList[i].AIactivity == AI.Combat)
-                //    {
-                //        debuginfo.Update("\nattackCD: " + enemyList[i].attackCooldownTimer);
-                //    }
-                //    else if (enemyList[i].AIactivity == AI.Wander)
-                //    {
-                //        debuginfo.Update("\nwandtime: " + enemyList[i].wanderTime);
-                //    }
-                //    debuginfo.Update("\n  Xpos:" + enemyList[i].Position.X + "\n  Ypos:" + enemyList[i].Position.Y);
-                //    debuginfo.Update("\n  Xvel:" + enemyList[i].velocity.X + "\n  Yvel:" + enemyList[i].velocity.Y);
-                //    if (i > 3)
-                //    {
-                //        i = enemyList.Count;
-                //    }
-                //}
-            }
-
-            debuginfo.Update("\n    Camera:" + camera);
-            debuginfo.Update("\nmainCamera:" + mainCamera);
-            //debuginfo.Update("\n Dp:₯");
-            
         }
 
         public static Texture2D[] LoadEnchantIcons()
@@ -2193,22 +2295,12 @@ namespace Irbis
             return returnstrings;
         }
 
-        public static float RandomFloat()
-        {
-            return (float)RAND.NextDouble();
-        }
-
+        /// <summary>
+        /// returns a random number between 0 and the passed value
+        /// </summary>
         public static int RandomInt(int maxValue)
         {
             maxValue++;
-            //int randomInt = RAND.Next(maxValue);
-            //if (maxValue <= 1) { return randomInt; }
-            //while (randomInt == lastRandomInt)
-            //{
-            //    randomInt = RAND.Next(maxValue);
-            //}
-            //lastRandomInt = randomInt;
-            //return randomInt;
             return RAND.Next(maxValue);
         }
 
@@ -2306,10 +2398,10 @@ namespace Irbis
                 p1.X = rectangle1.Right;
                 p2.X = rectangle2.Left;
             }
-            else
-            {//X values overlap
-                //leave as zero
-            }
+            //else
+            //{//X values overlap
+            //    //leave as zero
+            //}
 
             if (rectangle1.Bottom < rectangle2.Top)
             {//rectangle1 is above rectangle2
@@ -2321,12 +2413,162 @@ namespace Irbis
                 p1.Y = rectangle1.Top;
                 p2.Y = rectangle2.Bottom;
             }
-            else
-            {//Y values overlap
-                //leave as zero
-            }
+            //else
+            //{//Y values overlap
+            //    //leave as zero
+            //}
 
             return DistanceSquared(p1, p2);
+        }
+
+        public static float UnidirectionalDistance(float float1, float float2)
+        {
+            return Math.Abs(float1 - float2);
+        }
+
+        public static int UnidirectionalDistance(int int1, int int2)
+        {
+            return Math.Abs(int1 - int2);
+        }
+
+        /// <summary>
+        /// set X to true to test horizontal distance, or set X to false to test vertical distance
+        /// </summary>
+        public static int UnidirectionalDistance(Rectangle rectangle1, Rectangle rectangle2, bool X)
+        {
+            if (X)
+            {
+                return XDistance(rectangle1, rectangle2);
+            }
+            else
+            {
+                return YDistance(rectangle1, rectangle2);
+            }
+        }
+
+        public static int XDistance(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            int Shortest = UnidirectionalDistance(rectangle1.Left, rectangle2.Right);
+            int temp;
+            temp = UnidirectionalDistance(rectangle2.Left, rectangle1.Right);
+            if (temp < Shortest)
+            { Shortest = temp; }
+            temp = UnidirectionalDistance(rectangle2.Left, rectangle1.Left);
+            if (temp < Shortest)
+            { Shortest = temp; }
+            temp = UnidirectionalDistance(rectangle2.Right, rectangle1.Right);
+            if (temp < Shortest)
+            { Shortest = temp; }
+            return Shortest;
+        }
+
+        public static int YDistance(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            //if (rectangle1.Bottom < rectangle2.Top)
+            //{//rectangle1 is above rectangle2
+            //    return UnidirectionalDistance(rectangle1.Bottom, rectangle2.Top);
+            //}
+            //else if (rectangle2.Bottom < rectangle1.Top)
+            //{//rectangle1 is below rectangle2
+            //    return UnidirectionalDistance(rectangle2.Bottom, rectangle1.Top);
+            //}
+            //else
+            //{//Y values overlap
+            //    return 0;
+            //}
+            int Shortest = UnidirectionalDistance(rectangle1.Top, rectangle2.Bottom);
+            int temp;
+            temp = UnidirectionalDistance(rectangle2.Top, rectangle1.Bottom);
+            if (temp < Shortest)
+            { Shortest = temp; }
+            temp = UnidirectionalDistance(rectangle2.Top, rectangle1.Top);
+            if (temp < Shortest)
+            { Shortest = temp; }
+            temp = UnidirectionalDistance(rectangle2.Bottom, rectangle1.Bottom);
+            if (temp < Shortest)
+            { Shortest = temp; }
+            return Shortest;
+        }
+
+        ///<summary>
+        ///returns rectangle1's side that is closest to rectangle2
+        ///</summary>
+        public static Side SideClosest(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            Side Closest = 0;
+            int ClosestDistance = int.MaxValue;
+            int temp;
+            temp = UnidirectionalDistance(rectangle1.Bottom, rectangle2.Bottom);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Bottom;
+            }
+            temp = UnidirectionalDistance(rectangle1.Bottom, rectangle2.Top);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Bottom;
+            }
+            temp = UnidirectionalDistance(rectangle1.Left, rectangle2.Left);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Left;
+            }
+            temp = UnidirectionalDistance(rectangle1.Left, rectangle2.Right);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Left;
+            }
+            temp = UnidirectionalDistance(rectangle1.Right, rectangle2.Right);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Right;
+            }
+            temp = UnidirectionalDistance(rectangle1.Right, rectangle2.Left);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Right;
+            }
+            temp = UnidirectionalDistance(rectangle1.Top, rectangle2.Top);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Top;
+            }
+            temp = UnidirectionalDistance(rectangle1.Top, rectangle2.Bottom);
+            if (temp < ClosestDistance)
+            {
+                ClosestDistance = temp;
+                Closest = Side.Top;
+            }
+
+
+            return Closest;
+        }
+
+        /// <summary>
+        /// returns, relative to rectangle1, in which direction rectangle2 is.
+        /// returns Direction.Forward if there is overlap.
+        /// </summary>
+        public static Direction Directions(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            if (rectangle1.Center.X > rectangle2.Center.X)
+            {//rectangle2 is to the left of rectangle1
+                return Direction.Left;
+            }
+            else if (rectangle2.Center.X > rectangle1.Center.X)
+            {//rectangle2 is to the right of rectangle1
+                return Direction.Right;
+            }
+            else
+            {//X values overlap
+                return Direction.Forward;
+            }
         }
 
         private static bool GetKey(Keys key)
@@ -2433,7 +2675,7 @@ namespace Irbis
             if (enemySpawnPoints.Count > 0)
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
-                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], 100f, 10f, 200f, 0.4f);
+                Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), enemy0Tex, enemySpawnPoints[spawnpoint], 100f, 10f, 200f, 0.4f);
                 //eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
@@ -2451,7 +2693,7 @@ namespace Irbis
             if (enemySpawnPoints.Count > 0)
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
-                Enemy tempEnemy = new Enemy(enemy0Tex, enemySpawnPoints[spawnpoint], health, damage, speed, 0.4f);
+                Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), enemy0Tex, enemySpawnPoints[spawnpoint], health, damage, speed, 0.4f);
                 //eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
@@ -2463,28 +2705,45 @@ namespace Irbis
             }
         }
 
-        public void SummonLizardGuy()
+        public void SummonBoss(string Boss, Vector2 Location)
         {
-            LizardGuy tempLizardGuy = new LizardGuy(Content.Load<Texture2D>("Lizard Guy Spritesheet"), new Vector2(250, 100), 999, 50, 500, 0.4f);
-                   enemyList.Add(tempLizardGuy);
-            collisionObjects.Add(tempLizardGuy);
+            if (!string.IsNullOrEmpty(Boss))
+            {
+                Irbis.WriteLine("Summoning boss name:" + Boss + " at location:" + Location);
+                switch (Boss.Trim().ToLower())
+                {
+                    case "lizard":
+                        LizardGuy tempLizardGuy = new LizardGuy(Content.Load<Texture2D>("Lizard Guy Spritesheet"), Location, 999, 50, 500, null, 0.2f);
+                        enemyList.Add(tempLizardGuy);
+                        collisionObjects.Add(tempLizardGuy);
+                        break;
+                }
+            }
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static void KillEnemy(IEnemy killMe)
         {
             WriteLine("removing enemy. index:" + enemyList.IndexOf(killMe));
-            if (collisionObjects.Contains(killMe))
-            {
-                collisionObjects.Remove(killMe);
-                WriteLine("successfully removed from collisionObjects.");
-            }
+
+            jamie.OnPlayerAttack -= enemyList[enemyList.IndexOf(killMe)].Enemy_OnPlayerAttack;
+
             if (enemyList.Contains(killMe))
             {
                 enemyList.Remove(killMe);
                 WriteLine("successfully removed from enemyList.");
             }
+            if (collisionObjects.Contains(killMe))
+            {
+                if (jamie.collided.Contains(killMe))
+                {
+                    jamie.RemoveCollision(killMe);
+                }
+                collisionObjects.Remove(killMe);
+                WriteLine("successfully removed from collisionObjects.");
+            }
             if (onslaughtMode) { onslaughtSpawner.EnemyKilled(); }
+            WriteLine("done.");
         }
 
         public PlayerSettings Load(string filename)
@@ -2621,6 +2880,7 @@ namespace Irbis
             }
             return value1 + (value2 - value1) * amount;
         }
+
         public static Vector2 Lerp(Vector2 value1, Vector2 value2, float amount)
         {
             return new Vector2(Lerp(value1.X, value2.X, amount), Lerp(value1.Y, value2.Y, amount));
@@ -2707,6 +2967,31 @@ namespace Irbis
             //if (debug > 4) { methodLogger.AppendLine("Irbis.OpenConsole"); }
             textInputBuffer = string.Empty;
             acceptTextInput = console = !console;
+            if (consoleTex == null)
+            {
+                Texture2D tempConsoleTex = Content.Load<Texture2D>("console texture");
+                float tempScale = 0f;
+                Vector2 tempLocation = Vector2.Zero;
+                if (((float)consoleRect.Width / (float)tempConsoleTex.Bounds.Width) > ((float)consoleRect.Height / (float)tempConsoleTex.Bounds.Height))
+                {
+                    tempScale = (float)consoleRect.Width / (float)tempConsoleTex.Bounds.Width;
+                }
+                else
+                {
+                    tempScale = (float)consoleRect.Height / (float)tempConsoleTex.Bounds.Height;
+                }
+                tempLocation.X = -((((float)tempConsoleTex.Bounds.Width * tempScale) - screenspace.Width) / 2f);
+
+                RenderTarget2D renderTarget = new RenderTarget2D(GraphicsDevice, consoleRect.Width, consoleRect.Height); ;
+                GraphicsDevice.SetRenderTarget(renderTarget);
+                GraphicsDevice.Clear(Color.Transparent);
+                spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.LinearWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, Matrix.Identity);
+                spriteBatch.Draw(tempConsoleTex, tempLocation, null, Color.White, 0f, Vector2.Zero, tempScale, SpriteEffects.None, 0.5f);
+                spriteBatch.End();
+                GraphicsDevice.SetRenderTarget(null);
+                consoleTex = (Texture2D)renderTarget;
+
+            }
             if (jamie != null)
             {
                 jamie.inputEnabled = !console;
@@ -3484,22 +3769,9 @@ Thank you, Ze Frank, for the inspiration.";
 
 
 
-                    case "xcollideroffset":                                                         //place new floats above
-                        if (int.TryParse(value, out intResult))
-                        {
-                            jamie.XcolliderOffset = intResult;
-                        }
-                        else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
-                        break;
-                    case "ycollideroffset":
-                        if (int.TryParse(value, out intResult))
-                        {
-                            jamie.YcolliderOffset = intResult;
-                        }
-                        else
+                    case "collideroffset":                                                         //place new floats above
+                        jamie.colliderOffset = PointParser(value);
+                        if (jamie.colliderOffset == new Point(-0112, -0112))
                         {
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
                         }
@@ -3507,7 +3779,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "colliderwidth":
                         if (int.TryParse(value, out intResult))
                         {
-                            jamie.colliderWidth = intResult;
+                            jamie.colliderSize.X = intResult;
                         }
                         else
                         {
@@ -3517,7 +3789,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "colliderheight":
                         if (int.TryParse(value, out intResult))
                         {
-                            jamie.colliderHeight = intResult;
+                            jamie.colliderSize.Y = intResult;
                         }
                         else
                         {
@@ -3882,7 +4154,7 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         else
                         {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                            WriteLine("Use this command to summon X number of enemies: \"summonenemies=X\"");
                         }
                         break;
                     case "notarget":
@@ -4198,6 +4470,27 @@ Thank you, Ze Frank, for the inspiration.";
                             }
                         }
                         break;
+                    case "randombool":
+                        if (string.IsNullOrWhiteSpace(value))
+                        {
+                            WriteLine("random bool: " + RandomBool);
+                        }
+                        else
+                        {
+                            if (int.TryParse(value, out intResult))
+                            {
+                                WriteLine(intResult + " random bools:");
+                                for (int i = 1; i <= intResult; i++)
+                                {
+                                    WriteLine("random bool " + i + ": " + RandomBool);
+                                }
+                            }
+                            else
+                            {
+                                WriteLine("error: \"" + value + "\" could not be parsed");
+                            }
+                        }
+                        break;
                     case "spawnvending":
                         if (true)
                         {
@@ -4250,7 +4543,7 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("filling...");
                             for (int i = 0; i < intResult; i++)
                             {
-                                float randomfloat = RandomFloat() * 100f;
+                                float randomfloat = RandomFloat * 100f;
                                 Write(randomfloat + " ");
                                 testTree.Add(randomfloat);
                             }
@@ -4342,8 +4635,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "recordframerate":
                         goto case "recordfps";
                     case "god":
-                        jamie.invulnerableTime = float.MaxValue;
-                        jamie.invulnerable = true;
+                        jamie.invulnerable = float.MaxValue;
                         WriteLine("godmode on");
                         break;
                     case "addpoints":
@@ -4465,6 +4757,18 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "onslaught":
                         onslaughtMode = !onslaughtMode;
+                        WriteLine();
+                        break;
+                    case "enemies":
+                        WriteLine("enemyList currently contains " + enemyList.Count + " entities.\n" +
+                            "use \"print enemies\" to print a list");
+                        WriteLine();
+                        break;
+                    case "printenemies":
+                        for (int i = 0; i < enemyList.Count; i++)
+                        {
+                            WriteLine("enemyList[" + i + "]:" + enemyList[i] + " Position:" + enemyList[i].Position);
+                        }
                         WriteLine();
                         break;
 
@@ -4620,18 +4924,17 @@ Thank you, Ze Frank, for the inspiration.";
             if (debug > 1)
             {
                 RectangleBorder.Draw(spriteBatch, new Rectangle(Point.Zero, screenspace.Size), Color.Magenta, false);
-                if (levelEditor)
-                {
-                    Texture2D squareTex = Content.Load<Texture2D>("originTexture");
-                    foreach (Vector2 p in enemySpawnPoints)
-                    {
-                        Square tempSquare = new Square(squareTex, p.ToPoint(), screenScale, false, 0.9f);
-                        tempSquare.Draw(spriteBatch);
-                    }
-                    Square tempSquare2 = new Square(squareTex, worldSpaceMouseLocation, screenScale, false, 0.9f);
-                    tempSquare2.Draw(spriteBatch);
-
-                }
+                //if (levelEditor)
+                //{
+                //    Texture2D squareTex = Content.Load<Texture2D>("originTexture");
+                //    foreach (Vector2 p in enemySpawnPoints)
+                //    {
+                //        Square tempSquare = new Square(squareTex, p.ToPoint(), screenScale, false, 0.9f);
+                //        tempSquare.Draw(spriteBatch);
+                //    }
+                //    Square tempSquare2 = new Square(squareTex, worldSpaceMouseLocation, screenScale, false, 0.9f);
+                //    tempSquare2.Draw(spriteBatch);
+                //}
             }
             if (onslaughtSpawner != null)
             {
@@ -4701,26 +5004,28 @@ Thank you, Ze Frank, for the inspiration.";
             if (sceneIsMenu)        //FOR MENU DRAWING
             {
                 // TODO: Add your drawing code here    --------------------------------------------------------------------------------------------
+                spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
                 if (!levelEditor)
                 {
-                    spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
-                    spriteBatch.Draw(menuTex[scene], Vector2.Zero, null, Color.White, 0f, Vector2.Zero, (70f / menuTex[scene].Height) * screenScale, SpriteEffects.None, 0.5f);
-                    spriteBatch.End();
+                    if (levelLoaded > 0)
+                    {
+                        //darken bg screen
+                        spriteBatch.Draw(nullTex, zeroScreenspace, null, new Color(31, 29, 37, 205), 0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                    }
+                    else if (scene == 0)
+                    {
+                        if (logos != null)
+                        {
+                            for (int i = 0; i < logos.Count - 1 /*remove -1 to enable patreon logo*/; i++)
+                            { // PATREON
+                                spriteBatch.Draw(logos[i], new Vector2((i * 72) + 5, zeroScreenspace.Height - 69), null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.9f);
+                            }
+                        }
+                    }
                 }
-                spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
-                if (console || consoleMoveTimer > 0)
-                {
-                    spriteBatch.Draw(consoleTex, consoleRect, consoleTex.Bounds, consoleRectColor, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
-                    consoleWriteline.Draw(spriteBatch);
-                    developerConsole.Draw(spriteBatch);
-                }
-                debuginfo.Draw(spriteBatch);
 
-                //if (levelLoaded > 0 && !levelEditor)
-                //{
-                //    //darken bg screen
-                //    spriteBatch.Draw(nullTex, zeroScreenspace, null, Color.Black, 0f, Vector2.Zero, SpriteEffects.None, 0.0f);
-                //}
+                //debug stuff
+                debuginfo.Draw(spriteBatch);
 
                 if (scene == 3 && menuSelection >= 0 && menuSelection <= 3)
                 {
@@ -4770,6 +5075,22 @@ Thank you, Ze Frank, for the inspiration.";
 
                 spriteBatch.End();
                 // --------------------------------------------------------------------------------------------------------------------------------
+
+                if (!levelEditor)
+                {
+                    spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
+                    spriteBatch.Draw(menuTex[scene], Vector2.Zero, null, Color.White, 0f, Vector2.Zero, (70f / menuTex[scene].Height) * screenScale, SpriteEffects.None, 0.5f);
+                    spriteBatch.End();
+                }
+                if (console || consoleMoveTimer > 0)
+                {
+                    spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
+                    spriteBatch.Draw(consoleTex, consoleRect, null, consoleRectColor, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
+                    consoleWriteline.Draw(spriteBatch);
+                    developerConsole.Draw(spriteBatch);
+                    spriteBatch.End();
+                }
+
             }
 
             base.Draw(gameTime);

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -1322,6 +1323,8 @@ public class Menu
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.masterAudioLevel.ToString("0");
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.masterAudioLevel.ToString("0");
                                     Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].UpdateValue(Irbis.Irbis.masterAudioLevel);
+                                    MediaPlayer.Volume = (Irbis.Irbis.masterAudioLevel * Irbis.Irbis.musicLevel) / 10000f;
+                                    //update sound effects volume
                                 }
                                 break;
                             case 1:                         //1 == music
@@ -1349,6 +1352,7 @@ public class Menu
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.musicLevel.ToString("0");
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.musicLevel.ToString("0");
                                     Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].UpdateValue(Irbis.Irbis.musicLevel);
+                                    MediaPlayer.Volume = (Irbis.Irbis.masterAudioLevel * Irbis.Irbis.musicLevel) / 10000f;
                                 }
                                 break;
                             case 2:                         //2 == sound effects
@@ -1376,6 +1380,7 @@ public class Menu
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.soundEffectsLevel.ToString("0");
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.soundEffectsLevel.ToString("0");
                                     Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].UpdateValue(Irbis.Irbis.soundEffectsLevel);
+                                    //update sound effects volume
                                 }
                                 break;
                             default:
@@ -1428,6 +1433,8 @@ public class Menu
                             Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].highlightStatement = ">" + Irbis.Irbis.masterAudioLevel.ToString("0");
                             Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].Update(Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].buttonStatement);
                             Irbis.Irbis.sliderList[Irbis.Irbis.sliderPressed].UpdateValue(Irbis.Irbis.masterAudioLevel);
+                            MediaPlayer.Volume = (Irbis.Irbis.masterAudioLevel * Irbis.Irbis.musicLevel) / 10000f;
+                            //update sound effects volume
                             break;
                         case 1:
                             Irbis.Irbis.musicLevel = ((float)(Irbis.Irbis.GetMouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
@@ -1443,6 +1450,7 @@ public class Menu
                             Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].highlightStatement = ">" + Irbis.Irbis.musicLevel.ToString("0.0");
                             Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].Update(Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].buttonStatement);
                             Irbis.Irbis.sliderList[Irbis.Irbis.sliderPressed].UpdateValue(Irbis.Irbis.musicLevel);
+                            MediaPlayer.Volume = (Irbis.Irbis.masterAudioLevel * Irbis.Irbis.musicLevel) / 10000f;
                             break;
                         case 2:
                             Irbis.Irbis.soundEffectsLevel = ((float)(Irbis.Irbis.GetMouseState.X - Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Left) / (float)(Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].bounds.Width)) * 100;
@@ -1458,6 +1466,7 @@ public class Menu
                             Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].highlightStatement = ">" + Irbis.Irbis.soundEffectsLevel.ToString("0.0");
                             Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].Update(Irbis.Irbis.buttonList[Irbis.Irbis.sliderPressed].buttonStatement);
                             Irbis.Irbis.sliderList[Irbis.Irbis.sliderPressed].UpdateValue(Irbis.Irbis.soundEffectsLevel);
+                            //update sound effects volume
                             break;
                         default:
                             for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
@@ -1513,6 +1522,8 @@ public class Menu
                                         Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].UpdateValue(Irbis.Irbis.soundEffectsLevel);
                                         break;
                                 }
+                                MediaPlayer.Volume = (Irbis.Irbis.masterAudioLevel * Irbis.Irbis.musicLevel) / 10000f;
+                                //update sound effects volume
                             }
 
                             if ((Irbis.Irbis.GetUpKeyDown))
@@ -1554,6 +1565,8 @@ public class Menu
                                         Irbis.Irbis.sliderList[Irbis.Irbis.menuSelection].UpdateValue(Irbis.Irbis.soundEffectsLevel);
                                         break;
                                 }
+                                MediaPlayer.Volume = (Irbis.Irbis.masterAudioLevel * Irbis.Irbis.musicLevel) / 10000f;
+                                //update sound effects volume
                             }
                             if (Irbis.Irbis.menuSelection >= Irbis.Irbis.buttonList.Count)
                             {

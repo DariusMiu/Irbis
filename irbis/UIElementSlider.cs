@@ -174,6 +174,31 @@ public class UIElementSlider
         overlaySourceRect = new Rectangle(currentOverlayFrame * bounds.Width, 0, bounds.Width, bounds.Height);
     }
 
+    public void UpdateRect(float v)
+    {
+        value = v;
+        if (align == Direction.Right)
+        {
+            //valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect.X = bounds.Right - (int)Math.Ceiling((double)((value / maxValue) * bounds.Width));
+            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+            Irbis.Irbis.WriteLine("valueRect.Right:" + valueRect.Right);
+        }
+        else if (align == Direction.Forward)
+        {
+            //valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
+            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+        }
+        else
+        {
+            //valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
+            //valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
+            valueRect.Width = (int)((value / maxValue) * bounds.Width);
+        }
+        printValue.Update(value.ToString("0"), true);
+    }
+
     public void Update(float v)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
@@ -189,26 +214,7 @@ public class UIElementSlider
         }
         overlaySourceRect.X = currentOverlayFrame * 150;
 
-        value = v;
-        if (align == Direction.Right)
-        {
-            //valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Right - (int)((value / maxValue) * bounds.Width);
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        else if (align == Direction.Forward)
-        {
-            //valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        else
-        {
-            //valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            //valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        printValue.Update(value.ToString("0"), true);
+        UpdateRect(v);
     }
 
     public void Update(Color border_color, Color fill_color, float v)
@@ -216,38 +222,7 @@ public class UIElementSlider
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
         borderColor = border_color;
         fillColor = fill_color;
-        timeSinceLastFrame += Irbis.Irbis.DeltaTime;
-        if (timeSinceLastFrame >= overlayAnimationSpeed)
-        {
-            timeSinceLastFrame -= overlayAnimationSpeed;
-            currentOverlayFrame++;
-        }
-        if (currentOverlayFrame * 150 >= overlayTexture.Width)
-        {
-            currentOverlayFrame = 0;
-        }
-        overlaySourceRect.X = currentOverlayFrame * 150;
-
-        value = v;
-        if (align == Direction.Right)
-        {
-            //valueRect = new Rectangle(bounds.Right - (int)((value / maxValue) * bounds.Width), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Right - (int)((value / maxValue) * bounds.Width);
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        else if (align == Direction.Forward)
-        {
-            //valueRect = new Rectangle(bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth)), bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        else
-        {
-            //valueRect = new Rectangle(bounds.Left, bounds.Top, (int)((value / maxValue) * bounds.Width), bounds.Height);
-            //valueRect.X = bounds.Left + (int)(halfWidth - ((value / maxValue) * halfWidth));
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-        }
-        printValue.Update(value.ToString("0"), true);
+        Update(v);
     }
 
     public void UpdateValue(float Value)
@@ -257,7 +232,7 @@ public class UIElementSlider
         {
             if (align == Direction.Right)
             {
-                valueLocation.X = (bounds.Right - (value / maxValue) * bounds.Width) * Irbis.Irbis.screenScale;
+                valueLocation.X = (int)Math.Ceiling((double)(bounds.Right - (value / maxValue) * bounds.Width) * Irbis.Irbis.screenScale);
             }
             else if (align == Direction.Forward)
             {
@@ -269,7 +244,7 @@ public class UIElementSlider
         {
             if (align == Direction.Right)
             {
-                valueLocation.X = (bounds.Right - (value / maxValue) * bounds.Width);
+                valueLocation.X = (int)Math.Ceiling((double)(bounds.Right - (value / maxValue) * bounds.Width));
                 valueRect.X = bounds.Width - valueRect.Width;
             }
             else if (align == Direction.Forward)
@@ -301,36 +276,7 @@ public class UIElementSlider
             overlaySourceRect.X = currentOverlayFrame * 150;
         }
 
-        value = Value;
-
-        if (screenScale)
-        {
-            if (align == Direction.Right)
-            {
-                valueLocation.X = (bounds.Right - (value / maxValue) * bounds.Width) * Irbis.Irbis.screenScale;
-            }
-            else if (align == Direction.Forward)
-            {
-                valueLocation.X = (bounds.Left + halfWidth - ((value / maxValue) * halfWidth)) * Irbis.Irbis.screenScale;
-            }
-            valueRect.Width = (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale);
-        }
-        else
-        {
-            valueRect.Width = (int)((value / maxValue) * bounds.Width);
-            if (align == Direction.Right)
-            {
-                valueLocation.X = (bounds.Right - (value / maxValue) * bounds.Width);
-                valueRect.X = bounds.Width - valueRect.Width;
-            }
-            else if (align == Direction.Forward)
-            {
-                valueLocation.X = (bounds.Left + halfWidth - ((value / maxValue) * halfWidth));
-            }
-        }
-
-        if (drawText)
-        { printValue.Update(value.ToString("0"), true); }
+        UpdateValue(Value);
     }
 
     public bool Contains(MouseState mouseState)

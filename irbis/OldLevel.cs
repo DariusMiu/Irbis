@@ -264,7 +264,7 @@ public struct OldLevel
 
     }
 
-    public void Debug(bool butts)
+    public void Debug(bool mow)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Debug"); }
         Console.WriteLine("           squares: " + squareTextures.Length);
@@ -285,7 +285,10 @@ public struct OldLevel
 
         thislevel.SquareSpawnPoints = level.SquareSpawnPoints.ToArray();
         thislevel.squareTextures = level.squareTextures.ToArray();
-        thislevel.squareDepth = level.squareDepth;
+        for (int i = 0; i < thislevel.squareTextures.Length; i ++)
+        {
+            thislevel.squareDepth = 0.3f;
+        }
         thislevel.BackgroundSquares = level.BackgroundSquares.ToArray();
         thislevel.backgroundTextures = level.backgroundTextures.ToArray();
         thislevel.backgroundSquareDepths = level.backgroundSquareDepths.ToArray();

@@ -18,7 +18,7 @@ public class Bars
     public static Texture2D enemyBackgroundTexture;
     public static Vector2 backgroundTextureLocation;
     public static Vector2 enemyBackgroundTextureLocation;
-    public static Print enemyName;
+    public static Print name;
 
     public Bars(Texture2D HealthTexture, Texture2D ShieldTexture, Texture2D EnergyTexture, Texture2D PotionTexture, Texture2D EnemyHealthTexture,
         Texture2D ShieldBarOverlay,Texture2D BackgroundTexture, Texture2D EnemyBackgroundTexture, Texture2D[] PotionBackgroundTextures)
@@ -61,9 +61,9 @@ public class Bars
 
         enemyHealthBar = new UIElementSlider(Direction.Right, new Rectangle((int)((Irbis.Irbis.resolution.X) - (32 + scale)), (int)(32 + scale), EnemyHealthTexture.Width, EnemyHealthTexture.Height),
             new Point((scale / 2) * -1, 0), 100, new Color(108, 003, 003), null, null, null, EnemyHealthTexture, null, null, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);
-        enemyName = new Print(EnemyHealthTexture.Width, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - (int)(32 + (18 * scale)),
+        name = new Print(EnemyHealthTexture.Width, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - (int)(32 + (18 * scale)),
             (int)(40 + (10 * scale))), Direction.Right, 0.6f);
-        enemyName.Update("default", true);
+        name.Update("default", true);
 
         //For crappy computers?
         //healthBar = new UIElementSlider(Direction.Left, new Rectangle((int)(32 / screenScale), (int)(32 / screenScale),     125, 10), jamie.maxHealth, new Color(166, 030, 030), Color.White, Color.White, Color.Red, nullTex, null,         null, true, font, true, 0.5f, 0.499f, 0.501f, 0.502f);
@@ -82,7 +82,7 @@ public class Bars
         {
             sb.Draw(enemyBackgroundTexture, enemyBackgroundTextureLocation, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.499f);
             enemyHealthBar.Draw(sb);
-            enemyName.Draw(sb);
+            name.Draw(sb);
         }
     }
 }

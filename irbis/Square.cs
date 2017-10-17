@@ -87,7 +87,7 @@ public class Square : ICollisionObject
         }
         collider = new Rectangle(InitialPosition, texture.Bounds.Size);
 
-        Irbis.Irbis.WriteLine("InitialPosition:" + InitialPosition + " Position:" + position + " texture.Bounds:" + texture.Bounds);
+        Irbis.Irbis.WriteLine("InitialPosition:" + InitialPosition + " Position:" + position + " texture.Bounds:" + texture.Bounds + " depth:" + depth);
     }
 
     public Square(Texture2D t, Color drawColor, Point initialPos, Point Size, bool hascollider, bool UseExactPixels, float drawDepth)

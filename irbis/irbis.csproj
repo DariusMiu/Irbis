@@ -15,7 +15,7 @@
     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <PublishUrl>publish\</PublishUrl>
+    <PublishUrl>D:\Dropbox\MonoGame\publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -25,6 +25,7 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
+    <AutorunEnabled>true</AutorunEnabled>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>0.0.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
@@ -78,6 +79,7 @@
     <Compile Include="BinaryTree.cs" />
     <Compile Include="Boss.cs" />
     <Compile Include="Button.cs" />
+    <Compile Include="Collided.cs" />
     <Compile Include="Enchant.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="LizardGuy.cs" />
@@ -166,9 +168,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />
-    <None Include="changelog.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="levels\c0b0.lvl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -177,6 +176,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="changelog.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="content\Audio title.png" />
     <Content Include="content\bar enemy fill.png" />
     <Content Include="content\bar enemy.png" />
@@ -205,6 +207,7 @@
     <Content Include="content\largeNullTex.png" />
     <Content Include="content\Level Select title.png" />
     <Content Include="content\Lizard Guy Spritesheet.png" />
+    <Content Include="content\ln2.png" />
     <Content Include="content\Main Menu title.png" />
     <Content Include="content\menu background.png" />
     <Content Include="content\menu border bottom.png" />
@@ -216,9 +219,17 @@
     <Content Include="content\menu corner top left.png" />
     <Content Include="content\menu corner top right.png" />
     <Content Include="content\Misc title.png" />
+    <Content Include="content\music\bensound-betterdays.mp3" />
+    <Content Include="content\music\bensound-epic.mp3" />
+    <Content Include="content\music\bensound-instinct.mp3" />
+    <Content Include="content\music\bensound-memories.mp3" />
+    <Content Include="content\music\bensound-relaxing.mp3" />
+    <Content Include="content\music\bensound-slowmotion.mp3" />
+    <Content Include="content\music\Credits.txt" />
     <Content Include="content\nullTex.png" />
     <Content Include="content\Options title.png" />
     <Content Include="content\originTexture.png" />
+    <Content Include="content\patreon.png" />
     <Content Include="content\player.png" />
     <Content Include="content\poison enchant icon.png" />
     <Content Include="content\popup arrow.png" />

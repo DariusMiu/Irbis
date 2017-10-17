@@ -108,14 +108,14 @@ public class Enemy : IEnemy
     }
     private List<Enchant> activeEffects;
 
-    public string EnemyName
+    public string Name
     {
         get
         {
-            return enemyName;
+            return name;
         }
     }
-    private string enemyName = "enemy " + (Irbis.Irbis.RandomInt(100)).ToString("00");
+    private string name = "enemy " + (Irbis.Irbis.RandomInt(100)).ToString("00");
 
     public bool AIenabled
     {
@@ -235,7 +235,7 @@ public class Enemy : IEnemy
     public List<ICollisionObject> collided;
     List<Side> sideCollided;
 
-    public Enemy(Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, float drawDepth)
+    public Enemy(string enemyName, Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, float drawDepth)
 	{
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Enemy"); }
         tex = t;
@@ -243,9 +243,11 @@ public class Enemy : IEnemy
         collidedLock = new object();
         AIenabled = true;
 
+        name = enemyName;
+
         depth = drawDepth;
 
-        animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.Left, 0.9f);
+        animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.Left, drawDepth + 0.001f);
 
         climbablePixels = 3;
 
@@ -330,14 +332,7 @@ public class Enemy : IEnemy
         collided = new List<ICollisionObject>();
         sideCollided = new List<Side>();
 
-        if (colliderHeight > colliderWidth)
-        {
-            collisionCheckDistanceSqr = (colliderHeight * colliderHeight);
-        }
-        else
-        {
-            collisionCheckDistanceSqr = (colliderWidth * colliderWidth);
-        }
+        Irbis.Irbis.jamie.OnPlayerAttack += Enemy_OnPlayerAttack;
     }
 
     public bool Update()
@@ -393,7 +388,6 @@ public class Enemy : IEnemy
             {
                 velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpBuildup * Irbis.Irbis.DeltaTime);
             }
-            if (stunned <= 0) { stunned = 0; }
         }
 
         for (int i = 0; i < activeEffects.Count; i ++)
@@ -405,7 +399,6 @@ public class Enemy : IEnemy
             }
         }
 
-        PlayerAttackCollision();
         Movement();
         CalculateMovement();
         Animate();
@@ -430,6 +423,18 @@ public class Enemy : IEnemy
                 Irbis.Irbis.doneEvent.Set();
             }
         }
+    }
+
+    public bool Enemy_OnPlayerAttack(Rectangle attackCollider, Attacking attack)
+    {
+        Irbis.Irbis.WriteLine(name + " response:\nattackCollider:" + attackCollider + " " + name + " collider:" + collider + " attack:" + attack);
+        if (attackCollider.Intersects(collider))
+        {
+            PlayerAttackCollision();
+            Irbis.Irbis.WriteLine("hit. health remaining:" + health);
+        }
+        Irbis.Irbis.WriteLine(name + " done.\n");
+        return true;
     }
 
     public void Respawn(Vector2 initialPos)
@@ -490,7 +495,7 @@ public class Enemy : IEnemy
                 }
                 else
                 {
-                    if (Irbis.Irbis.RandomFloat() > 0.5)
+                    if (Irbis.Irbis.RandomFloat > 0.5)
                     {
                         input.X--;
                         direction = Direction.Left;
@@ -505,7 +510,7 @@ public class Enemy : IEnemy
                 previouslyWandered = true;
             }
             
-            wanderTime = Irbis.Irbis.RandomFloat() + 0.5f;
+            wanderTime = Irbis.Irbis.RandomFloat + 0.5f;
         }
 
         if (walled.Bottom > 0)                                                               //movement
@@ -848,7 +853,7 @@ public class Enemy : IEnemy
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.PlayerCollision"); }
         lock (attackPlayerLock)
         {
-            if (player.invulnerableTime <= 0)
+            if (player.invulnerable <= 0)
             {
                 if (enemy.collider != Rectangle.Empty && player.Collider.Intersects(enemy.collider))
                 {
@@ -865,7 +870,7 @@ public class Enemy : IEnemy
                         }
                     }
                     player.Hurt(20);
-                    player.invulnerableTime = player.invulnerableMaxTime;
+                    player.invulnerable = player.invulnerableMaxTime;
                 }
             }
         }
@@ -873,50 +878,33 @@ public class Enemy : IEnemy
 
     public void PlayerAttackCollision()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.PlayerAttackCollision"); }
-        if (Irbis.Irbis.jamie.attackID != lastHitByAttackID)
+        lastHitByAttackID = Irbis.Irbis.jamie.attackID;
+        Irbis.Irbis.jamie.attackHit = true;
+        Hurt(Irbis.Irbis.jamie.attackDamage);
+        Stun(0.75f);
+        float distanceSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.Collider.Center, Collider.Center);
+
+        if (Irbis.Irbis.jamie.direction == Direction.Left)
         {
-            if (Irbis.Irbis.jamie.attackCollider != Rectangle.Empty && Irbis.Irbis.jamie.attackCollider.Intersects(collider))
-            {
-                lastHitByAttackID = Irbis.Irbis.jamie.attackID;
-                Irbis.Irbis.jamie.attackHit = true;
-                Hurt(Irbis.Irbis.jamie.attackDamage);
-                Stun(0.75f);
-                float distanceSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.Collider.Center, Collider.Center);
-
-                if (Irbis.Irbis.jamie.direction == Direction.Left)
-                {
-                    velocity.Y = -25f;
-                    velocity.X =  -0f;
-                    if (distanceSqr < 1000)
-                    {
-                        velocity.X -= 150;
-                    }
-                    else
-                    {
-                        velocity.X -= (22500 / distanceSqr);
-                    }
-                }
-                else
-                {
-                    velocity.Y = -25f;
-                    velocity.X =   0f;
-                    if (distanceSqr < 1000)
-                    {
-                        velocity.X += 150;
-                    }
-                    else
-                    {
-                        velocity.X += (22500 / distanceSqr);
-                    }
-                }
-
-                foreach (Enchant enchant in Irbis.Irbis.jamie.enchantList)
-                {
-                    enchant.AddEffect(this);
-                }
-            }
+            velocity.Y = -25f;
+            velocity.X = -0f;
+            if (distanceSqr < 1000)
+            { velocity.X -= 150; }
+            else
+            { velocity.X -= (22500 / distanceSqr); }
         }
+        else
+        {
+            velocity.Y = -25f;
+            velocity.X = 0f;
+            if (distanceSqr < 1000)
+            { velocity.X += 150; }
+            else
+            { velocity.X += (22500 / distanceSqr); }
+        }
+
+        foreach (Enchant enchant in Irbis.Irbis.jamie.enchantList)
+        { enchant.AddEffect(this); }
     }
 
     public void Collision(List<ICollisionObject> colliderList)
@@ -1304,6 +1292,11 @@ public class Enemy : IEnemy
             + shockwaveEffectiveDistance + " distance:" + distance + " power:" + power + " (1 / mass):" + (1 / mass) + "\n");
     }
 
+    public override string ToString()
+    {
+        return name;
+    }
+
     public void Draw(SpriteBatch sb)
     {
         switch (Irbis.Irbis.debug)
@@ -1319,7 +1312,7 @@ public class Enemy : IEnemy
                 animationFrame.Draw(sb, (position * Irbis.Irbis.screenScale).ToPoint());
                 goto case 1;
             case 1:
-                if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, 0.9f); }
+                if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, depth + 0.001f); }
                 RectangleBorder.Draw(sb, collider, Color.Magenta, true);
                 goto default;
             default:

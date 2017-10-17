@@ -8,10 +8,8 @@ using Microsoft.Xna.Framework.Input;
 [Serializable]
 public struct PlayerSettings
 {   //start at line 11 to make it easier to count, just subtract 10 from final line
-    public int XcolliderOffset;
-    public int YcolliderOffset;
-    public int colliderWidth;
-    public int colliderHeight;
+    public Point colliderOffset;
+    public Point colliderSize;
     public float terminalVelocity;
     public float maxHealth;
     public float maxShield;
@@ -85,7 +83,7 @@ public struct PlayerSettings
     public int debug;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
-    static int numberOfVariables = 75;
+    static int numberOfVariables = 73;
 
     public PlayerSettings(bool useDefaults)
 	{
@@ -205,10 +203,8 @@ public struct PlayerSettings
 
             //highly unrecommended to not mess with these unless you really know what you're doing
             //collider size and placement relative to the 128x128 player sprite
-            XcolliderOffset = 30;
-            YcolliderOffset = 31;
-            colliderWidth = 20;
-            colliderHeight = 48;
+            colliderOffset = new Point(54, 63);
+            colliderSize = new Point(20, 48);
 
             //this is the size of the rectangle used as the main attack hitbox
             attackColliderWidth = 40;
@@ -248,52 +244,42 @@ public struct PlayerSettings
             //ANIMATION SETTINGS
             //the amount of time that is allowed to pass before the animator displays the next frame (seconds)
             //(for each animation listed below)
-            animationSpeed = new float[20];
-            animationSpeed[00] = 0.1f;
-            animationSpeed[01] = 0.1f;
-            animationSpeed[02] = 0.1f;
-            animationSpeed[03] = 0.1f;
-            animationSpeed[04] = 0.1f;
-            animationSpeed[05] = 0.1f;
-            animationSpeed[06] = 0.1f;
-            animationSpeed[07] = 0.1f;
-            animationSpeed[08] = 0.1f;
-            animationSpeed[09] = 0.1f;
-            animationSpeed[10] = 0.1f;
-            animationSpeed[11] = 0.1f;
-            animationSpeed[12] = 0.1f;
-            animationSpeed[13] = 0.1f;
-            animationSpeed[14] = 0.1f;
-            animationSpeed[15] = 0.1f;
-            animationSpeed[16] = 0.1f;
-            animationSpeed[17] = 0.1f;
-            animationSpeed[18] = 0.1f;
-            animationSpeed[19] = 0.1f;
+            animationSpeed = new float[30];
+            for (int i = 0; i < animationSpeed.Length; i++)
+            {
+                animationSpeed[i] = 0.1f;
+            }
+            //animationSpeed[19] = 0.3f;
+            //animationSpeed[20] = 0.3f;
 
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
-            animationFrames = new int[20];
-            animationFrames[00] = 3;            //idleforward1
-            animationFrames[01] = 15;           //idleforward2
-            animationFrames[02] = 3;            //idleforward3
-            animationFrames[03] = 2;            //idleleft
-            animationFrames[04] = 15;           //idleright
-            animationFrames[05] = 2;            //runleft
-            animationFrames[06] = 15;           //runright
-            animationFrames[07] = 6;            //attack1left
-            animationFrames[08] = 9;            //attack1right
-            animationFrames[09] = 2;            //
-            animationFrames[10] = 2;            //
-            animationFrames[10] = 2;            //
-            animationFrames[11] = 2;            //
-            animationFrames[12] = 2;            //
-            animationFrames[13] = 2;            //
-            animationFrames[14] = 2;            //
-            animationFrames[15] = 2;            //
-            animationFrames[16] = 2;            //
-            animationFrames[17] = 2;            //
-            animationFrames[18] = 2;            //
+            animationFrames = new int[30];
+            animationFrames[00] = 3;            //
+            animationFrames[01] = 15;           //
+            animationFrames[02] = 3;            //
+            animationFrames[03] = 15;            //
+            animationFrames[04] = 15;           //
+            animationFrames[05] = 15;            //
+            animationFrames[06] = 15;           //
+            animationFrames[07] = 9;            //
+            animationFrames[08] = 9;            //
+            animationFrames[09] = 5;            //
+            animationFrames[10] = 5;            //
+            animationFrames[11] = 0;            //
+            animationFrames[12] = 0;            //
+            animationFrames[13] = 1;            //
+            animationFrames[14] = 1;            //
+            animationFrames[15] = 0;            //
+            animationFrames[16] = 0;            //
+            animationFrames[17] = 0;            //
+            animationFrames[18] = 0;            //
             animationFrames[19] = 2;            //
+            animationFrames[20] = 2;            //
+            for (int i = 21; i < animationFrames.Length; i++)
+            {
+                animationFrames[i] = 0;
+            }
 
             //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)
             //NOTE: there is no variable for the number of frames in the shield animation, as the shield animator
@@ -487,10 +473,7 @@ public struct PlayerSettings
 
             //highly unrecommended to not mess with these unless you really know what you're doing
             //collider size and placement relative to the 128x128 player sprite
-            XcolliderOffset = 0;
-            YcolliderOffset = 0;
-            colliderWidth = 0;
-            colliderHeight = 0;
+            colliderSize = colliderOffset = Point.Zero;
 
             //this is the size of the rectangle used as the main attack hitbox
             attackColliderWidth = 0;
@@ -687,10 +670,8 @@ public struct PlayerSettings
 
         //highly unrecommended to not mess with these unless you really know what you're doing
         //collider size and placement relative to the 128x128 player sprite
-        XcolliderOffset = settings.XcolliderOffset;
-        YcolliderOffset = settings.YcolliderOffset;
-        colliderWidth = settings.colliderWidth;
-        colliderHeight = settings.colliderHeight;
+        colliderOffset = settings.colliderOffset;
+        colliderSize = settings.colliderSize;
 
         //this is the size of the rectangle used as the main attack hitbox
         attackColliderWidth = settings.attackColliderWidth;
@@ -896,10 +877,8 @@ public struct PlayerSettings
 
         writer.WriteLine(";highly unrecommended to not mess with these unless you really know what you're doing");
         writer.WriteLine(";collider size and placement relative to the 128x128 player sprite");
-        writer.WriteLine("XcolliderOffset=" + settings.XcolliderOffset);
-        writer.WriteLine("YcolliderOffset=" + settings.YcolliderOffset);
-        writer.WriteLine("colliderWidth=" + settings.colliderWidth);
-        writer.WriteLine("colliderHeight=" + settings.colliderHeight);
+        writer.WriteLine("colliderOffset=" + settings.colliderOffset);
+        writer.WriteLine("colliderSize=" + settings.colliderSize);
         writer.WriteLine("");
 
         writer.WriteLine(";this is the size of the rectangle used as the main attack hitbox");
@@ -950,7 +929,7 @@ public struct PlayerSettings
         writer.WriteLine(";ANIMATION SETTINGS");
         writer.WriteLine(";the amount of time that is allowed to pass before the animator displays the next frame (seconds)");
         writer.WriteLine(";(for each animation listed below)");
-        for (int i = 00; i < 20; i++)
+        for (int i = 00; i < settings.animationSpeed.Length; i++)
         {
             writer.WriteLine("animationSpeed[" + i + "]=" + settings.animationSpeed[i]);
         }
@@ -959,7 +938,7 @@ public struct PlayerSettings
 
         writer.WriteLine(";0 is 1 frame, 1 is 2 frames, etc");
         writer.WriteLine(";the number of frames in each animation, only edit this if you are remaking the default spritesheet");
-        for (int i = 00; i < 20; i++)
+        for (int i = 00; i < settings.animationFrames.Length; i++)
         {
             writer.WriteLine("animationFrames[" + i + "]=" + settings.animationFrames[i]);
         }
@@ -1148,10 +1127,8 @@ public struct PlayerSettings
 
         writer.WriteLine(";highly unrecommended to not mess with these unless you really know what you're doing");
         writer.WriteLine(";collider size and placement relative to the 128x128 player sprite");
-        writer.WriteLine("XcolliderOffset=" + Irbis.Irbis.jamie.XcolliderOffset);
-        writer.WriteLine("YcolliderOffset=" + Irbis.Irbis.jamie.YcolliderOffset);
-        writer.WriteLine("colliderWidth=" + Irbis.Irbis.jamie.colliderWidth);
-        writer.WriteLine("colliderHeight=" + Irbis.Irbis.jamie.colliderHeight);
+        writer.WriteLine("colliderOffset=" + Irbis.Irbis.jamie.colliderOffset);
+        writer.WriteLine("colliderSize=" + Irbis.Irbis.jamie.colliderSize);
         writer.WriteLine("");
 
         writer.WriteLine(";this is the size of the rectangle used as the main attack hitbox");
@@ -1202,7 +1179,7 @@ public struct PlayerSettings
         writer.WriteLine(";ANIMATION SETTINGS");
         writer.WriteLine(";the amount of time that is allowed to pass before the animator displays the next frame (seconds)");
         writer.WriteLine(";(for each animation listed below)");
-        for (int i = 00; i < 20; i++)
+        for (int i = 00; i < Irbis.Irbis.jamie.animationSpeed.Length; i++)
         {
             writer.WriteLine("animationSpeed[" + i + "]=" + Irbis.Irbis.jamie.animationSpeed[i]);
         }
@@ -1211,7 +1188,7 @@ public struct PlayerSettings
 
         writer.WriteLine(";0 is 1 frame, 1 is 2 frames, etc");
         writer.WriteLine(";the number of frames in each animation, only edit this if you are remaking the default spritesheet");
-        for (int i = 00; i < 20; i++)
+        for (int i = 00; i < Irbis.Irbis.jamie.animationFrames.Length; i++)
         {
             writer.WriteLine("animationFrames[" + i + "]=" + Irbis.Irbis.jamie.animationFrames[i]);
         }
@@ -1734,45 +1711,17 @@ public struct PlayerSettings
 
 
 
-                        case "xcollideroffset":                                                         //place new floats above
-                            if (int.TryParse(value, out intResult))
-                            {
-                                playerSettings.XcolliderOffset = intResult;
-                            }
-                            else
+                        case "collideroffset":                                                         //place new floats above
+                            playerSettings.colliderOffset = PointParser(value);
+                            if (playerSettings.colliderOffset == new Point(-0112, -0112))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
                             checker.Add(true); break;
-                        case "ycollideroffset":
-                            if (int.TryParse(value, out intResult))
-                            {
-                                playerSettings.YcolliderOffset = intResult;
-                            }
-                            else
-                            {
-                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
-                            }
-                            checker.Add(true); break;
-                        case "colliderwidth":
-                            if (int.TryParse(value, out intResult))
-                            {
-                                playerSettings.colliderWidth = intResult;
-                            }
-                            else
-                            {
-                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
-                            }
-                            checker.Add(true); break;
-                        case "colliderheight":
-                            if (int.TryParse(value, out intResult))
-                            {
-                                playerSettings.colliderHeight = intResult;
-                            }
-                            else
+                        case "collidersize":
+                            playerSettings.colliderSize = PointParser(value);
+                            if (playerSettings.colliderSize == new Point(-0112, -0112))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
