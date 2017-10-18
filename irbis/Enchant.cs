@@ -164,7 +164,7 @@ public class Enchant
                 }
                 break;
             case EnchantType.Knockback:
-                enemy.Knockback(Irbis.Irbis.jamie.direction, effectValue);
+                //enemy.Knockback(Irbis.Irbis.jamie.direction, effectValue);
                 break;
             case EnchantType.Poison:
                 if (uses > 0)

@@ -141,20 +141,19 @@ namespace Irbis
         {
             get;
         }
-        float ShockwaveMaxEffectDistanceSquared
+        float StunTime
         {
             get;
         }
         bool Update();
         void ThreadPoolCallback(Object threadContext);
-        bool Enemy_OnPlayerAttack(Rectangle attackCollider, Attacking attack);
+        bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack);
+        bool Enemy_OnPlayerShockwave(Point Origin, int RangeSquared, int Range, float Power);
         void AddEffect(Enchant effect);
         void UpgradeEffect(int index, float duration);
-        void Knockback(Direction knockbackDirection, float strength);
         void Hurt(float damage);
         void Stun(float duration);
         void Draw(SpriteBatch sb);
-        void Shockwave(float distance, float power, Vector2 heading);
     }
 
     public class Irbis : Game
@@ -162,8 +161,8 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.1.5.5";
-        static string versionID = "alpha";
+        static string versionNo = "0.2.0.0";
+        static string versionID = "beta";
         static string versionTy = "debug";
         /// Different version types: 
         /// debug
@@ -171,7 +170,7 @@ namespace Irbis
         /// release
 
                                                                                                     //debug
-        public static int debug = 1;
+        public static int debug = 0;
         public static bool Crash = true;
         private static Print debuginfo;
         private static SmartFramerate smartFPS;
@@ -692,10 +691,13 @@ namespace Irbis
         public static int pendingThreads;
         private static object listLock = new object();
 
+                                                                                                    //events
+        public delegate bool AttackEventDelegate(Rectangle AttackCollider, Attacking Attack);
+        public delegate bool ShockwaveEventDelegate(Point Origin, int RangeSquared, int Range, float Power);
+
                                                                                                     //etc
         public static float gravity;
         private static Random RAND;
-        private static int lastRandomInt;
         public static Texture2D nullTex;
         public static Texture2D largeNullTex;
         public static Texture2D defaultTex;
@@ -711,10 +713,10 @@ namespace Irbis
         private static List<Vector2> shadows;
         public static TooltipGenerator tooltipGenerator;
         private Point worldSpaceMouseLocation;
-        public delegate bool AttackEventDelegate(Rectangle attackCollider, Attacking attack);
         public static List<Song> music;
         public static List<string> musicList;
         public static List<Texture2D> logos;
+        public static Rectangle testRectangle = new Rectangle(300, 500, 0,0);
 
 
 
@@ -1865,51 +1867,44 @@ namespace Irbis
 
                 if (enemyList[0].GetType() == typeof(LizardGuy))
                 {
-                    debuginfo.Update("\nBossArena XDistance:" + XDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).bossArena));
-                    debuginfo.Update("\nBossArena YDistance:" + YDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).bossArena));
-                    debuginfo.Update("\n Arena side closest:" + SideClosest(((LizardGuy)enemyList[0]).bossArena, Irbis.jamie.Collider));
-                    debuginfo.Update("\n\nLizard ActivelyAttacking:" + ((LizardGuy)enemyList[0]).ActivelyAttacking);
-                    debuginfo.Update("\nLizardGuy  ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
-                    debuginfo.Update("\nLizardGuy       velocity:" + ((LizardGuy)enemyList[0]).Velocity);
-                    debuginfo.Update("\nLizardGuy      direction:" + ((LizardGuy)enemyList[0]).direction);
+                    //debuginfo.Update("\nXDistance:" + XDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
+                    //debuginfo.Update("\nYDistance:" + YDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
+                    //debuginfo.Update("\n Distance:" + Distance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
+                    //debuginfo.Update("\n Arena side closest:" + SideClosest(((LizardGuy)enemyList[0]).bossArena, Irbis.jamie.Collider));
+                    //debuginfo.Update("\n\n   Lizard Activity:" + ((LizardGuy)enemyList[0]).activity);
+                    //debuginfo.Update("\n  proper direction:" + Directions(((LizardGuy)enemyList[0]).TrueCollider, jamie.Collider));
+                    //debuginfo.Update("\n         Direction:" + ((LizardGuy)enemyList[0]).direction);
+                    //debuginfo.Update("\n         Animation:" + ((LizardGuy)enemyList[0]).currentAnimation);
+                    //debuginfo.Update("\ntimeSinceLastFrame:" + ((LizardGuy)enemyList[0]).timeSinceLastFrame);
+                    //debuginfo.Update("\n            frames:" + ((LizardGuy)enemyList[0]).animationFrames[((LizardGuy)enemyList[0]).currentAnimation]);
+                    //debuginfo.Update("\n             speed:" + ((LizardGuy)enemyList[0]).animationSpeed[((LizardGuy)enemyList[0]).currentAnimation]);
+                    //debuginfo.Update("\ntimeSinceLastFrame:" + ((LizardGuy)enemyList[0]).timeSinceLastFrame);
+                    //debuginfo.Update("\n\n ActivelyAttacking:" + ((LizardGuy)enemyList[0]).ActivelyAttacking);
+                    //debuginfo.Update("\nLizardGuy  ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
+                    //debuginfo.Update("\nLizardGuy       velocity:" + ((LizardGuy)enemyList[0]).Velocity);
+                    //debuginfo.Update("\nLizardGuy      direction:" + ((LizardGuy)enemyList[0]).direction);
                     debuginfo.Update("\nLizardGuy   stun:" + ((LizardGuy)enemyList[0]).stunned);
                     debuginfo.Update("\nLizardGuy   roll:" + ((LizardGuy)enemyList[0]).state[1] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[1]);
                     debuginfo.Update("\nLizardGuy  swipe:" + ((LizardGuy)enemyList[0]).state[2] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[2]);
                     debuginfo.Update("\nLizardGuy   bury:" + ((LizardGuy)enemyList[0]).state[4] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[4]);
                     debuginfo.Update("\nLizardGuy emerge:" + ((LizardGuy)enemyList[0]).state[5] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[5]);
                     debuginfo.Update("\nLizardGuy wander:" + ((LizardGuy)enemyList[0]).state[0] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[0]);
+                    debuginfo.Update("\n");
                 }
 
 
-                //for (int i = 0; i < enemyList.Count; i++)
-                //{
-                //    debuginfo.Update("\n    enemy " + i);
-                //    debuginfo.Update("\n  collided: " + enemyList[i].collided.Count);
-                //    debuginfo.Update("\n   effects: " + enemyList[i].ActiveEffects.Count);
-                //    for (int j = 0; j < enemyList[i].ActiveEffects.Count; j++)
-                //    {
-                //        debuginfo.Update("\n effect[" + j + "]: " + enemyList[i].ActiveEffects[j].enchantType + ", str: " + enemyList[i].ActiveEffects[j].strength);
-                //    }
-                //    debuginfo.Update("\n    health: " + enemyList[i].Health);
-                //    debuginfo.Update("\n     input: " + enemyList[i].input);
-                //    debuginfo.Update("\n  jumptime: " + enemyList[i].jumpTime);
-                //    debuginfo.Update("\n  activity: " + enemyList[i].AIactivity);
-                //    if (enemyList[i].AIactivity == AI.Persue || enemyList[i].AIactivity == AI.Combat)
-                //    {
-                //        debuginfo.Update("\nattackCD: " + enemyList[i].attackCooldownTimer);
-                //    }
-                //    else if (enemyList[i].AIactivity == AI.Wander)
-                //    {
-                //        debuginfo.Update("\nwandtime: " + enemyList[i].wanderTime);
-                //    }
-                //    debuginfo.Update("\n  Xpos:" + enemyList[i].Position.X + "\n  Ypos:" + enemyList[i].Position.Y);
-                //    debuginfo.Update("\n  Xvel:" + enemyList[i].velocity.X + "\n  Yvel:" + enemyList[i].velocity.Y);
-                //    if (i > 3)
-                //    {
-                //        i = enemyList.Count;
-                //    }
-                //}
+                for (int i = 0; i < enemyList.Count; i++)
+                {
+                    debuginfo.Update("\n enemy: " + enemyList[i] + "\nhealth: " + enemyList[i].Health + "\n  stun: " + enemyList[i].StunTime);
+                }
             }
+            //debuginfo.Update("\nDistance  :" + Distance(testRectangle, Irbis.jamie.Collider));
+            //debuginfo.Update("\nDistance  :" + Distance(Irbis.jamie.Collider, testRectangle.Center));
+            //debuginfo.Update("\nDistanceTL:" + Distance(testRectangle.Center, new Point(jamie.Collider.Left, jamie.Collider.Top)));
+            //debuginfo.Update("\nDistanceTR:" + Distance(testRectangle.Center, new Point(jamie.Collider.Right, jamie.Collider.Top)));
+            //debuginfo.Update("\nDistanceBL:" + Distance(testRectangle.Center, new Point(jamie.Collider.Left, jamie.Collider.Bottom)));
+            //debuginfo.Update("\nDistanceBR:" + Distance(testRectangle.Center, new Point(jamie.Collider.Right, jamie.Collider.Bottom)));
+            //debuginfo.Update("\ntestRectangle.Location:" + testRectangle.Location + " testRectangle.Center:" + testRectangle.Center);
 
             debuginfo.Update("\n    Camera:" + camera);
             debuginfo.Update("\nmainCamera:" + mainCamera);
@@ -2239,7 +2234,7 @@ namespace Irbis
             collisionObjects.Clear();
             backgroundSquareList.Clear();
             if (jamie != null)
-            { jamie.OnPlayerAttackReset(); }
+            { jamie.PlayerEventsReset(); }
             
             if (recordFPS)
             {
@@ -2378,6 +2373,11 @@ namespace Irbis
             return (tempX * tempX) + (tempY * tempY);
         }
 
+        public static float Distance(Point p1, Point p2)
+        {
+            return (float)Math.Sqrt(DistanceSquared(p1, p2));
+        }
+
         public static float Distance(Rectangle rectangle1, Rectangle rectangle2)
         {
             return (float)Math.Sqrt(DistanceSquared(rectangle1, rectangle2));
@@ -2419,6 +2419,44 @@ namespace Irbis
             //}
 
             return DistanceSquared(p1, p2);
+        }
+
+        public static float DistanceSquared(Rectangle rectangle, Point point)
+        {
+            Point p1 = Point.Zero;
+
+            if (rectangle.Left > point.X)
+            {//rectangle1 is to the right of rectangle2
+                p1.X = rectangle.Left;
+            }
+            else if (rectangle.Right < point.X)
+            {//rectangle2 is to the right of rectangle1
+                p1.X = rectangle.Right;
+            }
+            else
+            {//point is inside rectangle
+                point.X = 0;
+            }
+
+            if (rectangle.Bottom < point.Y)
+            {//rectangle1 is above rectangle2
+                p1.Y = rectangle.Bottom;
+            }
+            else if (rectangle.Top > point.Y)
+            {//rectangle1 is below rectangle2
+                p1.Y = rectangle.Top;
+            }
+            else
+            {//point is inside rectangle
+                point.Y = 0;
+            }
+
+            return DistanceSquared(p1, point);
+        }
+
+        public static float Distance(Rectangle rectangle, Point point)
+        {
+            return (float)Math.Sqrt(DistanceSquared(rectangle, point));
         }
 
         public static float UnidirectionalDistance(float float1, float float2)
@@ -2555,18 +2593,27 @@ namespace Irbis
         /// returns, relative to rectangle1, in which direction rectangle2 is.
         /// returns Direction.Forward if there is overlap.
         /// </summary>
-        public static Direction Directions(Rectangle rectangle1, Rectangle rectangle2)
+        public static Direction Directions(Rectangle Rectangle1, Rectangle Rectangle2)
         {
-            if (rectangle1.Center.X > rectangle2.Center.X)
-            {//rectangle2 is to the left of rectangle1
+            return Directions(Rectangle1.Center, Rectangle2.Center);
+        }
+
+        /// <summary>
+        /// returns, relative to Point1, in which direction Point2 is.
+        /// returns Direction.Forward if Point1.X == Point2.X.
+        /// </summary>
+        public static Direction Directions(Point Point1, Point Point2)
+        {
+            if (Point1.X > Point2.X)
+            {// Point2 is to the left of Point1
                 return Direction.Left;
             }
-            else if (rectangle2.Center.X > rectangle1.Center.X)
-            {//rectangle2 is to the right of rectangle1
+            else if (Point2.X > Point1.X)
+            {// Point2 is to the right of Point1
                 return Direction.Right;
             }
             else
-            {//X values overlap
+            {// values are the same
                 return Direction.Forward;
             }
         }
@@ -2713,7 +2760,7 @@ namespace Irbis
                 switch (Boss.Trim().ToLower())
                 {
                     case "lizard":
-                        LizardGuy tempLizardGuy = new LizardGuy(Content.Load<Texture2D>("Lizard Guy Spritesheet"), Location, 999, 50, 500, null, 0.2f);
+                        LizardGuy tempLizardGuy = new LizardGuy(Content.Load<Texture2D>("Lizard"), Location, 999, 50, 500, null, 0.45f);
                         enemyList.Add(tempLizardGuy);
                         collisionObjects.Add(tempLizardGuy);
                         break;
@@ -3575,16 +3622,6 @@ Thank you, Ze Frank, for the inspiration.";
                         if (float.TryParse(value, out floatResult))
                         {
                             jamie.superShockwaveHoldtime = floatResult;
-                        }
-                        else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
-                        break;
-                    case "shockwavemaxeffectdistance":
-                        if (float.TryParse(value, out floatResult))
-                        {
-                            jamie.shockwaveMaxEffectDistance = floatResult;
                         }
                         else
                         {
@@ -5001,19 +5038,19 @@ Thank you, Ze Frank, for the inspiration.";
             spriteBatch.End();
             // --------------------------------------------------------------------------------------------------------------------------------
 
-            if (sceneIsMenu)        //FOR MENU DRAWING
+            if (sceneIsMenu)        // FOR MENU DRAWING
             {
                 // TODO: Add your drawing code here    --------------------------------------------------------------------------------------------
                 spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
                 if (!levelEditor)
                 {
                     if (levelLoaded > 0)
-                    {
+                    { // everything in this if is displayed after a game has already been started
                         //darken bg screen
                         spriteBatch.Draw(nullTex, zeroScreenspace, null, new Color(31, 29, 37, 205), 0f, Vector2.Zero, SpriteEffects.None, 0.0f);
                     }
                     else if (scene == 0)
-                    {
+                    { // everything in this if is displayed ONLY on the main menu before a game has been started
                         if (logos != null)
                         {
                             for (int i = 0; i < logos.Count - 1 /*remove -1 to enable patreon logo*/; i++)
@@ -5024,7 +5061,7 @@ Thank you, Ze Frank, for the inspiration.";
                     }
                 }
 
-                //debug stuff
+                // debug stuff
                 debuginfo.Draw(spriteBatch);
 
                 if (scene == 3 && menuSelection >= 0 && menuSelection <= 3)

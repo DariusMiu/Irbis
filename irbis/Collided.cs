@@ -22,6 +22,28 @@ public class Collided
         }
     }
 
+    /// <summary>
+    /// Returns true if and only if: the collider is touching objects on both the left and the right
+    /// </summary>
+    public bool Horizontal
+    {
+        get
+        {
+            return (leftCollided.Count > 0 && rightCollided.Count > 0);
+        }
+    }
+
+    /// <summary>
+    /// Returns true if and only if: the collider is touching objects on both the top and the bottom
+    /// </summary>
+    public bool Vertical
+    {
+        get
+        {
+            return (topCollided.Count > 0 && bottomCollided.Count > 0);
+        }
+    }
+
     public int RightmostBottomCollision
     {
         get

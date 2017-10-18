@@ -107,7 +107,7 @@ public class Player
     public float shieldHealingPercentage;
 
     public float shockwaveEffectiveDistance;
-    public float shockwaveMaxEffectDistance;
+    public int shockwaveEffectiveDistanceSquared;
     public float shockwaveStunTime;
 
     public Vector2 shockwaveKnockback;
@@ -222,6 +222,7 @@ public class Player
     private Color renderColor;
 
     public event Irbis.Irbis.AttackEventDelegate OnPlayerAttack;
+    public event Irbis.Irbis.ShockwaveEventDelegate OnPlayerShockwave;
 
 
 
@@ -275,8 +276,6 @@ public class Player
         position.X -= colliderOffset.X;
         position.Y -= colliderOffset.Y;
 
-        superShockwave = 0;
-
         hurtVelocity = new Vector2(50f, -100f);
         invulnerable = 0f;
 
@@ -301,7 +300,9 @@ public class Player
         collision = true;
         noclip = false;
 
-        OnPlayerAttack = Player_OnPlayerAttack;
+        shockwaveEffectiveDistanceSquared = (int)(shockwaveEffectiveDistance * shockwaveEffectiveDistance);
+
+        PlayerEventsReset();
     }
     
     public bool Update()
@@ -570,15 +571,22 @@ public class Player
         return true;
     }
 
-    private bool Player_OnPlayerAttack(Rectangle attackCollider, Attacking attack)
+    private bool Player_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack)
     {
-        Irbis.Irbis.WriteLine(name + " attacking:" + attack + "\n");
+        Irbis.Irbis.WriteLine(name + " attack:" + Attack + "\n");
         return true;
     }
 
-    public void OnPlayerAttackReset()
+    private bool Player_OnPlayerShockwave(Point Origin, int RangeSquared, int Range, float Power)
+    {
+        Irbis.Irbis.WriteLine(name + " origin:" + Origin + " rangeSquared:" + RangeSquared + " power:" + Power + "\n");
+        return true;
+    }
+
+    public void PlayerEventsReset()
     {
         OnPlayerAttack = Player_OnPlayerAttack;
+        OnPlayerShockwave = Player_OnPlayerShockwave;
     }
 
     public void Respawn(Vector2 initialPos)
@@ -862,7 +870,11 @@ public class Player
                         //falling
                     }
                 }
-                else
+                else if (prevWalled.Bottom <= 0)
+                {
+                    activity = Activity.Landing;
+                }
+                else if (activity != Activity.Landing)
                 {
                     activity = Activity.Idle;
                 }
@@ -903,7 +915,8 @@ public class Player
                     case 15:
                         goto case 16;
                     case 16:
-                        //SetAnimation(1, false);
+                        SetAnimation(3, false);
+                        activity = Activity.Idle;
                         break;
                     default:
                         SetAnimation();
@@ -918,11 +931,6 @@ public class Player
         else if (previousActivity != activity)
         {
             SetAnimation();
-        }
-
-        if (direction == Direction.Right && currentAnimation % 2 != 0)
-        {
-            currentAnimation++;
         }
 
         if (previousAnimation != currentAnimation)
@@ -1030,16 +1038,24 @@ public class Player
                 SetAnimation(13, false);
                 break;
             case Activity.Landing:
-                SetAnimation(15, false);
+                SetAnimation(15, true);
                 break;
             case Activity.Rolling:
                 SetAnimation(17, false);
                 break;
             case Activity.Attacking:
-                //Random RAND = new Random();
-                //USE GAME.RAND!
-
-                SetAnimation(19, true);
+                switch (Irbis.Irbis.RandomInt(2))
+                {
+                    case 0:
+                        SetAnimation(17, true);
+                        break;
+                    case 1:
+                        SetAnimation(19, true);
+                        break;
+                    case 2:
+                        SetAnimation(21, true);
+                        break;
+                }
                 break;
             default:
                 SetAnimation(9, false);                                                           //run
@@ -1047,9 +1063,7 @@ public class Player
         }
 
         if (nextAnimation >= 0)
-        {
-            SetAnimation(nextAnimation, false);
-        }
+        { SetAnimation(nextAnimation, false); }
     }
 
     public void SetAnimation(int animation, bool noLoop)
@@ -1058,6 +1072,8 @@ public class Player
         currentFrame = 0;
         nextAnimation = -1;
         animationNoLoop = noLoop;
+        if (direction == Direction.Right)
+        { currentAnimation++; }
     }
 
     public void WalljumpDebug(int variableYo)
@@ -1106,14 +1122,10 @@ public class Player
                         collided.Add(s, Side.Bottom);
                         walled.Bottom++;
                         if (negAmountToMove.Y > s.Collider.Top - collider.Bottom && (velocity.Y * Irbis.Irbis.DeltaTime) >= -(s.Collider.Top - collider.Bottom))
-                        {
-                            negAmountToMove.Y = s.Collider.Top - collider.Bottom;
-                        }
+                        { negAmountToMove.Y = s.Collider.Top - collider.Bottom; }
                     }
                     else if (negAmountToMove.Y > s.Collider.Top - collider.Bottom)
-                    {
-                        negAmountToMove.Y = s.Collider.Top - collider.Bottom;
-                    }
+                    { negAmountToMove.Y = s.Collider.Top - collider.Bottom; }
                 }
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.Right))                               //RIGHT
                 {
@@ -1122,14 +1134,10 @@ public class Player
                         collided.Add(s, Side.Right);
                         walled.Right++;
                         if (negAmountToMove.X > s.Collider.Left - collider.Right && (velocity.X * Irbis.Irbis.DeltaTime) >= -(s.Collider.Left - collider.Right))
-                        {
-                            negAmountToMove.X = s.Collider.Left - collider.Right;
-                        }
+                        { negAmountToMove.X = s.Collider.Left - collider.Right; }
                     }
                     else if (negAmountToMove.X > s.Collider.Left - collider.Right)
-                    {
-                        negAmountToMove.X = s.Collider.Left - collider.Right;
-                    }
+                    { negAmountToMove.X = s.Collider.Left - collider.Right; }
                 }
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.Left))                                //LEFT
                 {
@@ -1138,14 +1146,10 @@ public class Player
                         collided.Add(s, Side.Left);
                         walled.Left++;
                         if (amountToMove.X < s.Collider.Right - collider.Left && (velocity.X * Irbis.Irbis.DeltaTime) <= -(s.Collider.Right - collider.Left))
-                        {
-                            amountToMove.X = s.Collider.Right - collider.Left;
-                        }
+                        { amountToMove.X = s.Collider.Right - collider.Left; }
                     }
                     else if (amountToMove.X < s.Collider.Right - collider.Left)
-                    {
-                        amountToMove.X = s.Collider.Right - collider.Left;
-                    }
+                    { amountToMove.X = s.Collider.Right - collider.Left; }
                 }
                 if (Irbis.Irbis.IsTouching(collider, s.Collider, Side.Top))                                 //UP
                 {
@@ -1154,14 +1158,10 @@ public class Player
                         collided.Add(s, Side.Top);
                         walled.Top++;
                         if (amountToMove.Y < s.Collider.Bottom - collider.Top && (velocity.Y * Irbis.Irbis.DeltaTime) <= -(s.Collider.Bottom - collider.Top))
-                        {
-                            amountToMove.Y = s.Collider.Bottom - collider.Top;
-                        }
+                        { amountToMove.Y = s.Collider.Bottom - collider.Top; }
                     }
                     else if (amountToMove.Y < s.Collider.Bottom - collider.Top)
-                    {
-                        amountToMove.Y = s.Collider.Bottom - collider.Top;
-                    }
+                    { amountToMove.Y = s.Collider.Bottom - collider.Top; }
                 }
             }
         }
@@ -1191,22 +1191,14 @@ public class Player
 
 
         if (amountToMove.X == 0)
-        {
-            amountToMove.X = negAmountToMove.X;
-        }
+        { amountToMove.X = negAmountToMove.X; }
         else if (negAmountToMove.X != 0 && -negAmountToMove.X < amountToMove.X)
-        {
-            amountToMove.X = negAmountToMove.X;
-        }
+        { amountToMove.X = negAmountToMove.X; }
 
         if (amountToMove.Y == 0)
-        {
-            amountToMove.Y = negAmountToMove.Y;
-        }
+        { amountToMove.Y = negAmountToMove.Y; }
         else if (negAmountToMove.Y != 0 && -negAmountToMove.Y < amountToMove.Y)
-        {
-            amountToMove.Y = negAmountToMove.Y;
-        }
+        { amountToMove.Y = negAmountToMove.Y; }
 
         bool Y = false;
         bool X = false;
@@ -1234,31 +1226,12 @@ public class Player
         if (pass)
         {
             if (Y)
-            {
-                amountToMove.X = 0;
-            }
+            { amountToMove.X = 0; }
             else if (X)
-            {
-                amountToMove.Y = 0;
-            }
+            { amountToMove.Y = 0; }
         }
         else
         {
-            if (amountToMove != Vector2.Zero)
-            {
-                Irbis.Irbis.WriteLine("this: " + this.ToString());
-                Irbis.Irbis.WriteLine("        pass: " + pass);
-                Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-                Irbis.Irbis.WriteLine("    velocity: " + velocity);
-                Irbis.Irbis.WriteLine("    position: " + position);
-                Irbis.Irbis.WriteLine("     testPos: " + testPos);
-                Irbis.Irbis.WriteLine("   pcollider: T:" + collider.Top + " B:" + collider.Bottom + " L:" + collider.Left + " R:" + collider.Right);
-                Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-                //foreach (ICollisionObject s in collided)
-                //{ Irbis.Irbis.WriteLine("   scollider: T:" + s.Collider.Top + " B:" + s.Collider.Bottom + " L:" + s.Collider.Left + " R:" + s.Collider.Right); }
-                Irbis.Irbis.WriteLine("after1--");
-            }
-
             pass = true;
             if (Y)
             {
@@ -1271,9 +1244,7 @@ public class Player
                 pass = !(collided.Intersects(testCollider));
 
                 if (pass)
-                {
-                    amountToMove.Y = 0;
-                }
+                { amountToMove.Y = 0; }
             }
             else if (X)
             {
@@ -1286,33 +1257,16 @@ public class Player
                 pass = !(collided.Intersects(testCollider));
 
                 if (pass)
-                {
-                    amountToMove.X = 0;
-                }
-            }
-            if (amountToMove != Vector2.Zero)
-            {
-                Irbis.Irbis.WriteLine("        pass: " + pass);
-                Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-                Irbis.Irbis.WriteLine("    velocity: " + velocity);
-                Irbis.Irbis.WriteLine("    position: " + position);
-                Irbis.Irbis.WriteLine("     testPos: " + testPos);
-                Irbis.Irbis.WriteLine("   pcollider: T:" + collider.Top + " B:" + collider.Bottom + " L:" + collider.Left + " R:" + collider.Right);
-                Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-                //foreach (ICollisionObject s in collided)
-                //{ Irbis.Irbis.WriteLine("   scollider: T:" + s.Collider.Top + " B:" + s.Collider.Bottom + " L:" + s.Collider.Left + " R:" + s.Collider.Right); }
-                Irbis.Irbis.WriteLine("after2--");
+                { amountToMove.X = 0; }
             }
         }
 
         if (amountToMove != Vector2.Zero)
-        {
-            Irbis.Irbis.WriteLine("    velocity: " + velocity);
-        }
+        { Irbis.Irbis.WriteLine("    velocity: " + velocity); }
 
         position += amountToMove;
-
         CalculateMovement();
+
         for (int i = 0; i < collided.bottomCollided.Count; i++)
         {
             if (!Irbis.Irbis.IsTouching(collider, collided.bottomCollided[i].Collider, Side.Bottom))
@@ -1350,20 +1304,6 @@ public class Player
             }
         }
 
-        if (amountToMove != Vector2.Zero)
-        {
-            Irbis.Irbis.WriteLine("        pass: " + pass);
-            Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-            Irbis.Irbis.WriteLine("    velocity: " + velocity);
-            Irbis.Irbis.WriteLine("    position: " + position);
-            Irbis.Irbis.WriteLine("     testPos: " + testPos);
-            Irbis.Irbis.WriteLine("   pcollider: T:" + collider.Top + " B:" + collider.Bottom + " L:" + collider.Left + " R:" + collider.Right);
-            Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-            //foreach (ICollisionObject s in collided)
-            //{ Irbis.Irbis.WriteLine("   scollider: T:" + s.Collider.Top + " B:" + s.Collider.Bottom + " L:" + s.Collider.Left + " R:" + s.Collider.Right); }
-            Irbis.Irbis.WriteLine("done.\n");
-        }
-
         if ((walled.Top > 0 && velocity.Y < 0) || (walled.Bottom > 0 && velocity.Y > 0))
         {
             velocity.Y = 0;
@@ -1397,6 +1337,9 @@ public class Player
         return true;
     }
 
+    /// <summary>
+    /// returns true if the player took damage
+    /// </summary>
     public bool Hurt(float damage)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Hurt"); }
@@ -1486,35 +1429,13 @@ public class Player
         {
             energy -= 30;
             Irbis.Irbis.CameraShake(0.1f, 5f);
-
-            float distanceSQR;
-            foreach (IEnemy e in enemyList)
-            {
-                distanceSQR = Irbis.Irbis.DistanceSquared(collider.Center, e.Collider.Center);
-                if (distanceSQR < (e.ShockwaveMaxEffectDistanceSquared)) { distanceSQR = e.ShockwaveMaxEffectDistanceSquared; }
-                if (e.Collider != Rectangle.Empty && distanceSQR <= e.ShockwaveMaxEffectDistanceSquared)
-                {
-                    heading = (e.Collider.Center - collider.Center).ToVector2();
-                    e.Shockwave((float)Math.Sqrt(distanceSQR), 1, heading);
-                }
-            }
+            OnPlayerShockwave(collider.Center, shockwaveEffectiveDistanceSquared, (int)shockwaveEffectiveDistance, 1);
         }
         else
         {
             energy -= 50;
             Irbis.Irbis.CameraShake(0.15f, 10f);
-
-            float distanceSQR;
-            foreach (IEnemy e in enemyList)
-            {
-                distanceSQR = Irbis.Irbis.DistanceSquared(collider.Center, e.Collider.Center);
-                if (distanceSQR < e.ShockwaveMaxEffectDistanceSquared) { distanceSQR = e.ShockwaveMaxEffectDistanceSquared; }
-                if (e.Collider != Rectangle.Empty && distanceSQR <= e.ShockwaveMaxEffectDistanceSquared)
-                {
-                    heading = (e.Collider.Center - collider.Center).ToVector2();
-                    e.Shockwave((float)Math.Sqrt(distanceSQR), 2, heading);
-                }
-            }
+            OnPlayerShockwave(collider.Center, shockwaveEffectiveDistanceSquared, (int)shockwaveEffectiveDistance, 2);
         }
         superShockwave = 0;
     }
@@ -1621,7 +1542,6 @@ public class Player
         energy = maxEnergy = playerSettings.maxEnergy;
         superShockwaveHoldtime = playerSettings.superShockwaveHoldtime;
         walljumpHoldtime = playerSettings.walljumpHoldtime;
-        shockwaveMaxEffectDistance = playerSettings.shockwaveMaxEffectDistance;
         shockwaveEffectiveDistance = playerSettings.shockwaveEffectiveDistance;
         shockwaveStunTime = playerSettings.shockwaveStunTime;
         shockwaveKnockback = playerSettings.shockwaveKnockback;

@@ -29,7 +29,6 @@ public struct PlayerSettings
     public int maxNumberOfPotions;
     public float shieldHealingPercentage;
     public float shockwaveEffectiveDistance;
-    public float shockwaveMaxEffectDistance;
     public float shockwaveStunTime;
     public Vector2 shockwaveKnockback;
     public float speed;
@@ -83,7 +82,7 @@ public struct PlayerSettings
     public int debug;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
-    static int numberOfVariables = 73;
+    static int numberOfVariables = 72;
 
     public PlayerSettings(bool useDefaults)
 	{
@@ -215,8 +214,6 @@ public struct PlayerSettings
             maxShield = 50f;
             maxEnergy = 50f;
 
-            //the distance at which the shockwave stops gaining power (otherwise it would be insanely strong close-up)
-            shockwaveMaxEffectDistance = 50f;
             //distance at which shockwave has no power
             shockwaveEffectiveDistance = 100f;
             //shockwave multipliers
@@ -484,8 +481,6 @@ public struct PlayerSettings
             maxShield = 0f;
             maxEnergy = 0f;
 
-            //the distance at which the shockwave stops gaining power (otherwise it would be insanely strong close-up)
-            shockwaveMaxEffectDistance = 0f;
             //distance at which shockwave has no power
             shockwaveEffectiveDistance = 0f;
             //shockwave multipliers
@@ -682,8 +677,6 @@ public struct PlayerSettings
         maxShield = settings.maxShield;
         maxEnergy = settings.maxEnergy;
 
-        //the distance at which the shockwave stops gaining power (otherwise it would be insanely strong close-up)
-        shockwaveMaxEffectDistance = settings.shockwaveMaxEffectDistance;
         //distance at which shockwave has no power
         shockwaveEffectiveDistance = settings.shockwaveEffectiveDistance;
         //shockwave multipliers
@@ -894,8 +887,6 @@ public struct PlayerSettings
 
 
 
-        writer.WriteLine(";the distance at which the shockwave stops gaining power (otherwise it would be insanely strong close-up)");
-        writer.WriteLine("shockwaveMaxEffectDistance=" + settings.shockwaveMaxEffectDistance);
         writer.WriteLine(";distance at which shockwave has no power");
         writer.WriteLine("shockwaveEffectiveDistance=" + settings.shockwaveEffectiveDistance);
         writer.WriteLine(";shockwave multipliers");
@@ -1144,8 +1135,6 @@ public struct PlayerSettings
 
 
 
-        writer.WriteLine(";the distance at which the shockwave stops gaining power (otherwise it would be insanely strong close-up)");
-        writer.WriteLine("shockwaveMaxEffectDistance=" + Irbis.Irbis.jamie.shockwaveMaxEffectDistance);
         writer.WriteLine(";distance at which shockwave has no power");
         writer.WriteLine("shockwaveEffectiveDistance=" + Irbis.Irbis.jamie.shockwaveEffectiveDistance);
         writer.WriteLine(";shockwave multipliers");
@@ -1437,17 +1426,6 @@ public struct PlayerSettings
                             if (float.TryParse(value, out floatResult))
                             {
                                 playerSettings.superShockwaveHoldtime = floatResult;
-                            }
-                            else
-                            {
-                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
-                            }
-                            checker.Add(true); break;
-                        case "shockwavemaxeffectdistance":
-                            if (float.TryParse(value, out floatResult))
-                            {
-                                playerSettings.shockwaveMaxEffectDistance = floatResult;
                             }
                             else
                             {

@@ -139,14 +139,13 @@ public class Enemy : IEnemy
     }
     private float mass = 0.9f;
 
-    public float ShockwaveMaxEffectDistanceSquared
+    public float StunTime
     {
         get
         {
-            return shockwaveMaxEffectDistanceSquared;
+            return stunned;
         }
     }
-    private float shockwaveMaxEffectDistanceSquared;
 
     private bool collidedContains;
     public float speed;
@@ -181,7 +180,6 @@ public class Enemy : IEnemy
     bool animationNoLoop;
     public Point input;
 
-    public float shockwaveMaxEffectDistance;
     public float shockwaveEffectiveDistance;
     public float shockwaveStunTime;
 
@@ -298,9 +296,6 @@ public class Enemy : IEnemy
 
         activeEffects = new List<Enchant>();
 
-        shockwaveMaxEffectDistanceSquared = Irbis.Irbis.jamie.shockwaveMaxEffectDistance * Irbis.Irbis.jamie.shockwaveMaxEffectDistance;
-        shockwaveMaxEffectDistance = Irbis.Irbis.jamie.shockwaveMaxEffectDistance;
-        shockwaveEffectiveDistance = Irbis.Irbis.jamie.shockwaveEffectiveDistance;
         shockwaveStunTime = Irbis.Irbis.jamie.shockwaveStunTime;
         shockwaveKnockback = Irbis.Irbis.jamie.shockwaveKnockback;
 
@@ -333,6 +328,7 @@ public class Enemy : IEnemy
         sideCollided = new List<Side>();
 
         Irbis.Irbis.jamie.OnPlayerAttack += Enemy_OnPlayerAttack;
+        Irbis.Irbis.jamie.OnPlayerShockwave += Enemy_OnPlayerShockwave;
     }
 
     public bool Update()
@@ -432,6 +428,24 @@ public class Enemy : IEnemy
         {
             PlayerAttackCollision();
             Irbis.Irbis.WriteLine("hit. health remaining:" + health);
+        }
+        Irbis.Irbis.WriteLine(name + " done.\n");
+        return true;
+    }
+
+    public bool Enemy_OnPlayerShockwave(Point Origin, int RangeSquared, int Range, float Power)
+    {
+        Irbis.Irbis.WriteLine(name + " Enemy_OnPlayerShockwave triggered");
+        float DistanceSQR = Irbis.Irbis.DistanceSquared(collider, Origin);
+        if (DistanceSQR <= RangeSquared)
+        {
+            float Distance = (float)Math.Sqrt(DistanceSQR);
+            Stun(((Range - Distance) / Range) * shockwaveStunTime * Power);
+            if (Irbis.Irbis.Directions(Origin, collider.Center) == Direction.Left)
+            { velocity = new Vector2(-shockwaveKnockback.X, shockwaveKnockback.Y)  * (Range - Distance) * Power * (1 / mass); }
+            else
+            { velocity = shockwaveKnockback * (Range - Distance) * Power * (1 / mass); }
+            Irbis.Irbis.WriteLine("postcalc velocity:" + velocity);
         }
         Irbis.Irbis.WriteLine(name + " done.\n");
         return true;
@@ -1275,21 +1289,6 @@ public class Enemy : IEnemy
         stunned += duration;
         AIactivity = AI.Stunned;
         attackCooldownTimer += 0.5f;
-    }
-
-    public void Shockwave(float distance, float power, Vector2 heading)
-    {
-        Irbis.Irbis.WriteLine("Enemy shockwave\n precalc velocity:" + velocity);
-        Irbis.Irbis.WriteLine("shockwaveKnockback:" + shockwaveKnockback + " heading:" + heading + " shockwaveEffectiveDistance:"
-            + shockwaveEffectiveDistance + " distance:" + distance + " power:" + power + " (1 / mass):" + (1 / mass));
-
-        heading.Normalize();
-        Stun(((shockwaveEffectiveDistance - distance) * 2) / shockwaveStunTime);
-        velocity += shockwaveKnockback * heading * (shockwaveEffectiveDistance - distance) * power * (1 / mass);
-
-        Irbis.Irbis.WriteLine("postcalc velocity:" + velocity);
-        Irbis.Irbis.WriteLine("shockwaveKnockback:" + shockwaveKnockback + " heading:" + heading + " shockwaveEffectiveDistance:"
-            + shockwaveEffectiveDistance + " distance:" + distance + " power:" + power + " (1 / mass):" + (1 / mass) + "\n");
     }
 
     public override string ToString()
