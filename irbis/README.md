@@ -8,7 +8,6 @@
 `03.` Camera swing causes weird things and has been disabled for the time being  
 `04.` Boss strike attack during bury phase sometimes hits twice  
 `05.` Tailwhip and strike seem to not trigger their knockbacks occasionally  
-`06.` Collision no longer works on C0O0, use noclip to explore this level, if you wish  
 
 
 ### Important Notes  

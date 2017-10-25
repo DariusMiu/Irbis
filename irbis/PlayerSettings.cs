@@ -17,7 +17,6 @@ public struct PlayerSettings
     public float invulnerableMaxTime;
     public float energyUsableMargin;
     public float minSqrDetectDistance;
-    public Vector2 initialPosition;
     public Rectangle boundingBox;
     public bool cameraLerpSetting;
     public float cameraLerpSpeed;
@@ -82,7 +81,7 @@ public struct PlayerSettings
     public int debug;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
-    static int numberOfVariables = 72;
+    static int numberOfVariables = 71;
 
     public PlayerSettings(bool useDefaults)
 	{
@@ -217,7 +216,7 @@ public struct PlayerSettings
             //distance at which shockwave has no power
             shockwaveEffectiveDistance = 100f;
             //shockwave multipliers
-            shockwaveStunTime = 50f;
+            shockwaveStunTime = 2f;
             shockwaveKnockback = new Vector2(5f, -2.5f);
 
             //this how the player won't take damage after previously taking damage (seconds)
@@ -243,40 +242,38 @@ public struct PlayerSettings
             //(for each animation listed below)
             animationSpeed = new float[30];
             for (int i = 0; i < animationSpeed.Length; i++)
-            {
-                animationSpeed[i] = 0.1f;
-            }
+            { animationSpeed[i] = 0.1f; }
             //animationSpeed[19] = 0.3f;
             //animationSpeed[20] = 0.3f;
 
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
             animationFrames = new int[30];
-            animationFrames[00] = 3;            //
-            animationFrames[01] = 15;           //
-            animationFrames[02] = 3;            //
-            animationFrames[03] = 15;            //
-            animationFrames[04] = 15;           //
-            animationFrames[05] = 15;            //
-            animationFrames[06] = 15;           //
-            animationFrames[07] = 9;            //
-            animationFrames[08] = 9;            //
-            animationFrames[09] = 5;            //
-            animationFrames[10] = 5;            //
-            animationFrames[11] = 0;            //
-            animationFrames[12] = 0;            //
-            animationFrames[13] = 1;            //
-            animationFrames[14] = 1;            //
-            animationFrames[15] = 0;            //
-            animationFrames[16] = 0;            //
-            animationFrames[17] = 0;            //
-            animationFrames[18] = 0;            //
-            animationFrames[19] = 2;            //
-            animationFrames[20] = 2;            //
-            for (int i = 21; i < animationFrames.Length; i++)
-            {
-                animationFrames[i] = 0;
-            }
+            animationFrames[00] = 3;
+            animationFrames[01] = 15;
+            animationFrames[02] = 3;
+            animationFrames[03] = 15;
+            animationFrames[04] = 15;
+            animationFrames[05] = 15;
+            animationFrames[06] = 15;
+            animationFrames[07] = 9;
+            animationFrames[08] = 9;
+            animationFrames[09] = 5;
+            animationFrames[10] = 5;
+            animationFrames[11] = 0;
+            animationFrames[12] = 0;
+            animationFrames[13] = 1;
+            animationFrames[14] = 1;
+            animationFrames[15] = 0;
+            animationFrames[16] = 0;
+            animationFrames[17] = 2;
+            animationFrames[18] = 2;
+            animationFrames[19] = 2;
+            animationFrames[20] = 2;
+            animationFrames[21] = 2;
+            animationFrames[22] = 2;
+            for (int i = 23; i < animationFrames.Length; i++)
+            { animationFrames[i] = 0; }
 
             //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)
             //NOTE: there is no variable for the number of frames in the shield animation, as the shield animator
@@ -300,59 +297,30 @@ public struct PlayerSettings
             int[] elevenCol = { 66 };
             int[] twelveCol = { 32 };
             foreach (int i in characterWidth)
-            {
-                characterWidth[i] = -1;
-            }
+            { characterWidth[i] = -1; }
             foreach (int i in twosCol)
-            {
-                characterWidth[i] = 2;
-            }
+            { characterWidth[i] = 2; }
             foreach (int i in threesCol)
-            {
-                characterWidth[i] = 3;
-            }
+            { characterWidth[i] = 3; }
             foreach (int i in foursCol)
-            {
-                characterWidth[i] = 4;
-            }
+            { characterWidth[i] = 4; }
             foreach (int i in fivesCol)
-            {
-                characterWidth[i] = 5;
-            }
+            { characterWidth[i] = 5; }
             foreach (int i in sixesCol)
-            {
-                characterWidth[i] = 6;
-            }
+            { characterWidth[i] = 6; }
             foreach (int i in sevensCol)
-            {
-                characterWidth[i] = 7;
-            }
+            { characterWidth[i] = 7; }
             foreach (int i in eightsCol)
-            {
-                characterWidth[i] = 8;
-            }
+            { characterWidth[i] = 8; }
             foreach (int i in ninesCol)
-            {
-                characterWidth[i] = 9;
-            }
+            { characterWidth[i] = 9; }
             foreach (int i in tensCol)
-            {
-                characterWidth[i] = 10;
-            }
+            { characterWidth[i] = 10; }
             foreach (int i in elevenCol)
-            {
-                characterWidth[i] = 11;
-            }
+            { characterWidth[i] = 11; }
             foreach (int i in twelveCol)
-            {
-                characterWidth[i] = 12;
-            }
+            { characterWidth[i] = 12; }
 
-
-            //ETC SETTINGS
-            //player starting position(world space)
-            //only used when one isn't given by the fight
-            initialPosition = new Vector2(64f, 64f);
 
             //DEBUG MODE
             debug = 0;
@@ -514,17 +482,13 @@ public struct PlayerSettings
             //(for each animation listed below)
             animationSpeed = new float[0];
             for (int i = 0; i < animationSpeed.Length; i++)
-            {
-                animationSpeed[i] = 0f;
-            }
+            { animationSpeed[i] = 0f; }
 
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
             animationFrames = new int[0];
             for (int i = 0; i < animationFrames.Length; i++)
-            {
-                animationFrames[i] = 0;
-            }
+            { animationFrames[i] = 0; }
 
             //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)
             //NOTE: there is no variable for the number of frames in the shield animation, as the shield animator
@@ -537,14 +501,7 @@ public struct PlayerSettings
             //the width of each character in the font spritesheet (pixels)
             characterWidth = new int[0];
             for (int i = 0; i < characterWidth.Length; i++)
-            {
-                characterWidth[i] = 0;
-            }
-
-            //ETC SETTINGS
-            //player starting position(world space)
-            //only used when one isn't given by the fight
-            initialPosition = new Vector2(0f, 0f);
+            { characterWidth[i] = 0; }
 
             //DEBUG MODE
             debug = 1;
@@ -701,10 +658,6 @@ public struct PlayerSettings
 
         //how full the energy bar has to be before allowing you to use (95f == 95%)
         energyUsableMargin = settings.energyUsableMargin;
-        
-        //player starting position(world space)
-        //only used when one isn't given by the fight
-        initialPosition = settings.initialPosition;
         
         //ANIMATION SETTINGS
         //the amount of time that is allowed to pass before the animator displays the next frame (seconds)
@@ -921,18 +874,14 @@ public struct PlayerSettings
         writer.WriteLine(";the amount of time that is allowed to pass before the animator displays the next frame (seconds)");
         writer.WriteLine(";(for each animation listed below)");
         for (int i = 00; i < settings.animationSpeed.Length; i++)
-        {
-            writer.WriteLine("animationSpeed[" + i + "]=" + settings.animationSpeed[i]);
-        }
+        { writer.WriteLine("animationSpeed[" + i + "]=" + settings.animationSpeed[i]); }
         writer.WriteLine("");
 
 
         writer.WriteLine(";0 is 1 frame, 1 is 2 frames, etc");
         writer.WriteLine(";the number of frames in each animation, only edit this if you are remaking the default spritesheet");
         for (int i = 00; i < settings.animationFrames.Length; i++)
-        {
-            writer.WriteLine("animationFrames[" + i + "]=" + settings.animationFrames[i]);
-        }
+        { writer.WriteLine("animationFrames[" + i + "]=" + settings.animationFrames[i]); }
         writer.WriteLine("");
 
 
@@ -947,20 +896,11 @@ public struct PlayerSettings
         writer.WriteLine("characterHeight=" + settings.characterHeight);
         writer.WriteLine(";the width of each character in the font spritesheet (pixels)");
         for (int i = 00; i < 100; i++)
-        {
-            writer.WriteLine("characterWidth[" + i + "]=" + settings.characterWidth[i]);
-        }
+        { writer.WriteLine("characterWidth[" + i + "]=" + settings.characterWidth[i]); }
         writer.WriteLine(";characterWidth[99] is used as SPACE, so it should remain blank on the spritesheet (it is the final character)");
         writer.WriteLine("");
         writer.WriteLine("");
 
-
-
-        writer.WriteLine(";ETC SETTINGS");
-        writer.WriteLine(";player starting position (world space)");
-        writer.WriteLine(";only used when one isn't given by the fight");
-        writer.WriteLine("initialPosition=" + settings.initialPosition);
-        writer.WriteLine("");
 
         writer.WriteLine(";DEBUG MODE");
         writer.WriteLine("debug=" + settings.debug);
@@ -1169,18 +1109,14 @@ public struct PlayerSettings
         writer.WriteLine(";the amount of time that is allowed to pass before the animator displays the next frame (seconds)");
         writer.WriteLine(";(for each animation listed below)");
         for (int i = 00; i < Irbis.Irbis.jamie.animationSpeed.Length; i++)
-        {
-            writer.WriteLine("animationSpeed[" + i + "]=" + Irbis.Irbis.jamie.animationSpeed[i]);
-        }
+        { writer.WriteLine("animationSpeed[" + i + "]=" + Irbis.Irbis.jamie.animationSpeed[i]); }
         writer.WriteLine("");
 
 
         writer.WriteLine(";0 is 1 frame, 1 is 2 frames, etc");
         writer.WriteLine(";the number of frames in each animation, only edit this if you are remaking the default spritesheet");
         for (int i = 00; i < Irbis.Irbis.jamie.animationFrames.Length; i++)
-        {
-            writer.WriteLine("animationFrames[" + i + "]=" + Irbis.Irbis.jamie.animationFrames[i]);
-        }
+        { writer.WriteLine("animationFrames[" + i + "]=" + Irbis.Irbis.jamie.animationFrames[i]); }
         writer.WriteLine("");
 
 
@@ -1195,9 +1131,7 @@ public struct PlayerSettings
         writer.WriteLine("characterHeight=" + Irbis.Irbis.font.charHeight);
         writer.WriteLine(";the width of each character in the font spritesheet (pixels)");
         for (int i = 00; i < 100; i++)
-        {
-            writer.WriteLine("characterWidth[" + i + "]=" + Irbis.Irbis.font.charWidth[i]);
-        }
+        { writer.WriteLine("characterWidth[" + i + "]=" + Irbis.Irbis.font.charWidth[i]); }
         writer.WriteLine(";characterWidth[99] is used as SPACE, so it should remain blank on the spritesheet (it is the final character)");
         writer.WriteLine("");
         writer.WriteLine("");
@@ -1256,9 +1190,7 @@ public struct PlayerSettings
                 foreach (char c in line)
                 {
                     if (!char.IsWhiteSpace(c))
-                    {
-                        statement += c;
-                    }
+                    { statement += c; }
                 }
 
                 int stage = 0;
@@ -1280,52 +1212,34 @@ public struct PlayerSettings
                     if (stage == 3)
                     {
                         if (c.Equals('\u003b'))
-                        {
-                            stage = -1;
-                        }
+                        { stage = -1; }
                         if (stage > 0)
-                        {
-                            value += c;
-                        }
+                        { value += c; }
                     }
                     if (stage == 2)
                     {
                         if (c.Equals('\u003d'))
-                        {
-                            stage = 3;
-                        }
+                        { stage = 3; }
                         else
-                        {
-                            //do nothing
-                        }
+                        { /*do nothing*/ }
                     }
                     if (stage == 1)
                     {
                         if (c.Equals('\u005d'))
-                        {
-                            stage = 2;
-                        }
+                        { stage = 2; }
                         else
-                        {
-                            extra += c;
-                        }
+                        { extra += c; }
                     }
                     if (stage == 0)
                     {
                         if (c.Equals('\u003d'))
-                        {
-                            stage = 3;
-                        }
+                        { stage = 3; }
                         else
                         {
                             if (c.Equals('\u005b'))
-                            {
-                                stage = 1;
-                            }
+                            { stage = 1; }
                             else
-                            {
-                                variable += c;
-                            }
+                            { variable += c; }
                         }
                     }
                 }
@@ -2079,14 +1993,6 @@ public struct PlayerSettings
                         case "shockwaveknockback":                                                        //place new key binds above
                             playerSettings.shockwaveKnockback = Vector2Parser(value);
                             if (playerSettings.shockwaveKnockback == new Vector2(-0.112f, -0.112f))
-                            {
-                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
-                            }
-                            checker.Add(true); break;
-                        case "initialposition":
-                            playerSettings.initialPosition = Vector2Parser(value);
-                            if (playerSettings.initialPosition == new Vector2(-0.112f, -0.112f))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;

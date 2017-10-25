@@ -421,14 +421,16 @@ public class Enemy : IEnemy
         }
     }
 
-    public bool Enemy_OnPlayerAttack(Rectangle attackCollider, Attacking attack)
+    public bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack)
     {
-        Irbis.Irbis.WriteLine(name + " response:\nattackCollider:" + attackCollider + " " + name + " collider:" + collider + " attack:" + attack);
-        if (attackCollider.Intersects(collider))
+        Irbis.Irbis.WriteLine(name + " response:\nattackCollider:" + AttackCollider + " this.collider:" + collider);
+        if (AttackCollider.Intersects(collider))
         {
             PlayerAttackCollision();
             Irbis.Irbis.WriteLine("hit. health remaining:" + health);
         }
+        else
+        { Irbis.Irbis.WriteLine("miss. health remaining:" + health); }
         Irbis.Irbis.WriteLine(name + " done.\n");
         return true;
     }

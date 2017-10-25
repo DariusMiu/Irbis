@@ -30,7 +30,7 @@ public class Print
     int printLines;
     public float depth;
     public Point origin;
-    Direction align;
+    public Direction align;
     public int characterHeight;
     bool monoSpace;
     public int lines;
@@ -770,15 +770,11 @@ public class Print
             }
             else if (align == Direction.Right)
             {
-                width = -1;
+                width = -(characterHeight * 2 + 1);
                 if (scrollDown)
-                {
-                    height = 0;
-                }
+                { height = 0; }
                 else
-                {
-                    height = -lines;
-                }
+                { height = -lines; }
 
                 int statementLengthMinOne = statement.Length - 1;
                 //for (int i = 0; i < statementLength; i++)
@@ -786,14 +782,14 @@ public class Print
                 {
                     if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
                     {
-                        width = -1;
+                        width = -(characterHeight * 2 + 1);
                         height++;
                     }
                     else
                     {
                         if (width >= maxWidth)
                         {
-                            width = -1;
+                            width = -(characterHeight * 2 + 1);
                             height++;
                         }
 
@@ -810,7 +806,7 @@ public class Print
                             sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
                         }
                         //else { return; }
-                        width -= characterHeight;
+                        width -= characterHeight * textScale;
                     }
                 }
             }
@@ -842,7 +838,7 @@ public class Print
                             width = 0;
                             height++;
                         }
-                        width += fontSourceRect[ReturnCharacterIndex(statement[i])].Width;
+                        width += characterHeight;
                         if (maxUsedWidth > width)
                         {
                             maxUsedWidth = width;
@@ -877,11 +873,9 @@ public class Print
                         displayPosition.X = (int)(width + (int)origin.X);
                         displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
                         if (true)
-                        {
-                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                        }
+                        { sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth); }
                         //else { return; }
-                        width -= (int)((fontSourceRect[charIndex].Width + 1) * textScale);
+                        width -= ((characterHeight + 1) * textScale);
                     }
                 }
             }

@@ -93,8 +93,8 @@ public class Menu
                 {
                     if (i < 11)
                     {
-                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale)), Irbis.Irbis.buttonList[i].bounds.Y), new Point(200 * Irbis.Irbis.textScale, Irbis.Irbis.textScale), false, true, 0.6f));
-                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(27, 28, 32), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale) + Irbis.Irbis.textScale), Irbis.Irbis.buttonList[i].bounds.Y + Irbis.Irbis.textScale), new Point(200 * Irbis.Irbis.textScale, Irbis.Irbis.textScale), false, true, 0.5f));
+                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale)), Irbis.Irbis.buttonList[i].bounds.Y), new Point(200 * Irbis.Irbis.textScale, Irbis.Irbis.textScale), Irbis.Irbis.screenScale, false, true, 0.1f));
+                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(27, 28, 32), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale) + Irbis.Irbis.textScale), Irbis.Irbis.buttonList[i].bounds.Y + Irbis.Irbis.textScale), new Point(200 * Irbis.Irbis.textScale, Irbis.Irbis.textScale), Irbis.Irbis.screenScale, false, true, 0.09f));
                     }
                 }
 
@@ -217,11 +217,11 @@ public class Menu
                 op46t.Update("vSync");
                 Irbis.Irbis.printList.Add(op46t);
 
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 83), Irbis.Irbis.resolution.Y - (tempLP.Y - 73)), new Point(65, 1), false, true, 0.5f));
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 82), Irbis.Irbis.resolution.Y - (tempLP.Y - 74)), new Point(65, 1), false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 83), Irbis.Irbis.resolution.Y - (tempLP.Y - 73)), new Point(65, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 82), Irbis.Irbis.resolution.Y - (tempLP.Y - 74)), new Point(65, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
 
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 25), Irbis.Irbis.resolution.Y - (tempLP.Y - 73)), new Point(69, 1), false, true, 0.5f));
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 26), Irbis.Irbis.resolution.Y - (tempLP.Y - 74)), new Point(69, 1), false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 25), Irbis.Irbis.resolution.Y - (tempLP.Y - 73)), new Point(69, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 26), Irbis.Irbis.resolution.Y - (tempLP.Y - 74)), new Point(69, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
 
                 if (Irbis.Irbis.graphics.IsFullScreen)
                 {
@@ -760,11 +760,11 @@ public class Menu
                     {
                         switch (Irbis.Irbis.menuSelection)
                         {
-                            case 20: //save
+                            case 22: //save
                                 PlayerSettings.Save(game, @".\content\playerSettings.ini");
                                 game.LoadMenu(1, 0, false);
                                 break;
-                            case 21: //cancel
+                            case 23: //cancel
                                 game.LoadMenu(1, 0, false);
                                 break;
                             default:

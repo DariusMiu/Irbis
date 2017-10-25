@@ -12,6 +12,13 @@ using System.Runtime.CompilerServices;
 
 namespace Irbis
 {
+    public enum Difficulty
+    {
+        Easy = 1,
+        Medium = 2,
+        Hard = 3,
+        Insane = 4,
+    }
     public enum Side
     {
         Top = 0,
@@ -161,7 +168,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.2.0.0";
+        static string versionNo = "0.2.0.6";
         static string versionID = "beta";
         static string versionTy = "debug";
         /// Different version types: 
@@ -567,7 +574,7 @@ namespace Irbis
 
                                                                                                     //player
         public static Player jamie;
-        public static Vector2 initialPos;
+        public static Vector2 initialPos = new Vector2(156, 93);
 
                                                                                                     //onslaught
         public static bool onslaughtMode;
@@ -786,7 +793,6 @@ namespace Irbis
             textInputBuffer = "";
 
             //EventInput.EventInput.Initialize(this.Window);
-            camera = screenSpacePlayerPos = mainCamera = Vector2.Zero;
             foreground = Matrix.Identity;
             background = Matrix.Identity;
             UIground = Matrix.Identity;
@@ -875,12 +881,14 @@ namespace Irbis
 
             menu = new Menu();
 
-            debuginfo = new Print(resolution.X, font2, Color.White, true, new Point(1, 3), Direction.Left, 0.95f);
+            debuginfo = new Print(resolution.X, font2, Color.White, true, new Point(resolution.X, 3), Direction.Left, 0.95f);
             consoleWriteline = new Print(resolution.X, font2, Color.White, true, new Point(1, 5), Direction.Left, 1f);
             developerConsole.Update(resolution.X);
             developerConsole.scrollDown = false;
             consoleMoveTimer = 0f;
             console = false;
+
+            Debug(debug);
 
             printList.Add(debuginfo);
             printList.Add(consoleWriteline);
@@ -1045,7 +1053,6 @@ namespace Irbis
 
         public void LoadLevel(string filename, bool loadUI)
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.LoadLevel"); }
             this.IsMouseVisible = false;
             scene = 11;
             sceneIsMenu = false;
@@ -1064,12 +1071,10 @@ namespace Irbis
             Point[] BackgroundSquares = thisLevel.BackgroundSquares.ToArray();
 
             onslaughtMode = thisLevel.isOnslaught;
-            initialPos = thisLevel.PlayerSpawn;
+            //initialPos = thisLevel.PlayerSpawn;
             enemySpawnPoints = thisLevel.EnemySpawnPoints;
             bossSpawn = thisLevel.BossSpawn;
             bossName = thisLevel.bossName;
-            //bossSpawn = new Vector2(250, 100);
-            //bossName = "lizard";
 
             enemy0Tex = Content.Load<Texture2D>("enemy0");
             Texture2D centerTex = Content.Load<Texture2D>("centerTexture");
@@ -1078,12 +1083,18 @@ namespace Irbis
             {
                 bars = new Bars(Content.Load<Texture2D>("bar health"), Content.Load<Texture2D>("bar shield"), Content.Load<Texture2D>("bar energy"), Content.Load<Texture2D>("bar potion fill 1"), Content.Load<Texture2D>("bar enemy fill"), Content.Load<Texture2D>("shieldBar"), Content.Load<Texture2D>("bars"), Content.Load<Texture2D>("bar enemy"), new[] { Content.Load<Texture2D>("bar potion 1"), Content.Load<Texture2D>("bar potion 2"), Content.Load<Texture2D>("bar potion 3")});
                 if (jamie != null)
-                { jamie.Respawn(initialPos); }
+                {
+                    jamie.Respawn(initialPos);
+                    //camera = screenSpacePlayerPos = mainCamera = (initialPos + halfResolution.ToVector2());
+                }
             }
             else
             {
                 if (jamie != null)
-                { jamie.Respawn(new Vector2(-1000f, -1000f)); }
+                {
+                    jamie.Respawn(new Vector2(-1000f, -1000f));
+                    camera = screenSpacePlayerPos = mainCamera = halfResolution.ToVector2();
+                }
             }
 
             if (onslaughtMode)
@@ -1095,7 +1106,7 @@ namespace Irbis
                 string[] vendingMachineTextures = thisLevel.VendingMachineTextures;
                 for (int i = 0; i < vendingMachineTextures.Length; i++)
                 {
-                    onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i] + new Point(0,52), new Point(64, 64)), Content.Load<Texture2D>(vendingMachineTextures[i]), 0.35f));
+                    onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i], new Point(64, 64)), Content.Load<Texture2D>(vendingMachineTextures[i]), 0.35f));
                 }
 
                 onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.Left, 0.6f);
@@ -1110,20 +1121,45 @@ namespace Irbis
 
             for (int i = 0; i < thisLevel.squareTextures.Count; i++)
             {
-                Texture2D squareTex = Content.Load<Texture2D>(thisLevel.squareTextures[i]);
-                Square tempSquare = new Square(squareTex, squareSpawns[i], screenScale, false, squareDepths[i]);
+                Square tempSquare;
+                if (thisLevel.squareDepths[i] > 0.1f)  //  no collider, is displayed
+                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), squareSpawns[i], screenScale, false, false, thisLevel.squareDepths[i]); }
+                else if(thisLevel.squareDepths[i] > 0) // has collider, is displayed (usually debug)
+                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), squareSpawns[i], screenScale, false, true,  thisLevel.squareDepths[i]); }
+                else                                   // has collider, is not displayed (this is generally used after backgrounds are added)
+                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), squareSpawns[i], screenScale, false, true,  null); }
                 collisionObjects.Add(tempSquare);
                 squareList.Add(tempSquare);
             }
 
+            //{
+            //    Texture2D squareTex = Content.Load<Texture2D>("mountain");
+            //    Square tempSquare = new Square(LoadTexture("mountain"), Color.White, new Point(141, 0), Point.Zero, screenScale, false, true, 1);
+            //    collisionObjects.Add(tempSquare);
+            //    squareList.Add(tempSquare);
+            //}
+
             for (int i = 0; i < thisLevel.backgroundSquareDepths.Count; i++)                                                                                              //backgrounds
             {
                 Texture2D squareTex = Content.Load<Texture2D>(thisLevel.backgroundTextures[i]);
-                Square tempSquare = new Square(squareTex, BackgroundSquares[i], screenScale, true, thisLevel.backgroundSquareDepths[i]);
+                Square tempSquare = new Square(squareTex, BackgroundSquares[i], screenScale, true, false, thisLevel.backgroundSquareDepths[i]);
                 backgroundSquareList.Add(tempSquare);
             }
-
-            mainCamera = camera = halfResolution.ToVector2();
+            //{
+            //    Texture2D squareTex = Content.Load<Texture2D>("cave");
+            //    Square tempSquare = new Square(squareTex, new Point(300, squareTex.Bounds.Height / 2), screenScale, true, 1f);
+            //    backgroundSquareList.Add(tempSquare);
+            //}
+            //{
+            //    Texture2D squareTex = Content.Load<Texture2D>("sky");
+            //    Square tempSquare = new Square(squareTex, new Point(300, squareTex.Bounds.Height / 2), screenScale, true, 0.9f);
+            //    backgroundSquareList.Add(tempSquare);
+            //}
+            //{
+            //    Texture2D squareTex = Content.Load<Texture2D>("dirt");
+            //    Square tempSquare = new Square(squareTex, new Point(300, squareTex.Bounds.Height / 2), screenScale, true, 0.5f);
+            //    backgroundSquareList.Add(tempSquare);
+            //}
 
             if (levelLoaded < 0) //THIS MEANS WE ARE LOADING A LEVEL FOR THE TITLESCREEN
             {
@@ -1138,8 +1174,16 @@ namespace Irbis
                 WriteLine("for a list of all squares, enter: squareList");
             }
 
-            //if (thisLevel.bossName != null && thisLevel.BossSpawn != null)
             SummonBoss(bossName, bossSpawn);
+        }
+
+        public static Texture2D LoadTexture(string TextureFile)
+        {
+            WriteLine(TextureFile);
+            if (string.IsNullOrWhiteSpace(TextureFile))
+            { return game.Content.Load<Texture2D>("defaultTex"); }
+            else
+            { return game.Content.Load<Texture2D>(TextureFile); }
         }
 
 
@@ -1277,31 +1321,23 @@ namespace Irbis
 
         protected void LevelUpdate(GameTime gameTime)
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelUpdate"); }
-            if ((GetKey(Keys.T) && !acceptTextInput) || jamie.health <= 0)                            //RESPAWN
+            if (debug > 0)
             {
-                jamie.Respawn(initialPos);
-
-                foreach (IEnemy e in enemyList)
+                if (GetKeyDown(Keys.N) && !acceptTextInput)
                 {
-                    collisionObjects.Remove(e);
+                    nextFrameTimer = 0f;
+                    framebyframe = true; //nex
                 }
-                enemyList.Clear();
+                else if (framebyframe && GetKey(Keys.N) && !acceptTextInput)
+                {
+                    nextFrameTimer += DeltaTime;
+                }
+                if (keyboardState.IsKeyDown(Keys.G) && !acceptTextInput)
+                {
+                    framebyframe = false; //nex
+                }
             }
 
-            if (GetKeyDown(Keys.N) && !acceptTextInput)
-            {
-                nextFrameTimer = 0f;
-                framebyframe = true; //nex
-            }
-            else if (framebyframe && GetKey(Keys.N) && !acceptTextInput)
-            {
-                nextFrameTimer += DeltaTime;
-            }
-            if (keyboardState.IsKeyDown(Keys.G) && !acceptTextInput)
-            {
-                framebyframe = false; //nex
-            }
             if (!framebyframe || GetKeyDown(Keys.N) || nextFrameTimer > 0.1f) //nex
             {
                 if (framebyframe)
@@ -1313,6 +1349,11 @@ namespace Irbis
 
 
                 jamie.Update();    // multithread this eventually
+                if (jamie.health <= 0)
+                {
+                    PlayerDeath();
+                    LoadLevel(currentLevel, true);
+                }
 
 
 
@@ -1784,7 +1825,6 @@ namespace Irbis
                         break;
                     default:
                         //disable on release
-                        debuginfo.Update("\n\nIrbis " + versionID + " v" + versionNo, true);
                         break;
                 }
             }
@@ -1871,31 +1911,30 @@ namespace Irbis
                     //debuginfo.Update("\nYDistance:" + YDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
                     //debuginfo.Update("\n Distance:" + Distance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
                     //debuginfo.Update("\n Arena side closest:" + SideClosest(((LizardGuy)enemyList[0]).bossArena, Irbis.jamie.Collider));
-                    //debuginfo.Update("\n\n   Lizard Activity:" + ((LizardGuy)enemyList[0]).activity);
+                    debuginfo.Update("\n\n   Lizard Activity:" + ((LizardGuy)enemyList[0]).activity);
+                    debuginfo.Update("\n  melee activities:" + ((LizardGuy)enemyList[0]).meleeActivitiesInARow);
                     //debuginfo.Update("\n  proper direction:" + Directions(((LizardGuy)enemyList[0]).TrueCollider, jamie.Collider));
                     //debuginfo.Update("\n         Direction:" + ((LizardGuy)enemyList[0]).direction);
                     //debuginfo.Update("\n         Animation:" + ((LizardGuy)enemyList[0]).currentAnimation);
+                    //debuginfo.Update("\n             speed:" + ((LizardGuy)enemyList[0]).animationSpeed[((LizardGuy)enemyList[0]).currentAnimation]);
+                    //debuginfo.Update("\n\n ActivelyAttacking:" + ((LizardGuy)enemyList[0]).ActivelyAttacking);
+                    debuginfo.Update("\n     ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
                     //debuginfo.Update("\ntimeSinceLastFrame:" + ((LizardGuy)enemyList[0]).timeSinceLastFrame);
                     //debuginfo.Update("\n            frames:" + ((LizardGuy)enemyList[0]).animationFrames[((LizardGuy)enemyList[0]).currentAnimation]);
-                    //debuginfo.Update("\n             speed:" + ((LizardGuy)enemyList[0]).animationSpeed[((LizardGuy)enemyList[0]).currentAnimation]);
-                    //debuginfo.Update("\ntimeSinceLastFrame:" + ((LizardGuy)enemyList[0]).timeSinceLastFrame);
-                    //debuginfo.Update("\n\n ActivelyAttacking:" + ((LizardGuy)enemyList[0]).ActivelyAttacking);
-                    //debuginfo.Update("\nLizardGuy  ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
-                    //debuginfo.Update("\nLizardGuy       velocity:" + ((LizardGuy)enemyList[0]).Velocity);
-                    //debuginfo.Update("\nLizardGuy      direction:" + ((LizardGuy)enemyList[0]).direction);
-                    debuginfo.Update("\nLizardGuy   stun:" + ((LizardGuy)enemyList[0]).stunned);
-                    debuginfo.Update("\nLizardGuy   roll:" + ((LizardGuy)enemyList[0]).state[1] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[1]);
-                    debuginfo.Update("\nLizardGuy  swipe:" + ((LizardGuy)enemyList[0]).state[2] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[2]);
-                    debuginfo.Update("\nLizardGuy   bury:" + ((LizardGuy)enemyList[0]).state[4] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[4]);
-                    debuginfo.Update("\nLizardGuy emerge:" + ((LizardGuy)enemyList[0]).state[5] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[5]);
-                    debuginfo.Update("\nLizardGuy wander:" + ((LizardGuy)enemyList[0]).state[0] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[0]);
+                    debuginfo.Update("\n          velocity:" + ((LizardGuy)enemyList[0]).Velocity);
+                    debuginfo.Update("\n         direction:" + ((LizardGuy)enemyList[0]).direction);
+                    //debuginfo.Update("\n              stun:" + ((LizardGuy)enemyList[0]).stunned);
+                    debuginfo.Update("\n              roll:" + ((LizardGuy)enemyList[0]).state[1] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[1]);
+                    debuginfo.Update("\n             swipe:" + ((LizardGuy)enemyList[0]).state[2] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[2]);
+                    debuginfo.Update("\n              bury:" + ((LizardGuy)enemyList[0]).state[4] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[4]);
+                    debuginfo.Update("\n            wander:" + ((LizardGuy)enemyList[0]).state[0] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[0]);
                     debuginfo.Update("\n");
                 }
 
 
                 for (int i = 0; i < enemyList.Count; i++)
                 {
-                    debuginfo.Update("\n enemy: " + enemyList[i] + "\nhealth: " + enemyList[i].Health + "\n  stun: " + enemyList[i].StunTime);
+                    debuginfo.Update("\n enemy: " + enemyList[i].GetType() + "\nhealth: " + enemyList[i].Health + "\n  stun: " + enemyList[i].StunTime);
                 }
             }
             //debuginfo.Update("\nDistance  :" + Distance(testRectangle, Irbis.jamie.Collider));
@@ -1910,6 +1949,30 @@ namespace Irbis
             debuginfo.Update("\nmainCamera:" + mainCamera);
             //debuginfo.Update("\n Dp:₯");
 
+        }
+
+        public void Debug(int rank)
+        {
+            //if (debug > 4) { methodLogger.AppendLine("Irbis.Debug"); }
+            debug = rank;
+            if (debug > 0)
+            {
+                this.IsMouseVisible = recordFPS = true;
+                meanFPS = new TotalMeanFramerate(true);
+                maxFPS = double.MinValue;
+                minFPS = double.MaxValue;
+                debuginfo.align = Direction.Left;
+                debuginfo.origin = new Point(3, 3);
+            }
+            else
+            {
+                debuginfo.Update(versionID + " v" + versionNo, true);
+                this.IsMouseVisible = recordFPS = false;
+                foreach (Square s in squareList)
+                { s.color = Color.White; }
+                debuginfo.align = Direction.Right;
+                debuginfo.origin = new Point((resolution.X - 3), 3);
+            }
         }
 
         public static void RemoveFromPrintList(string printStatement)
@@ -2061,7 +2124,7 @@ namespace Irbis
                     {
                         WriteLine("spawning block with defaultTex texture at " + worldSpaceMouseLocation);
                         Texture2D defaultSquareTex = Content.Load<Texture2D>("defaultTex");
-                        Square tempSquare = new Square(defaultSquareTex, worldSpaceMouseLocation, screenScale, false, 0.3f);
+                        Square tempSquare = new Square(defaultSquareTex, worldSpaceMouseLocation, screenScale, false, true, 0.3f);
                         squareList.Add(tempSquare);
                     }
                 }
@@ -2166,7 +2229,7 @@ namespace Irbis
             List<float> backgroundSquareDepths = new List<float>();
             for (int i = 0; i < backgroundSquareList.Count; i++)
             {
-                BackgroundSquares.Add(backgroundSquareList[i].Position.ToPoint());
+                BackgroundSquares.Add(backgroundSquareList[i].initialPosition);
                 backgroundTextures.Add(backgroundSquareList[i].texture.Name);
                 backgroundSquareDepths.Add(backgroundSquareList[i].depth);
             }
@@ -2295,7 +2358,7 @@ namespace Irbis
         /// </summary>
         public static int RandomInt(int maxValue)
         {
-            maxValue++;
+            //maxValue++;
             return RAND.Next(maxValue);
         }
 
@@ -2694,17 +2757,12 @@ namespace Irbis
                     savefile.bestOnslaughtWaveLevel = currentLevel;
                 }
             }
-            else
-            {
-
-            }
+            //else { }
             int loselisttimerindex = savefile.loseList.IndexOf(currentLevel);
             if (loselisttimerindex >= 0)
             {
                 if (timer > savefile.timerLoseList[loselisttimerindex])
-                {
-                    savefile.timerLoseList[loselisttimerindex] = timer;
-                }
+                { savefile.timerLoseList[loselisttimerindex] = timer; }
             }
             else
             {
@@ -2825,7 +2883,6 @@ namespace Irbis
             cameraLerpSpeed = playerSettings.cameraLerpSpeed;
         
             //debug = playerSettings.debug;
-            initialPos = playerSettings.initialPosition;
             minSqrDetectDistance = playerSettings.minSqrDetectDistance;
             cameraShakeSetting = playerSettings.cameraShakeSetting;
             cameraSwingSetting = playerSettings.cameraSwingSetting;
@@ -3163,28 +3220,6 @@ namespace Irbis
             Irbis.WriteLine("saving " + nameoffile + "...");
 
             File.WriteAllText(nameoffile, stringtoexport);
-        }
-
-        public void Debug(int rank)
-        {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.Debug"); }
-            debug = rank;
-            if (debug > 0)
-            {
-                this.IsMouseVisible = recordFPS = true;
-                meanFPS = new TotalMeanFramerate(true);
-                maxFPS = double.MinValue;
-                minFPS = double.MaxValue;
-            }
-            else
-            {
-                this.IsMouseVisible = recordFPS = false;
-                debuginfo.Clear();
-                foreach (Square s in squareList)
-                {
-                    s.color = Color.White;
-                }
-            }
         }
 
         public static void WriteLine(string line)
@@ -4275,7 +4310,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "squarelist":
                         for (int i = 0; i < squareList.Count; i++)
                         {
-                            WriteLine("squareList[" + i + "] position: " + squareList[i].Position + ", collider: " + squareList[i].Collider);
+                            WriteLine("squareList[" + i + "] position:" + squareList[i].Position + " collider:" + squareList[i].Collider + " texture:" + squareList[i].texture + " depth:" + squareList[i].depth);
                         }
                         break;
                     case "addspawn":
@@ -4324,14 +4359,14 @@ Thank you, Ze Frank, for the inspiration.";
                             {
                                 WriteLine("spawning block with defaultTex texture at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
                                 Texture2D defaultSquareTex = Content.Load<Texture2D>("defaultTex");
-                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), screenScale, false, 0.3f);
+                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), screenScale, false, true, 0.3f);
                                 squareList.Add(tempSquare);
                             }
                             else
                             {
                                 WriteLine("spawning block with" + value + " texture at " + new Point((int)(camera.X % 32), (int)(camera.Y % 32)));
                                 Texture2D defaultSquareTex = Content.Load<Texture2D>(value);
-                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X % 32), (int)(camera.Y % 32)), screenScale, false, 0.3f);
+                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X % 32), (int)(camera.Y % 32)), screenScale, false, true, 0.3f);
                                 squareList.Add(tempSquare);
                             }
                         }
@@ -4804,7 +4839,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "printenemies":
                         for (int i = 0; i < enemyList.Count; i++)
                         {
-                            WriteLine("enemyList[" + i + "]:" + enemyList[i] + " Position:" + enemyList[i].Position);
+                            WriteLine("enemyList[" + i + "]:" + enemyList[i] + " Position:" + enemyList[i].Position + " Health:" + enemyList[i].Health + " StunTime:" + enemyList[i].StunTime);
                         }
                         WriteLine();
                         break;

@@ -52,11 +52,16 @@ public class Square : ICollisionObject
     public Color color;
     private float scale;
     public bool useExactPixels;
+    public Point initialPosition;
+    public bool draw = true;
 
-    public Square(Texture2D Texture, Point InitialPosition, float drawDepth)
+    public Square(Texture2D Texture, Point InitialPosition, float? DrawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
-        depth = drawDepth;
+        if (DrawDepth != null)
+        { depth = (float)DrawDepth; }
+        else
+        { draw = false; }
         texture = Texture;
         position = InitialPosition.ToVector2();
         position.X = position.X * 16;
@@ -68,33 +73,40 @@ public class Square : ICollisionObject
         useExactPixels = false;
     }
 
-    public Square(Texture2D Texture, Point InitialPosition, float Scale, bool CenterTextureOnPosition, float DrawDepth)
+    public Square(Texture2D Texture, Point InitialPosition, float Scale, bool CenterTextureOnPosition, bool CreateCollider, float? DrawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
-        depth = DrawDepth;
+        if (DrawDepth != null)
+        { depth = (float)DrawDepth; }
+        else
+        { draw = false; }
+
+        if (CreateCollider)
+        { collider = new Rectangle(InitialPosition, Texture.Bounds.Size); }
+        else
+        { collider = Rectangle.Empty; }
+
         texture = Texture;
         drawTex = true;
         color = Color.White;
         scale = Scale;
-
+        initialPosition = InitialPosition;
         if (CenterTextureOnPosition)
-        {
-            position = ((InitialPosition.ToVector2() - ((texture.Bounds.Size.ToVector2() / 2f))).ToPoint()).ToVector2();
-        }
+        { position = ((InitialPosition.ToVector2() - ((texture.Bounds.Size.ToVector2() / 2f))).ToPoint()).ToVector2(); }
         else
-        {
-            position = InitialPosition.ToVector2();
-        }
-        collider = new Rectangle(InitialPosition, texture.Bounds.Size);
+        { position = InitialPosition.ToVector2(); }
 
-        Irbis.Irbis.WriteLine("InitialPosition:" + InitialPosition + " Position:" + position + " texture.Bounds:" + texture.Bounds + " depth:" + depth);
+        Irbis.Irbis.WriteLine("initialPosition:" + InitialPosition + " position:" + position + " texture:" + texture.Name + " depth:" + depth);
     }
 
-    public Square(Texture2D t, Color drawColor, Point initialPos, Point Size, bool hascollider, bool UseExactPixels, float drawDepth)
+    public Square(Texture2D Texture, Color drawColor, Point initialPos, Point meh, float Scale, bool hascollider, bool UseExactPixels, float? DrawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
-        scale = Irbis.Irbis.screenScale;
-        depth = drawDepth;
+        scale = Scale;
+        if (DrawDepth != null)
+        { depth = (float)DrawDepth; }
+        else
+        { draw = false; }
         position = initialPos.ToVector2();
         color = drawColor;
 
@@ -103,20 +115,23 @@ public class Square : ICollisionObject
 
         useExactPixels = UseExactPixels;
 
-        RenderTarget2D renderTarget = new RenderTarget2D(Irbis.Irbis.game.GraphicsDevice, Size.X, Size.Y);
-        SpriteBatch spriteBatch = new SpriteBatch(Irbis.Irbis.game.GraphicsDevice);
-        Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(renderTarget);
-        Irbis.Irbis.game.GraphicsDevice.Clear(Color.Transparent);
-        spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, Matrix.Identity);
-        spriteBatch.Draw(t, new Rectangle(0, 0, Size.X, Size.Y), Color.White);
-        spriteBatch.End();
-        Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(null);
+        texture = Texture;
 
-        texture = (Texture2D)renderTarget;
+        //RenderTarget2D renderTarget = new RenderTarget2D(Irbis.Irbis.game.GraphicsDevice, Size.X, Size.Y);
+        //SpriteBatch spriteBatch = new SpriteBatch(Irbis.Irbis.game.GraphicsDevice);
+        //Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(renderTarget);
+        //Irbis.Irbis.game.GraphicsDevice.Clear(Color.Transparent);
+        //spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, Matrix.Identity);
+        //spriteBatch.Draw(t, new Rectangle(0, 0, Size.X, Size.Y), Color.White);
+        //spriteBatch.End();
+        //Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(null);
+
+        //texture = (Texture2D)renderTarget;
     }
 
     public void Draw(SpriteBatch sb)
     {
-        sb.Draw(texture, position * scale, null, color, 0f, Vector2.Zero, scale, SpriteEffects.None, depth);
+        if (draw)
+        { sb.Draw(texture, position * scale, null, color, 0f, Vector2.Zero, scale, SpriteEffects.None, depth); }
     }
 }
