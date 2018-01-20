@@ -55,6 +55,12 @@ public class Player
     }
     private string name = "jamie";
 
+    public bool Jumpable
+    {
+        get
+        { return jumpable > 0; }
+    }
+
     private Wall prevWalled;
     Texture2D tex;
     Texture2D shieldTex;
@@ -116,21 +122,22 @@ public class Player
     public float airSpeed;
     public float attackMovementSpeed;
 
-    float jumpTime;
+    public float jumpTime;
     public float jumpTimeMax;
     float timeSinceLastFrame;
-    float idleTime;
+    public float idleTime;
     public float idleTimeMax;
-    float specialTime;
+    public float specialTime;
     float specialIdleTime;
     int currentFrame;
     int currentShieldFrame;
     public bool combat;
 
     public float stunTime;
+    public float floatTime;
 
     public int currentAnimation;
-    int previousAnimation;
+    int prevAnimation;
     public float[] animationSpeed;
     public int[] animationFrames;
     public bool animationNoLoop;
@@ -158,14 +165,18 @@ public class Player
     public bool inputEnabled;                                                                          //use this to turn player control on/off
 
     int climbablePixels;
+    float fallingVelocity;
+    public bool fallableSquare; // is there a square directly below me within /climbablePixels/ ?
 
     //public Vector2 currentLocation;
     public Direction direction;
+    public Direction prevDirection;
     public Direction attackDirection;
 
     public Location location;
     public Activity activity;
-    public Activity previousActivity;
+    public Activity prevActivity;
+    public bool activityChanged;
 
     public float rollTime;
     float rollSpeed;
@@ -187,6 +198,8 @@ public class Player
     public int attackColliderHeight;
 
     public float wallJumpTimer;
+    public float jumpable;
+    public float jumpableMax = 0.05f;   //coyote time
 
     public bool attackImmediately;
     public bool interruptAttack;
@@ -225,45 +238,30 @@ public class Player
 
 
 
-    public Player(Texture2D t, Texture2D t3, PlayerSettings playerSettings, float drawDepth)
+    public Player(Texture2D PlayerTex, Texture2D ShieldTex, PlayerSettings playerSettings, float drawDepth)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Player"); }
         displayRect = new Rectangle((int)position.X, (int)position.Y, 128, 128);
-        
         animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.Left, drawDepth + 0.01f);
-        currentFrame = 0;
-        currentAnimation = 0;
 
         Load(playerSettings);
-
-        baseVelocity = Vector2.Zero;
-
-        stunTime = 0f;
-        isRunning = false;
 
         walled = Wall.Zero;
 
         depth = drawDepth;
         shieldDepth = 0.51f;
 
-        heading = Vector2.Zero;
+        baseVelocity = heading = Vector2.Zero;
         inputEnabled = true;
-        frameInput = false;
-        tex = t;
-        shieldTex = t3;
-        direction = Direction.Right;
-        location = Location.Air;
-        activity = Activity.Idle;
-        prevAttacking = attacking = Attacking.No;
+        tex = PlayerTex;
+        shieldTex = ShieldTex;
 
         attackID = attackIDtracker = 0;
         lastAttackID = -1;
 
-        climbablePixels = 3;
-
-        attackImmediately = false;
-        interruptAttack = false;
-
+        climbablePixels = 2;
+        fallingVelocity = 60f;      //this prevents the falling animation from playing before hitting this vertical velocity. Useful for running down slopes.
+                                    //use ~35 for one pixel slopes, or ~60 for two pixels.
         airSpeed = 0.6f * speed;
         attackMovementSpeed = 0.3f * speed;
         jumpTime = 0;
@@ -276,10 +274,6 @@ public class Player
 
         hurtVelocity = new Vector2(50f, -100f);
         invulnerable = 0f;
-
-        shieldDepleted = false;
-        shielded = false;
-        energyed = false;
 
         potionTime = 0f;
 
@@ -296,7 +290,6 @@ public class Player
         shieldtimeSinceLastFrame = 0f;
 
         collision = true;
-        noclip = false;
 
         shockwaveEffectiveDistanceSquared = (int)(shockwaveEffectiveDistance * shockwaveEffectiveDistance);
 
@@ -310,10 +303,10 @@ public class Player
         prevAttacking = attacking;
         prevWalled = walled;
         input = Point.Zero;
-        frameInput = false;
+        activityChanged = frameInput = false;
 
-        if (!Irbis.Irbis.GetJumpKey && !Irbis.Irbis.GetLeftKey && !Irbis.Irbis.GetRightKey)
-        { wallJumpTimer = 0f; }
+        if ((velocity.X >= 0 && Irbis.Irbis.GetRightKeyUp) || (velocity.X <= 0 && Irbis.Irbis.GetLeftKeyUp) || (Irbis.Irbis.GetRightKeyUp && Irbis.Irbis.GetLeftKeyUp))
+        { wallJumpTimer = 0f; } // this controls wall jump reset
         if (inputEnabled)
         {
             if (Irbis.Irbis.GetLeftKey) //left
@@ -353,15 +346,13 @@ public class Player
                 }
                 else
                 { shieldDepleted = shielded = false; }
-                if (Irbis.Irbis.GetShockwaveKey && energy > maxShield * energyUsableMargin)
-                //shockwave key held
+                if (Irbis.Irbis.GetShockwaveKey && Jumpable) //shockwave key held
                 { superShockwave += Irbis.Irbis.DeltaTime; }
                 else if (superShockwave > 0)
                 //activate shockwave
                 {
-                    Shockwave(this, Irbis.Irbis.enemyList);
+                    Shockwave(Irbis.Irbis.enemyList);
                     interruptAttack = true;
-                    superShockwave = 0; //shockwave was just used, reset to zero
                 }
                 if ((Irbis.Irbis.GetPotionKeyDown) && potions > 0) //potions
                 {
@@ -373,43 +364,9 @@ public class Player
                     potions--;
                     Bars.potionBar.Update(potions);
                 }
-                if (Irbis.Irbis.GetJumpKey)
+                if (Irbis.Irbis.GetJumpKey || Irbis.Irbis.GetUpKey)
                 {
-                    if (wallJumpTimer <= walljumpHoldtime && walled.Bottom <= 0 && walled.Horizontal && (Irbis.Irbis.GetRightKey || Irbis.Irbis.GetLeftKey))
-                    //horizontal input
-                    {
-                        if (walled.Left > 0)
-                        {
-                            velocity.X = speed;
-                            position.X = position.X + 1;
-                            direction = Direction.Right;
-                            input.X = prevInput.X = 1;
-                        }
-                        else if (walled.Right > 0)
-                        {
-                            velocity.X = -speed;
-                            position.X = position.X - 1;
-                            direction = Direction.Left;
-                            input.X = prevInput.X = -1;
-                        }
-                        wallJumpTimer = 1f;
-                        jumpTime += Irbis.Irbis.DeltaTime;
-                        isRunning = true;
-                    }
-                    else if (walled.Top <= 0 && jumpTime < jumpTimeMax)
-                    //normal jump
-                    {
-                        if (jumpTime > 0)
-                        { jumpTime += Irbis.Irbis.DeltaTime; }
-                        else if (walled.Bottom > 0)
-                        {
-                            jumpTime += Irbis.Irbis.DeltaTime;
-                            wallJumpTimer = 1f;
-                        }
-                        wallJumpTimer += Irbis.Irbis.DeltaTime;
-                    }
-                    else //just jumped, reset to zero
-                    { jumpTime = 0; }
+                    input.Y++;
                 }
                 else //just jumped, reset to zero
                 { jumpTime = 0; }
@@ -524,17 +481,28 @@ public class Player
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Movement"); }
 
+        if (walled.Bottom > 0 || fallableSquare)
+        {
+            if (jumpable < 0)
+            { jumpable += Irbis.Irbis.DeltaTime; }
+            else
+            { jumpable = jumpableMax; }
+        }
+        else if (jumpable > -0.05)
+        { jumpable -= Irbis.Irbis.DeltaTime; }
+
+
         if (noclip)
         {
             if (Irbis.Irbis.GetRollKey)
             {
-                velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * ( speed * 0.1f), movementLerpSlowdown * Irbis.Irbis.DeltaTime);
-                velocity.Y = Irbis.Irbis.Lerp(velocity.Y, input.Y * (-speed * 0.1f), movementLerpSlowdown * Irbis.Irbis.DeltaTime);
+                velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * speed, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
+                velocity.Y = Irbis.Irbis.Lerp(velocity.Y, input.Y * -speed, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
             }
             else
             {
-                velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X *  speed, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
-                velocity.Y = Irbis.Irbis.Lerp(velocity.Y, input.Y * -speed, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
+                velocity.X = Irbis.Irbis.Lerp(velocity.X, input.X * (speed * 0.1f), movementLerpSlowdown * Irbis.Irbis.DeltaTime);
+                velocity.Y = Irbis.Irbis.Lerp(velocity.Y, input.Y * (-speed * 0.1f), movementLerpSlowdown * Irbis.Irbis.DeltaTime);
             }
         }
         else
@@ -560,17 +528,19 @@ public class Player
             }
             else if (attacking != Attacking.No)
             {
-                //AttackMovement();
+                //AttackMovement
                 isRunning = false;
-                if (currentFrame <= attackMovementFrames && walled.Bottom > 0)
+                if ((fallableSquare || walled.Bottom > 0) && currentFrame <= attackMovementFrames)
                 {
                     if (direction == Direction.Right)
                     {
                         velocity.X = Irbis.Irbis.Lerp(velocity.X, attackMovementSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
+                        input.X = 1;
                     }
                     else if (direction == Direction.Left)
                     {
                         velocity.X = Irbis.Irbis.Lerp(velocity.X, -attackMovementSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
+                        input.X = -1;
                     }
                     debugspeed = attackMovementSpeed;
                 }
@@ -585,19 +555,21 @@ public class Player
                     debugspeed = 0f;
                 }
 
-                if (walled.Bottom > 0 && (walled.Left + walled.Right + walled.Top <= 0) && ((direction == Direction.Left && collided.LeftmostBottomCollision > collider.Left) || (direction == Direction.Right && collided.RightmostBottomCollision < collider.Right)))
-                {
-                    velocity.X = 0;
-                }
+                if (!fallableSquare && walled.Bottom > 0 && ((direction == Direction.Left && collided.LeftmostBottomCollision > collider.Left) || (direction == Direction.Right && collided.RightmostBottomCollision < collider.Right)))
+                { velocity.X = 0; }
+
+                if (input.Y > 0 && walled.Top <= 0 && jumpTime < jumpTimeMax && jumpTime > 0)
+                //normal jump
+                { jumpTime += Irbis.Irbis.DeltaTime; }
+                else //just jumped, reset to zero
+                { jumpTime = 0; }
             }
             else
             {
                 if (input.X != 0)
                 {
                     if (walled.Bottom > 0)                                                                   //movement
-                    {
-                        isRunning = true;
-                    }
+                    { isRunning = true; }
                     else if (!isRunning)
                     {
                         if ((input.X > 0 && velocity.X < 0) || (input.X < 0 && velocity.X > 0))
@@ -639,6 +611,47 @@ public class Player
                     }
                     isRunning = false;
                 }
+                if (input.Y > 0)
+                {
+                    if (wallJumpTimer <= walljumpHoldtime && walled.Bottom <= 0 && walled.Horizontal && (Irbis.Irbis.GetRightKey || Irbis.Irbis.GetLeftKey))
+                    //horizontal input
+                    {
+                        if (walled.Left > 0)
+                        {
+                            velocity.X = speed;
+                            position.X = position.X + 1;
+                            direction = Direction.Right;
+                            input.X = prevInput.X = 1;
+                        }
+                        else if (walled.Right > 0)
+                        {
+                            velocity.X = -speed;
+                            position.X = position.X - 1;
+                            direction = Direction.Left;
+                            input.X = prevInput.X = -1;
+                        }
+                        wallJumpTimer = 1f;
+                        jumpTime += Irbis.Irbis.DeltaTime;
+                        isRunning = true;
+                    }
+                    else if (walled.Top <= 0 && jumpTime < jumpTimeMax)
+                    //normal jump
+                    {
+                        if (jumpTime > 0)
+                        { jumpTime += Irbis.Irbis.DeltaTime; }
+                        else if (Jumpable)
+                        {
+                            jumpTime += Irbis.Irbis.DeltaTime;
+                            jumpable = 0;
+                            //wallJumpTimer = 1f;
+                        }
+                        wallJumpTimer += Irbis.Irbis.DeltaTime;
+                    }
+                    else //just jumped, reset to zero
+                    { jumpTime = 0; }
+                }
+                else //just jumped, reset to zero
+                { jumpTime = 0; }
             }
 
             ///if (Math.Abs(velocity.X) <= 0.000001f)
@@ -685,7 +698,7 @@ public class Player
 
             if (walled.Bottom > 0)
             { baseVelocity = collided.bottomCollided[0].Velocity; }
-            else if (walled.Bottom <= 0)
+            else //if (walled.Bottom <= 0)
             {
                 if (walled.Left > 0 && walled.Right <= 0)
                 { baseVelocity = collided.leftCollided[0].Velocity; }
@@ -720,32 +733,37 @@ public class Player
             currentFrame++;
             timeSinceLastFrame -= animationSpeed[currentAnimation];
         }
+        if (activity == Activity.Idle)
+        {
+            idleTime += Irbis.Irbis.DeltaTime;
+            specialTime += Irbis.Irbis.DeltaTime;
+        }
 
         if (attacking != Attacking.No)
         {
-            activity = Activity.Attacking;
+            SetActivity(Activity.Attacking);
         }
         else
         {
             if (input != Point.Zero)
             {
-                idleTime = 0;
+                specialTime = idleTime = 0;
                 if (input.X != 0)
                 {
                     if (walled.Bottom > 0)
                     {
-                        activity = Activity.Running;
+                        SetActivity(Activity.Running);
                     }
                     else
                     {
                         if (jumpTime > 0)
                         {
-                            activity = Activity.Jumping;
+                            SetActivity(Activity.Jumping);
                             //jumping
                         }
                         else if (velocity.Y > 0 || activity != Activity.Jumping)
                         {
-                            activity = Activity.Falling;
+                            SetActivity(Activity.Falling);
                             //falling
                         }
                     }
@@ -756,19 +774,19 @@ public class Player
                     {
                         if (jumpTime > 0)
                         {
-                            activity = Activity.Jumping;
+                            SetActivity(Activity.Jumping);
                             //jumping
                         }
                         else if (velocity.Y > 0 || activity != Activity.Jumping)
                         {
-                            activity = Activity.Falling;
+                            SetActivity(Activity.Falling);
                             //falling
                         }
                     }
-                    else
-                    {
-                        //nothing, yet
-                    }
+                    else if (prevWalled.Bottom <= 0)
+                    { SetActivity(Activity.Landing); }
+                    else if (activity != Activity.Landing && activity != Activity.Idle)
+                    { SetActivity(Activity.Idle); }
                 }
             }
             else
@@ -777,34 +795,24 @@ public class Player
                 {
                     if (jumpTime > 0)
                     {
-                        activity = Activity.Jumping;
+                        SetActivity(Activity.Jumping);
                         //jumping
                     }
                     else if (velocity.Y > 0 || activity != Activity.Jumping)
                     {
-                        activity = Activity.Falling;
+                        SetActivity(Activity.Falling);
                         //falling
                     }
                 }
                 else if (prevWalled.Bottom <= 0)
-                {
-                    activity = Activity.Landing;
-                }
-                else if (activity != Activity.Landing)
-                {
-                    activity = Activity.Idle;
-                }
+                { SetActivity(Activity.Landing); }
+                else if (activity != Activity.Landing && activity != Activity.Idle)
+                { SetActivity(Activity.Idle); }
             }
             if (rollTime > 0)
             {
-                activity = Activity.Rolling;
+                SetActivity(Activity.Rolling);
             }
-        }
-
-        if (activity == Activity.Idle)
-        {
-            idleTime += Irbis.Irbis.DeltaTime;
-            specialTime += Irbis.Irbis.DeltaTime;
         }
 
         if (currentFrame > animationFrames[currentAnimation])
@@ -821,8 +829,20 @@ public class Player
                     attacking = Attacking.No;
                     attackCollider = Rectangle.Empty;
                 }
+                SetAnimation();
             }
-            if (animationNoLoop)
+            else if (direction != Direction.Forward && specialTime >= specialIdleTime)
+            {
+                if (idleTime >= idleTimeMax && idleTimeMax > 0)
+                {
+                    idleTime -= idleTimeMax;
+                    direction = Direction.Forward;
+                    SetAnimation(0, true);
+                }
+                else
+                { SetAnimation(); }
+            }
+            else if (animationNoLoop)
             {
                 switch (currentAnimation)
                 {
@@ -833,7 +853,7 @@ public class Player
                         goto case 16;
                     case 16:
                         SetAnimation(3, false);
-                        activity = Activity.Idle;
+                        SetActivity(Activity.Idle);
                         break;
                     default:
                         SetAnimation();
@@ -841,16 +861,14 @@ public class Player
                 }
             }
             else
-            {
-                SetAnimation();
-            }
+            { currentFrame = 0; }
         }
-        else if (previousActivity != activity)
-        {
-            SetAnimation();
-        }
+        else if (prevActivity == Activity.Running && activity == Activity.Falling && velocity.Y > fallingVelocity)
+        { SetAnimation(); }
+        else if (activityChanged || direction != prevDirection)
+        { SetAnimation(); }
 
-        if (previousAnimation != currentAnimation)
+        if (prevAnimation != currentAnimation)
         {
             timeSinceLastFrame = 0;
             currentFrame = 0;
@@ -882,8 +900,8 @@ public class Player
             shieldtimeSinceLastFrame = 0;
             renderColor = normalColor;
         }
-        previousAnimation = currentAnimation;
-        previousActivity = activity;
+        prevDirection = direction;
+        prevAnimation = currentAnimation;
     }
 
     public void SetAnimation()
@@ -891,43 +909,21 @@ public class Player
         switch (activity)
         {
             case Activity.Idle:
-                if (direction == Direction.Forward)
-                {
-                    if (idleTime >= idleTimeMax && idleTimeMax > 0)
-                    {
-                        idleTime = 0;
-                        SetAnimation(1, false);
-                    }
-                    else
-                    { SetAnimation(1, false); }
-                }
+                if (direction != Direction.Forward && specialTime < specialIdleTime)
+                { SetAnimation(3, false); }
                 else
-                {
-                    if (idleTime >= idleTimeMax && idleTimeMax > 0)
+                {   //currentAnimation = 3;
+                    specialTime -= specialIdleTime;
+                    switch (Irbis.Irbis.RandomInt(2))
                     {
-                        idleTime -= idleTimeMax;
-                        SetAnimation(0, true);
-                        direction = Direction.Forward;
+                        case 1:
+                            SetAnimation(7, true);
+                            break;
+                        default:
+                            SetAnimation(5, true);
+                            break;
                     }
-                    else if (specialTime >= specialIdleTime)
-                    {
-                        //currentAnimation = 3;
-                        specialTime -= specialIdleTime;
-                        switch (Irbis.Irbis.RandomInt(2))
-                        {
-                            case 1:
-                                SetAnimation(7, true);
-                                break;
-                            default:
-                                SetAnimation(5, true);
-                                break;
-                        }
-                    }
-                    else
-                    { SetAnimation(3, false); }
                 }
-                if (frameInput || combat)
-                { idleTime = 0; }
                 //else
                 //{ /*idleTime += Irbis.Irbis.DeltaTime;*/ }
 
@@ -939,7 +935,10 @@ public class Player
                 SetAnimation(11, false);
                 break;
             case Activity.Falling:
-                SetAnimation(13, false);
+                if (prevActivity == Activity.Running && velocity.Y < fallingVelocity)
+                { }
+                else
+                { SetAnimation(13, false); }
                 break;
             case Activity.Landing:
                 SetAnimation(15, true);
@@ -975,12 +974,25 @@ public class Player
 
     public void SetAnimation(int animation, bool noLoop)
     {
-        currentAnimation = animation;
-        currentFrame = 0;
-        nextAnimation = -1;
+        if ((direction == Direction.Right && currentAnimation != animation+1) || (direction == Direction.Left && currentAnimation != animation) || direction == Direction.Forward)
+        {
+            currentAnimation = animation;
+            currentFrame = 0;
+            nextAnimation = -1;
+            if (direction == Direction.Right)
+            { currentAnimation++; }
+        }
         animationNoLoop = noLoop;
-        if (direction == Direction.Right)
-        { currentAnimation++; }
+    }
+
+    public void SetActivity(Activity activityToSet)
+    {
+        if (activity != activityToSet)
+        {
+            prevActivity = activity;
+            activity = activityToSet;
+            activityChanged = true;
+        }
     }
 
     public void WalljumpDebug(int variableYo)
@@ -1016,9 +1028,13 @@ public class Player
         amountToMove = negAmountToMove = Vector2.Zero;
         testCollider.Width = colliderSize.X;
         testCollider.Height = colliderSize.Y;
+        fallableSquare = false;
 
         foreach (ICollisionObject s in colliderList)
         {
+            if (!fallableSquare)
+            { fallableSquare = IsSquareFallable(s.Collider); }
+
             if (s.Collider != Rectangle.Empty && s.Collider != this.collider && Irbis.Irbis.DistanceSquared(collider, s.Collider) <= 0)
             {
                 collidedContains = collided.Contains(s);
@@ -1073,25 +1089,25 @@ public class Player
             }
         }
 
-        if (walled.Left == 1 && input.X < 0)
+        if (walled.Left == 1 && (velocity.X < -0.0001f || input.X < 0))
         {
             int climbamount = (collider.Bottom - collided.leftCollided[0].Collider.Top);
-            if ((climbamount) <= climbablePixels)
+            if (climbamount <= climbablePixels)
             {
                 position.Y -= climbamount;
-                //position.X -= 1;
                 amountToMove = negAmountToMove = Vector2.Zero;
+                floatTime = 0.05f;  //turn off gravity for this long
                 Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels. Timer:" + Irbis.Irbis.Timer);
             }
         }
-        if (walled.Right == 1 && input.X > 0)
+        if (walled.Right == 1 && (velocity.X > 0.0001f || input.X > 0))
         {
             int climbamount = (collider.Bottom - collided.rightCollided[0].Collider.Top);
-            if ((climbamount) <= climbablePixels)
+            if (climbamount <= climbablePixels)
             {
                 position.Y -= climbamount;
-                //position.X += 1;
                 amountToMove = negAmountToMove = Vector2.Zero;
+                floatTime = 0.05f;  //turn off gravity for this long
                 Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels. Timer:" + Irbis.Irbis.Timer);
             }
         }
@@ -1222,13 +1238,15 @@ public class Player
             position.X = (int)Math.Round((double)position.X);
         }
 
-        if (walled.Bottom <= 0 && jumpTime <= 0)
+        if (floatTime <= 0 && walled.Bottom <= 0 && jumpTime <= 0)
         {
-            if (attacking != Attacking.No)
+            if (attacking != Attacking.No && velocity.Y > 0)
             { velocity.Y += (Irbis.Irbis.gravity / 2) * mass * Irbis.Irbis.DeltaTime; }
             else
             { velocity.Y += Irbis.Irbis.gravity * mass * Irbis.Irbis.DeltaTime; }
         }
+        else
+        { floatTime -= Irbis.Irbis.DeltaTime; }
     }
 
     public bool RemoveCollision(ICollisionObject collisionObject)
@@ -1242,6 +1260,15 @@ public class Player
         if (collided.Remove(collisionObject, Side.Top   ))
         { walled.Top--; }
         return true;
+    }
+
+    /// <summary>
+    /// returns true if the square is not touching the collider, is within /climbablePixels/ and is within 1 pixel (left and right) of the collider
+    /// </summary>
+    public bool IsSquareFallable(Rectangle testrect)
+    {
+        return (testrect.Left < collider.Right && testrect.Right > collider.Left
+            && testrect.Top - collider.Bottom > 0 && testrect.Top - collider.Bottom <= climbablePixels);
     }
 
     /// <summary>
@@ -1325,26 +1352,28 @@ public class Player
         }
     }
 
-    public void Shockwave(Player player, List<IEnemy> enemyList)
+    public void Shockwave(List<IEnemy> enemyList)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Shockwave"); }
         //energyed = true;
         //activate shockwave animation
         //stun for duration of animation
-        Stun(0.25f);        //the time it takes to "cast" shockwave
-        if (superShockwave < superShockwaveHoldtime)
+        if (energy >= maxEnergy * energyUsableMargin)
         {
-            energy -= 30;
-            Irbis.Irbis.CameraShake(0.1f, 5f);
-            OnPlayerShockwave(collider.Center, shockwaveEffectiveDistanceSquared, (int)shockwaveEffectiveDistance, 1);
+            Stun(0.25f);        //the time it takes to "cast" shockwave
+            if (superShockwave < superShockwaveHoldtime)
+            {
+                energy -= 30;
+                Irbis.Irbis.CameraShake(0.1f, 5f);
+                OnPlayerShockwave(collider.Center, shockwaveEffectiveDistanceSquared, (int)shockwaveEffectiveDistance, 1);
+            }
+            else
+            {
+                energy -= 50;
+                Irbis.Irbis.CameraShake(0.15f, 10f);
+                OnPlayerShockwave(collider.Center, shockwaveEffectiveDistanceSquared, (int)shockwaveEffectiveDistance, 2);
+            }
         }
-        else
-        {
-            energy -= 50;
-            Irbis.Irbis.CameraShake(0.15f, 10f);
-            OnPlayerShockwave(collider.Center, shockwaveEffectiveDistanceSquared, (int)shockwaveEffectiveDistance, 2);
-        }
-        superShockwave = 0;
+        superShockwave = 0; //shockwave was just pressed, reset to zero
     }
 
     public void ClearCollision()
@@ -1488,12 +1517,12 @@ public class Player
             case 3:
                 goto case 2;
             case 2:
-                goto case 1;
-            case 1:
                 if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, true); }
                 RectangleBorder.Draw(sb, collider, Color.Magenta, true);
                 animationFrame.Update(currentFrame.ToString(), true);
                 animationFrame.Draw(sb, ((position + (colliderOffset - new Point(24)).ToVector2()) * Irbis.Irbis.screenScale).ToPoint());
+                goto case 1;
+            case 1:
                 goto default;
             default:
                 sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, renderColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);

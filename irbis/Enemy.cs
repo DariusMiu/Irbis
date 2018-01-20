@@ -1311,10 +1311,10 @@ public class Enemy : IEnemy
             case 2:
                 animationFrame.Update(currentFrame.ToString(), true);
                 animationFrame.Draw(sb, (position * Irbis.Irbis.screenScale).ToPoint());
-                goto case 1;
-            case 1:
                 if (attackCollider != Rectangle.Empty) { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, depth + 0.001f); }
                 RectangleBorder.Draw(sb, collider, Color.Magenta, true);
+                goto case 1;
+            case 1:
                 goto default;
             default:
                 sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);

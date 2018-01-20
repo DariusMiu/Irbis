@@ -1781,9 +1781,9 @@ class LizardGuy : IEnemy
             case 2:
                 animationFrame.Update(currentFrame.ToString(), true);
                 animationFrame.Draw(sb, ((position + (colliderOffset - new Point(24)).ToVector2()) * Irbis.Irbis.screenScale).ToPoint());
+                RectangleBorder.Draw(sb, collider, Color.Magenta, true);
                 goto case 1;
             case 1:
-                RectangleBorder.Draw(sb, collider, Color.Magenta, true);
                 goto default;
             default:
                 if (state[4] == 5)

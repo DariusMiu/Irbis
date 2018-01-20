@@ -16,13 +16,15 @@ namespace Irbis
             try
             {
                 using (var game = new Irbis())
-                    game.Run();
+                { game.Run(); }
+            }
+            catch (Exception e)
+            {
+                Irbis.WriteLine("Exception: " + e.Message);
+                Console.WriteLine("Exception:", e.Message);
             }
             finally
-            {
-                if (Irbis.Crash)
-                    Irbis.ExportConsole();
-            }
+            { if (Irbis.Crash) { Irbis.ExportConsole(); } }
         }
     }
 }

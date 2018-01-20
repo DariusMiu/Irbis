@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCompany("Liquid Nitrogen")]
-[assembly: AssemblyCopyright("Copyright © Liquid Nitrogen 2017")]
+[assembly: AssemblyCopyright("Copyright © Liquid Nitrogen 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,5 +33,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.2.0.6")]
-[assembly: AssemblyFileVersion("0.2.0.6")]
+[assembly: AssemblyVersion(Irbis.Irbis.versionNo)]
+[assembly: AssemblyFileVersion(Irbis.Irbis.versionNo)]

@@ -36,6 +36,7 @@ public struct PlayerSettings
     public float[] animationSpeed;
     public int[] animationFrames;
     public int[] characterWidth;
+    public float analogCutoff;
     public float shieldAnimationSpeed;
     public float superShockwaveHoldtime;
     public float walljumpHoldtime;
@@ -56,32 +57,44 @@ public struct PlayerSettings
     public float musicLevel;
     public float soundEffectsLevel;
     public Keys attackKey;
-    public Keys altAttackKey;
     public Keys shockwaveKey;
-    public Keys altShockwaveKey;
     public Keys shieldKey;
-    public Keys altShieldKey;
     public Keys jumpKey;
-    public Keys altJumpKey;
     public Keys upKey;
-    public Keys altUpKey;
     public Keys downKey;
-    public Keys altDownKey;
     public Keys leftKey;
-    public Keys altLeftKey;
     public Keys rightKey;
-    public Keys altRightKey;
     public Keys rollKey;
-    public Keys altRollKey;
     public Keys potionKey;
-    public Keys altPotionKey;
     public Keys useKey;
+    public Keys altAttackKey;
+    public Keys altShockwaveKey;
+    public Keys altShieldKey;
+    public Keys altJumpKey;
+    public Keys altUpKey;
+    public Keys altDownKey;
+    public Keys altLeftKey;
+    public Keys altRightKey;
+    public Keys altRollKey;
+    public Keys altPotionKey;
     public Keys altUseKey;
+    public Buttons GPattackKey;
+    public Buttons GPshockwaveKey;
+    public Buttons GPshieldKey;
+    public Buttons GPjumpKey;
+    public Buttons GPupKey;
+    public Buttons GPdownKey;
+    public Buttons GPleftKey;
+    public Buttons GPrightKey;
+    public Buttons GProllKey;
+    public Buttons GPpotionKey;
+    public Buttons GPuseKey;
     public int characterHeight;
     public int debug;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
-    static int numberOfVariables = 71;
+    const int numberOfVariables = 83;
+
 
     public PlayerSettings(bool useDefaults)
 	{
@@ -118,6 +131,19 @@ public struct PlayerSettings
             altPotionKey = Keys.F;
             useKey = Keys.R;
             altUseKey = Keys.R;
+
+            GPattackKey = Buttons.RightTrigger;
+            GPshockwaveKey = Buttons.RightShoulder;
+            GPshieldKey = Buttons.LeftTrigger;
+            GPjumpKey = Buttons.A;
+            GPupKey = Buttons.DPadUp;
+            GPdownKey = Buttons.DPadDown;
+            GPleftKey = Buttons.DPadLeft;
+            GPrightKey = Buttons.DPadRight;
+            GProllKey = Buttons.X;
+            GPpotionKey = Buttons.B;
+            GPuseKey = Buttons.Y;
+
 
             //CAMERA SETTINGS
             //The camera will move when the player leaves this area on the screen
@@ -168,6 +194,9 @@ public struct PlayerSettings
 
 
             //MISC SETTINGS
+            //How far does the thumbstick need to be moved before input is registered?
+            analogCutoff = 0.1f;
+
             //How accurate is the timer (digits after the seconds' decimal)
             timerAccuracy = "00.00";
 
@@ -356,6 +385,19 @@ public struct PlayerSettings
             useKey = Keys.R;
             altUseKey = Keys.R;
 
+            GPattackKey = Buttons.RightTrigger;
+            GPshockwaveKey = Buttons.RightShoulder;
+            GPshieldKey = Buttons.LeftTrigger;
+            GPjumpKey = Buttons.A;
+            GPupKey = Buttons.DPadUp;
+            GPdownKey = Buttons.DPadDown;
+            GPleftKey = Buttons.DPadLeft;
+            GPrightKey = Buttons.DPadRight;
+            GProllKey = Buttons.X;
+            GPpotionKey = Buttons.B;
+            GPuseKey = Buttons.Y;
+
+
             //CAMERA SETTINGS
             //The camera will move when the player leaves this area on the screen
             //{int X location, int Y location, int Width, int Height}
@@ -405,6 +447,9 @@ public struct PlayerSettings
 
 
             //MISC SETTINGS
+            //How far does the thumbstick need to be moved before input is registered?
+            analogCutoff = 0f;
+
             //How accurate is the timer (digits after the seconds' decimal)
             timerAccuracy = "00.";
 
@@ -510,182 +555,18 @@ public struct PlayerSettings
 
     public PlayerSettings(PlayerSettings settings)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.PlayerSettings"); }
-        //lines beginning with ; are ignored
-        //delete this file and relaunch to return everything to defaults
-
-        //key binds
-        //a list of all available keys can be found here:
-        // https://msdn.microsoft.com/en-us/library/microsoft.xna.framework.input.keys.aspx
-        attackKey = settings.attackKey;
-        altAttackKey = settings.altAttackKey;
-        shockwaveKey = settings.shockwaveKey;
-        altShockwaveKey = settings.altShockwaveKey;
-        shieldKey = settings.shieldKey;
-        altShieldKey = settings.altShieldKey;
-        jumpKey = settings.jumpKey;
-        altJumpKey = settings.altJumpKey;
-        upKey = settings.upKey;
-        altUpKey = settings.altUpKey;
-        downKey = settings.downKey;
-        altDownKey = settings.altDownKey;
-        leftKey = settings.leftKey;
-        altLeftKey = settings.altLeftKey;
-        rightKey = settings.rightKey;
-        altRightKey = settings.altRightKey;
-        rollKey = settings.rollKey;
-        altRollKey = settings.altRollKey;
-        potionKey = settings.potionKey;
-        altPotionKey = settings.altPotionKey;
-        useKey = settings.useKey;
-        altUseKey = settings.altUseKey;
-
-        //SETTINGS
-        //CAMERA SETTINGS
-        //The camera will move when the player leaves this area on the screen
-        //{int X location, int Y location, int Width, int Height}
-        //where location refers to the center of the rectangle
-        boundingBox = settings.boundingBox;
-
-        //Do you want the camera to smoothly trail the player?
-        cameraLerpSetting = settings.cameraLerpSetting;
-
-        //How fast should the camera lerp?
-        cameraLerpSpeed = settings.cameraLerpSpeed;
-
-        //Turn off camera "swing" (the motion the camera makes when you attack and miss)
-        cameraSwingSetting = settings.cameraSwingSetting;
-
-        //How far should the camera swing?
-        swingMagnitude = settings.swingMagnitude;
-
-        //How long should that swing take (this is the time it takes to travel the above pixels,
-        //the time it takes to return to the normal camera position is double this number) (seconds)
-        swingDuration = settings.swingDuration;
-
-        //Turn off camera shake
-        cameraShakeSetting = settings.cameraShakeSetting;
-
-
-        //VIDEO SETTINGS
-        //toggles windowed/fullscreen mode
-        fullscreen = settings.fullscreen;
-
-        //the screenScale of the window
-        screenScale = settings.screenScale;
-
-        //how much will be drawn
-        resolution = settings.resolution;
-        //the actual size of the window is a combination of resolution and scale
-        //for example, a 960x540 resolution at 2x scale gives you a 1920x1080window
-        //with each in-game pixel using 2x2 pixels on your screen
-
-        vSync = settings.vSync;
-
-
-        //AUDIO SETTINGS
-        masterAudioLevel = settings.masterAudioLevel;
-        musicLevel = settings.musicLevel;
-        soundEffectsLevel = settings.soundEffectsLevel;
-
-
-        //MISC SETTINGS
-        //How accurate is the timer (digits after the seconds' decimal)
-        timerAccuracy = settings.timerAccuracy;
-
-        //how long before the player is considered idle (seconds)
-        idleTimeMax = settings.idleTimeMax;
-
-        //This is the time it takes to "charge" the super shockwave (seconds)
-        //Basically, how long you have to hold the shockwaveKey to use
-        superShockwaveHoldtime = settings.superShockwaveHoldtime;
-
-        //The amount of time the player can hold down the left or right movement key
-        //during a wall jump before they drift away from the wall (seconds)
-        walljumpHoldtime = settings.walljumpHoldtime;
-
-        //minimum distance(squared) for an enemy health bar to appear(bosses override this)
-        minSqrDetectDistance = settings.minSqrDetectDistance;
-
-
-        //CHEATS
-        //self-explanatory
-        attack1Damage = settings.attack1Damage;
-        attack2Damage = settings.attack2Damage;
-
-        //run&jump speed
-        speed = settings.speed;
-        //The maximum speed you can travel in any given direction
-        terminalVelocity = settings.terminalVelocity;
-        //how long your jumps will maintain jump velocity (seconds)
-        jumpTimeMax = settings.jumpTimeMax;
-
-        //highly unrecommended to not mess with these unless you really know what you're doing
-        //collider size and placement relative to the 128x128 player sprite
-        colliderOffset = settings.colliderOffset;
-        colliderSize = settings.colliderSize;
-
-        //this is the size of the rectangle used as the main attack hitbox
-        attackColliderWidth = settings.attackColliderWidth;
-        attackColliderHeight = settings.attackColliderHeight;
-
-        //self-explanatory
-        maxHealth = settings.maxHealth;
-        maxShield = settings.maxShield;
-        maxEnergy = settings.maxEnergy;
-
-        //distance at which shockwave has no power
-        shockwaveEffectiveDistance = settings.shockwaveEffectiveDistance;
-        //shockwave multipliers
-        shockwaveStunTime = settings.shockwaveStunTime;
-        shockwaveKnockback = settings.shockwaveKnockback;
-
-        //this how the player won't take damage after previously taking damage (seconds)
-        invulnerableMaxTime = settings.invulnerableMaxTime;
-
-        //self-explanatory (per second)
-        shieldRechargeRate = settings.shieldRechargeRate;
-        energyRechargeRate = settings.energyRechargeRate;
-        healthRechargeRate = settings.healthRechargeRate;
-        potionRechargeRate = settings.potionRechargeRate;
-        potionRechargeTime = settings.potionRechargeTime;
-        maxNumberOfPotions = settings.maxNumberOfPotions;
-
-
-        //this is the percentage of the damage absorbed by the shield that is converted back into health
-        //0.25 means 25% of damage absorbed by the shield is converted to health (if 20 damage is absorbed, 5 damage is healed)
-        shieldHealingPercentage = settings.shieldHealingPercentage;
-
-        //how full the energy bar has to be before allowing you to use (95f == 95%)
-        energyUsableMargin = settings.energyUsableMargin;
-        
-        //ANIMATION SETTINGS
-        //the amount of time that is allowed to pass before the animator displays the next frame (seconds)
-        //(for each animation listed below)
-        animationSpeed = settings.animationSpeed;
-
-        // 0 is 1 frame, 1 is 2 frames, etc
-        //the number of frames in each animation, only edit this if you are remaking the default spritesheet
-        animationFrames = settings.animationFrames;
-
-        //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)
-        //NOTE: there is no variable for the number of frames in the shield animation, as the shield animator
-        //uses the width of the shield sprite to determine when to loop.
-        shieldAnimationSpeed = settings.shieldAnimationSpeed;
-
-        //FONT SETTINGS
-        //the height of each character in the font spritesheet (pixels)
-        characterHeight = settings.characterHeight;
-        //the width of each character in the font spritesheet (pixels)
-        characterWidth = settings.characterWidth;
-
-        //DEBUG MODE
-        debug = settings.debug;
+        this = settings;
     }
 
-    public static void Save(PlayerSettings settings, string filename)
+    public PlayerSettings(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Save"); }
+        this = new PlayerSettings(true);
+        this.Load(filename);
+    }
+
+    public void Save(string filename)
+    {
+        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSave"); }
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         StreamWriter writer = new StreamWriter(filename);
 
@@ -701,38 +582,52 @@ public struct PlayerSettings
         writer.WriteLine(";KEY BINDS");
         writer.WriteLine(";a list of all available keys can be found here:");
         writer.WriteLine("; https://msdn.microsoft.com/en-us/library/microsoft.xna.framework.input.keys.aspx");
-        writer.WriteLine("attackKey=" + settings.attackKey);
-        writer.WriteLine("altAttackKey=" + settings.altAttackKey);
+        writer.WriteLine("attackKey=" + attackKey);
+        writer.WriteLine("altAttackKey=" + altAttackKey);
         writer.WriteLine("");
-        writer.WriteLine("shockwaveKey=" + settings.shockwaveKey);
-        writer.WriteLine("altShockwaveKey=" + settings.altShockwaveKey);
+        writer.WriteLine("shockwaveKey=" + shockwaveKey);
+        writer.WriteLine("altShockwaveKey=" + altShockwaveKey);
         writer.WriteLine("");
-        writer.WriteLine("shieldKey=" + settings.shieldKey);
-        writer.WriteLine("altShieldKey=" + settings.altShieldKey);
+        writer.WriteLine("shieldKey=" + shieldKey);
+        writer.WriteLine("altShieldKey=" + altShieldKey);
         writer.WriteLine("");
-        writer.WriteLine("jumpKey=" + settings.jumpKey);
-        writer.WriteLine("altJumpKey=" + settings.altJumpKey);
+        writer.WriteLine("jumpKey=" + jumpKey);
+        writer.WriteLine("altJumpKey=" + altJumpKey);
         writer.WriteLine("");
-        writer.WriteLine("upKey=" + settings.upKey);
-        writer.WriteLine("altUpKey=" + settings.altUpKey);
+        writer.WriteLine("upKey=" + upKey);
+        writer.WriteLine("altUpKey=" + altUpKey);
         writer.WriteLine("");
-        writer.WriteLine("downKey=" + settings.downKey);
-        writer.WriteLine("altDownKey=" + settings.altDownKey);
+        writer.WriteLine("downKey=" + downKey);
+        writer.WriteLine("altDownKey=" + altDownKey);
         writer.WriteLine("");
-        writer.WriteLine("leftKey=" + settings.leftKey);
-        writer.WriteLine("altLeftKey=" + settings.altLeftKey);
+        writer.WriteLine("leftKey=" + leftKey);
+        writer.WriteLine("altLeftKey=" + altLeftKey);
         writer.WriteLine("");
-        writer.WriteLine("rightKey=" + settings.rightKey);
-        writer.WriteLine("altRightKey=" + settings.altRightKey);
+        writer.WriteLine("rightKey=" + rightKey);
+        writer.WriteLine("altRightKey=" + altRightKey);
         writer.WriteLine("");
-        writer.WriteLine("rollKey=" + settings.rollKey);
-        writer.WriteLine("altRollKey=" + settings.altRollKey);
+        writer.WriteLine("rollKey=" + rollKey);
+        writer.WriteLine("altRollKey=" + altRollKey);
         writer.WriteLine("");
-        writer.WriteLine("potionKey=" + settings.potionKey);
-        writer.WriteLine("altPotionKey=" + settings.altPotionKey);
+        writer.WriteLine("potionKey=" + potionKey);
+        writer.WriteLine("altPotionKey=" + altPotionKey);
         writer.WriteLine("");
-        writer.WriteLine("useKey=" + settings.useKey);
-        writer.WriteLine("altUseKey=" + settings.altUseKey);
+        writer.WriteLine("useKey=" + useKey);
+        writer.WriteLine("altUseKey=" + altUseKey);
+        writer.WriteLine("");
+        writer.WriteLine(";a list of all available gamepad (controller) buttons can be found here:");
+        writer.WriteLine("; https://msdn.microsoft.com/en-us/library/microsoft.xna.framework.input.buttons.aspx");
+        writer.WriteLine("GPattackKey=" + GPattackKey);
+        writer.WriteLine("GPshockwaveKey=" + GPshockwaveKey);
+        writer.WriteLine("GPshieldKey=" + GPshieldKey);
+        writer.WriteLine("GPjumpKey=" + GPjumpKey);
+        writer.WriteLine("GPupKey=" + GPupKey);
+        writer.WriteLine("GPdownKey=" + GPdownKey);
+        writer.WriteLine("GPleftKey=" + GPleftKey);
+        writer.WriteLine("GPrightKey=" + GPrightKey);
+        writer.WriteLine("GProllKey=" + GProllKey);
+        writer.WriteLine("GPpotionKey=" + GPpotionKey);
+        writer.WriteLine("GPuseKey=" + GPuseKey);
         writer.WriteLine("");
         writer.WriteLine("");
 
@@ -740,170 +635,173 @@ public struct PlayerSettings
         writer.WriteLine(";The camera will move when the player leaves this area on the screen");
         writer.WriteLine(";{int X location, int Y location, int Width, int Height})");
         writer.WriteLine(";where location refers to the center of the rectangle");
-        writer.WriteLine("boundingBox={X:" + settings.boundingBox.Center.X + " Y:" + settings.boundingBox.Center.Y + " Width:" + settings.boundingBox.Width + " Height:" + settings.boundingBox.Height + "}");
+        writer.WriteLine("boundingBox={X:" + boundingBox.Center.X + " Y:" + boundingBox.Center.Y + " Width:" + boundingBox.Width + " Height:" + boundingBox.Height + "}");
         writer.WriteLine("");
         writer.WriteLine(";Do you want the camera to smoothly trail the player?");
-        writer.WriteLine("cameraLerpSetting=" + settings.cameraLerpSetting);
+        writer.WriteLine("cameraLerp=" + cameraLerpSetting);
         writer.WriteLine("");
         writer.WriteLine(";How fast should the camera lerp?");
-        writer.WriteLine("cameraLerpSpeed=" + settings.cameraLerpSpeed);
+        writer.WriteLine("cameraLerpSpeed=" + cameraLerpSpeed);
         writer.WriteLine("");
         writer.WriteLine(";Turn off camera \"swing\" (the motion the camera makes when you attack and miss)");
-        writer.WriteLine("cameraSwingSetting=" + settings.cameraSwingSetting);
+        writer.WriteLine("cameraSwingSetting=" + cameraSwingSetting);
         writer.WriteLine("");
         writer.WriteLine(";How far should the camera swing? (pixels)");
-        writer.WriteLine("swingMagnitude=" + settings.swingMagnitude);
+        writer.WriteLine("swingMagnitude=" + swingMagnitude);
         writer.WriteLine("");
         writer.WriteLine(";How long should that swing take (this is the time it takes to travel the above pixels,");
         writer.WriteLine(";the time it takes to return to the normal camera position is double this number) (seconds)");
-        writer.WriteLine("swingDuration=" + settings.swingDuration);
+        writer.WriteLine("swingDuration=" + swingDuration);
         writer.WriteLine("");
         writer.WriteLine(";Turn off camera shake");
-        writer.WriteLine("cameraShakeSetting=" + settings.cameraShakeSetting);
+        writer.WriteLine("cameraShakeSetting=" + cameraShakeSetting);
         writer.WriteLine("");
         writer.WriteLine("");
 
         writer.WriteLine(";VIDEO SETTINGS");
         writer.WriteLine(";toggles windowed/fullscreen mode");
-        writer.WriteLine("fullscreen=" + settings.fullscreen);
+        writer.WriteLine("fullscreen=" + fullscreen);
         writer.WriteLine("");
         writer.WriteLine(";the scale of the window");
-        writer.WriteLine("screenScale=" + settings.screenScale);
+        writer.WriteLine("screenScale=" + screenScale);
         writer.WriteLine("");
         writer.WriteLine(";how much of the world will be drawn");
-        writer.WriteLine("resolution=" + settings.resolution);
+        writer.WriteLine("resolution=" + resolution);
         writer.WriteLine(";the actual size of the window is a combination of resolution and scale");
         writer.WriteLine(";for example, a 960x540 resolution at 2x scale gives you a 1920x1080 window");
         writer.WriteLine(";with each in-game pixel using 2x2 pixels on your screen");
         writer.WriteLine("");
-        writer.WriteLine("vSync=" + settings.vSync);
+        writer.WriteLine("vSync=" + vSync);
         writer.WriteLine("");
         writer.WriteLine("");
 
         writer.WriteLine(";AUDIO SETTINGS");
-        writer.WriteLine("masterAudioLevel=" + settings.masterAudioLevel);
-        writer.WriteLine("musicLevel=" + settings.musicLevel);
-        writer.WriteLine("soundEffectsLevel=" + settings.soundEffectsLevel);
+        writer.WriteLine("masterAudioLevel=" + masterAudioLevel);
+        writer.WriteLine("musicLevel=" + musicLevel);
+        writer.WriteLine("soundEffectsLevel=" + soundEffectsLevel);
         writer.WriteLine("");
         writer.WriteLine("");
 
         writer.WriteLine(";MISC SETTINGS");
+        writer.WriteLine(";How far does the thumbstick need to be moved before input is registered?");
+        writer.WriteLine("analogCutoff=" + analogCutoff);
+        writer.WriteLine("");
         writer.WriteLine(";How accurate is the timer (digits after the seconds' decimal)");
-        writer.WriteLine("timerAccuracy=" + (settings.timerAccuracy.Length - 3));
+        writer.WriteLine("timerAccuracy=" + (timerAccuracy.Length - 3));
         writer.WriteLine("");
         writer.WriteLine(";How long before the player is considered idle (seconds)");
-        writer.WriteLine("idleTimeMax=" + settings.idleTimeMax);
+        writer.WriteLine("idleTimeMax=" + idleTimeMax);
         writer.WriteLine("");
         writer.WriteLine(";This is the time it takes to \"charge\" the super shockwave (seconds)");
         writer.WriteLine(";Basically, how long you have to hold the shockwaveKey to use");
-        writer.WriteLine("superShockwaveHoldtime=" + settings.superShockwaveHoldtime);
+        writer.WriteLine("superShockwaveHoldtime=" + superShockwaveHoldtime);
         writer.WriteLine("");
         writer.WriteLine(";The amount of time the player can hold down the left or right movement key");
         writer.WriteLine(";during a wall jump before they drift away from the wall (seconds)");
-        writer.WriteLine("walljumpHoldtime=" + settings.walljumpHoldtime);
+        writer.WriteLine("walljumpHoldtime=" + walljumpHoldtime);
         writer.WriteLine("");
         writer.WriteLine(";Minimum distance(squared) for an enemy health bar to appear(bosses override this)");
-        writer.WriteLine("minSqrDetectDistance=" + settings.minSqrDetectDistance);
+        writer.WriteLine("minSqrDetectDistance=" + minSqrDetectDistance);
         writer.WriteLine("");
         writer.WriteLine("");
 
         writer.WriteLine(";CHEATS");
         writer.WriteLine(";self-explanatory");
-        writer.WriteLine("attack1Damage=" + settings.attack1Damage);
-        writer.WriteLine("attack2Damage=" + settings.attack2Damage);
+        writer.WriteLine("attack1Damage=" + attack1Damage);
+        writer.WriteLine("attack2Damage=" + attack2Damage);
         writer.WriteLine("");
 
         writer.WriteLine(";run&jump speed");
-        writer.WriteLine("speed=" + settings.speed);
+        writer.WriteLine("speed=" + speed);
         writer.WriteLine(";The maximum speed you can travel in any given direction");
-        writer.WriteLine("terminalVelocity=" + settings.terminalVelocity);
+        writer.WriteLine("terminalVelocity=" + terminalVelocity);
         writer.WriteLine(";how long your jumps will maintain jump velocity (seconds)");
-        writer.WriteLine("jumpTimeMax=" + settings.jumpTimeMax);
+        writer.WriteLine("jumpTimeMax=" + jumpTimeMax);
         writer.WriteLine("");
 
         writer.WriteLine(";highly unrecommended to not mess with these unless you really know what you're doing");
         writer.WriteLine(";collider size and placement relative to the 128x128 player sprite");
-        writer.WriteLine("colliderOffset=" + settings.colliderOffset);
-        writer.WriteLine("colliderSize=" + settings.colliderSize);
+        writer.WriteLine("colliderOffset=" + colliderOffset);
+        writer.WriteLine("colliderSize=" + colliderSize);
         writer.WriteLine("");
 
         writer.WriteLine(";this is the size of the rectangle used as the main attack hitbox");
-        writer.WriteLine("attackColliderWidth=" + settings.attackColliderWidth);
-        writer.WriteLine("attackColliderHeight=" + settings.attackColliderHeight);
+        writer.WriteLine("attackColliderWidth=" + attackColliderWidth);
+        writer.WriteLine("attackColliderHeight=" + attackColliderHeight);
         writer.WriteLine("");
 
         writer.WriteLine(";self-explanatory");
-        writer.WriteLine("maxHealth=" + settings.maxHealth);
-        writer.WriteLine("maxShield=" + settings.maxShield);
-        writer.WriteLine("maxEnergy=" + settings.maxEnergy);
+        writer.WriteLine("maxHealth=" + maxHealth);
+        writer.WriteLine("maxShield=" + maxShield);
+        writer.WriteLine("maxEnergy=" + maxEnergy);
         writer.WriteLine("");
 
 
 
         writer.WriteLine(";distance at which shockwave has no power");
-        writer.WriteLine("shockwaveEffectiveDistance=" + settings.shockwaveEffectiveDistance);
+        writer.WriteLine("shockwaveEffectiveDistance=" + shockwaveEffectiveDistance);
         writer.WriteLine(";shockwave multipliers");
-        writer.WriteLine("shockwaveStunTime=" + settings.shockwaveStunTime);
-        writer.WriteLine("shockwaveKnockback=" + settings.shockwaveKnockback);
+        writer.WriteLine("shockwaveStunTime=" + shockwaveStunTime);
+        writer.WriteLine("shockwaveKnockback=" + shockwaveKnockback);
         writer.WriteLine("");
 
         writer.WriteLine(";this how the player won't take damage after previously taking damage (seconds)");
-        writer.WriteLine("invulnerableMaxTime=" + settings.invulnerableMaxTime);
+        writer.WriteLine("invulnerableMaxTime=" + invulnerableMaxTime);
         writer.WriteLine("");
 
         writer.WriteLine(";these are only the base. they may be modified in-game by potions and other ways (per second)");
-        writer.WriteLine("shieldRechargeRate=" + settings.shieldRechargeRate);
-        writer.WriteLine("energyRechargeRate=" + settings.energyRechargeRate);
-        writer.WriteLine("healthRechargeRate=" + settings.healthRechargeRate);
-        writer.WriteLine("potionRechargeRate=" + settings.potionRechargeRate);
-        writer.WriteLine("potionRechargeTime=" + settings.potionRechargeTime);
-        writer.WriteLine("maxNumberOfPotions=" + settings.maxNumberOfPotions);
+        writer.WriteLine("shieldRechargeRate=" + shieldRechargeRate);
+        writer.WriteLine("energyRechargeRate=" + energyRechargeRate);
+        writer.WriteLine("healthRechargeRate=" + healthRechargeRate);
+        writer.WriteLine("potionRechargeRate=" + potionRechargeRate);
+        writer.WriteLine("potionRechargeTime=" + potionRechargeTime);
+        writer.WriteLine("maxNumberOfPotions=" + maxNumberOfPotions);
         writer.WriteLine("");
 
         writer.WriteLine(";this is the percentage of the damage absorbed by the shield that is converted back into health");
         writer.WriteLine(";0.25 means 25% of damage absorbed by the shield is converted to health (if 20 damage is absorbed, 5 damage is healed)");
-        writer.WriteLine("shieldHealingPercentage=" + settings.shieldHealingPercentage);
+        writer.WriteLine("shieldHealingPercentage=" + shieldHealingPercentage);
         writer.WriteLine("");
 
         writer.WriteLine(";how full the energy bar has to be before allowing you to use (95 == 95%)");
-        writer.WriteLine("energyUsableMargin=" + settings.energyUsableMargin);
+        writer.WriteLine("energyUsableMargin=" + energyUsableMargin);
         writer.WriteLine("");
         //writer.WriteLine("");
 
         writer.WriteLine(";ANIMATION SETTINGS");
         writer.WriteLine(";the amount of time that is allowed to pass before the animator displays the next frame (seconds)");
         writer.WriteLine(";(for each animation listed below)");
-        for (int i = 00; i < settings.animationSpeed.Length; i++)
-        { writer.WriteLine("animationSpeed[" + i + "]=" + settings.animationSpeed[i]); }
+        for (int i = 00; i < animationSpeed.Length; i++)
+        { writer.WriteLine("animationSpeed[" + i + "]=" + animationSpeed[i]); }
         writer.WriteLine("");
 
 
         writer.WriteLine(";0 is 1 frame, 1 is 2 frames, etc");
         writer.WriteLine(";the number of frames in each animation, only edit this if you are remaking the default spritesheet");
-        for (int i = 00; i < settings.animationFrames.Length; i++)
-        { writer.WriteLine("animationFrames[" + i + "]=" + settings.animationFrames[i]); }
+        for (int i = 00; i < animationFrames.Length; i++)
+        { writer.WriteLine("animationFrames[" + i + "]=" + animationFrames[i]); }
         writer.WriteLine("");
 
 
         writer.WriteLine(";the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)");
         writer.WriteLine(";NOTE: there is no variable for the number of frames in the shield animation, as the shield animator");
         writer.WriteLine(";uses the width of the shield sprite to determine when to loop.");
-        writer.WriteLine("shieldAnimationSpeed=" + settings.shieldAnimationSpeed);
+        writer.WriteLine("shieldAnimationSpeed=" + shieldAnimationSpeed);
 
 
         writer.WriteLine(";FONT SETTINGS");
         writer.WriteLine(";the height of each character in the font spritesheet (pixels)");
-        writer.WriteLine("characterHeight=" + settings.characterHeight);
+        writer.WriteLine("characterHeight=" + characterHeight);
         writer.WriteLine(";the width of each character in the font spritesheet (pixels)");
         for (int i = 00; i < 100; i++)
-        { writer.WriteLine("characterWidth[" + i + "]=" + settings.characterWidth[i]); }
+        { writer.WriteLine("characterWidth[" + i + "]=" + characterWidth[i]); }
         writer.WriteLine(";characterWidth[99] is used as SPACE, so it should remain blank on the spritesheet (it is the final character)");
         writer.WriteLine("");
         writer.WriteLine("");
 
 
         writer.WriteLine(";DEBUG MODE");
-        writer.WriteLine("debug=" + settings.debug);
+        writer.WriteLine("debug=" + debug);
         writer.WriteLine("");
         writer.WriteLine(";//END");
 
@@ -917,254 +815,112 @@ public struct PlayerSettings
 
     public static void Save(Irbis.Irbis game, string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Save"); }
-        Irbis.Irbis.WriteLine("saving " + filename + "...");
-        StreamWriter writer = new StreamWriter(filename);
+        PlayerSettings settings = new PlayerSettings(true);
+        settings.attackKey = Irbis.Irbis.attackKey;
+        settings.altAttackKey = Irbis.Irbis.altAttackKey;
+        settings.shockwaveKey = Irbis.Irbis.shockwaveKey;
+        settings.altShockwaveKey = Irbis.Irbis.altShockwaveKey;
+        settings.shieldKey = Irbis.Irbis.shieldKey;
+        settings.altShieldKey = Irbis.Irbis.altShieldKey;
+        settings.jumpKey = Irbis.Irbis.jumpKey;
+        settings.altJumpKey = Irbis.Irbis.altJumpKey;
+        settings.upKey = Irbis.Irbis.upKey;
+        settings.altUpKey = Irbis.Irbis.altUpKey;
+        settings.downKey = Irbis.Irbis.downKey;
+        settings.altDownKey = Irbis.Irbis.altDownKey;
+        settings.leftKey = Irbis.Irbis.leftKey;
+        settings.altLeftKey = Irbis.Irbis.altLeftKey;
+        settings.rightKey = Irbis.Irbis.rightKey;
+        settings.altRightKey = Irbis.Irbis.altRightKey;
+        settings.rollKey = Irbis.Irbis.rollKey;
+        settings.altRollKey = Irbis.Irbis.altRollKey;
+        settings.potionKey = Irbis.Irbis.potionKey;
+        settings.altPotionKey = Irbis.Irbis.altPotionKey;
+        settings.useKey = Irbis.Irbis.useKey;
+        settings.altUseKey = Irbis.Irbis.altUseKey;
+        settings.GPattackKey = Irbis.Irbis.GPattackKey;
+        settings.GPshockwaveKey = Irbis.Irbis.GPshockwaveKey;
+        settings.GPshieldKey = Irbis.Irbis.GPshieldKey;
+        settings.GPjumpKey = Irbis.Irbis.GPjumpKey;
+        settings.GPupKey = Irbis.Irbis.GPupKey;
+        settings.GPdownKey = Irbis.Irbis.GPdownKey;
+        settings.GPleftKey = Irbis.Irbis.GPleftKey;
+        settings.GPrightKey = Irbis.Irbis.GPrightKey;
+        settings.GProllKey = Irbis.Irbis.GProllKey;
+        settings.GPpotionKey = Irbis.Irbis.GPpotionKey;
+        settings.GPuseKey = Irbis.Irbis.GPuseKey;
 
-        //do writing here
-        //;lines beginning with ; are ignored
-        writer.WriteLine(";lines beginning with \";\" and empty lines are ignored");
-        writer.WriteLine(";delete this file and relaunch to return everything to defaults");
-        writer.WriteLine("");
-        writer.WriteLine("");
-
-
-        writer.WriteLine(";SETTINGS");
-        writer.WriteLine(";KEY BINDS");
-        writer.WriteLine(";a list of all available keys can be found here:");
-        writer.WriteLine("; https://msdn.microsoft.com/en-us/library/microsoft.xna.framework.input.keys.aspx");
-        writer.WriteLine("attackKey=" + Irbis.Irbis.attackKey);
-        writer.WriteLine("altAttackKey=" + Irbis.Irbis.altAttackKey);
-        writer.WriteLine("");
-        writer.WriteLine("shockwaveKey=" + Irbis.Irbis.shockwaveKey);
-        writer.WriteLine("altShockwaveKey=" + Irbis.Irbis.altShockwaveKey);
-        writer.WriteLine("");
-        writer.WriteLine("shieldKey=" + Irbis.Irbis.shieldKey);
-        writer.WriteLine("altShieldKey=" + Irbis.Irbis.altShieldKey);
-        writer.WriteLine("");
-        writer.WriteLine("jumpKey=" + Irbis.Irbis.jumpKey);
-        writer.WriteLine("altJumpKey=" + Irbis.Irbis.altJumpKey);
-        writer.WriteLine("");
-        writer.WriteLine("upKey=" + Irbis.Irbis.upKey);
-        writer.WriteLine("altUpKey=" + Irbis.Irbis.altUpKey);
-        writer.WriteLine("");
-        writer.WriteLine("downKey=" + Irbis.Irbis.downKey);
-        writer.WriteLine("altDownKey=" + Irbis.Irbis.altDownKey);
-        writer.WriteLine("");
-        writer.WriteLine("leftKey=" + Irbis.Irbis.leftKey);
-        writer.WriteLine("altLeftKey=" + Irbis.Irbis.altLeftKey);
-        writer.WriteLine("");
-        writer.WriteLine("rightKey=" + Irbis.Irbis.rightKey);
-        writer.WriteLine("altRightKey=" + Irbis.Irbis.altRightKey);
-        writer.WriteLine("");
-        writer.WriteLine("rollKey=" + Irbis.Irbis.rollKey);
-        writer.WriteLine("altRollKey=" + Irbis.Irbis.altRollKey);
-        writer.WriteLine("");
-        writer.WriteLine("potionKey=" + Irbis.Irbis.potionKey);
-        writer.WriteLine("altPotionKey=" + Irbis.Irbis.altPotionKey);
-        writer.WriteLine("");
-        writer.WriteLine("useKey=" + Irbis.Irbis.useKey);
-        writer.WriteLine("altUseKey=" + Irbis.Irbis.altUseKey);
-        writer.WriteLine("");
-        writer.WriteLine("");
-
-        writer.WriteLine(";CAMERA SETTINGS");
-        writer.WriteLine(";The camera will move when the player leaves this area on the screen");
-        writer.WriteLine(";XNA rectangle sctructure: (int X location, int Y location, int Width, int Height)");
-        writer.WriteLine(";where location refers to the center of the rectangle");
-        writer.WriteLine("boundingBox={X:" + Irbis.Irbis.boundingBox.Center.X + " Y:" + Irbis.Irbis.boundingBox.Center.Y + " Width:" + Irbis.Irbis.boundingBox.Width + " Height:" + Irbis.Irbis.boundingBox.Height + "}");
-        writer.WriteLine("");
-        writer.WriteLine(";Do you want the camera to smoothly trail the player?");
-        writer.WriteLine("cameraLerpSetting=" + Irbis.Irbis.cameraLerpSetting);
-        writer.WriteLine("");
-        writer.WriteLine(";How fast should the camera lerp?");
-        writer.WriteLine("cameraLerpSpeed=" + Irbis.Irbis.cameraLerpSpeed);
-        writer.WriteLine("");
-        writer.WriteLine(";Turn off camera \"swing\" (the motion the camera makes when you attack and miss)");
-        writer.WriteLine("cameraSwingSetting=" + Irbis.Irbis.cameraSwingSetting);
-        writer.WriteLine("");
-        writer.WriteLine(";How far should the camera swing? (pixels)");
-        writer.WriteLine("swingMagnitude=" + Irbis.Irbis.swingMagnitude);
-        writer.WriteLine("");
-        writer.WriteLine(";How long should that swing take (this is the time it takes to travel the above pixels,");
-        writer.WriteLine(";the time it takes to return to the normal camera position is double this number) (seconds)");
-        writer.WriteLine("swingDuration=" + Irbis.Irbis.swingDuration);
-        writer.WriteLine("");
-        writer.WriteLine(";Turn off camera shake");
-        writer.WriteLine("cameraShakeSetting=" + Irbis.Irbis.cameraShakeSetting);
-        writer.WriteLine("");
-        writer.WriteLine("");
-
-        writer.WriteLine(";VIDEO SETTINGS");
-        writer.WriteLine(";toggles windowed/fullscreen mode");
-        writer.WriteLine("fullscreen=" + Irbis.Irbis.graphics.IsFullScreen);
-        writer.WriteLine("");
-        writer.WriteLine(";the scale of the window");
+        settings.boundingBox = Irbis.Irbis.boundingBox;
+        settings.cameraLerpSetting = Irbis.Irbis.cameraLerpSetting;
+        settings.cameraLerpSpeed = Irbis.Irbis.cameraLerpSpeed;
+        settings.cameraSwingSetting = Irbis.Irbis.cameraSwingSetting;
+        settings.swingMagnitude = Irbis.Irbis.swingMagnitude;
+        settings.swingDuration = Irbis.Irbis.swingDuration;
+        settings.cameraShakeSetting = Irbis.Irbis.cameraShakeSetting;
+        settings.fullscreen = Irbis.Irbis.graphics.IsFullScreen;
         if (Irbis.Irbis.screenScale != Irbis.Irbis.resolution.X / 480f)
-        { writer.WriteLine("screenScale=" + Irbis.Irbis.screenScale); }
+        { settings.screenScale = Irbis.Irbis.screenScale; }
         else
-        { writer.WriteLine("screenScale=" + 0); }
-        writer.WriteLine("");
-        writer.WriteLine(";how much of the world will be drawn");
-        writer.WriteLine("resolution=" + Irbis.Irbis.tempResolution);
-        writer.WriteLine(";the actual size of the window is a combination of resolution and scale");
-        writer.WriteLine(";for example, a 960x540 resolution at 2x scale gives you a 1920x1080 window");
-        writer.WriteLine(";with each in-game pixel using 2x2 pixels on your screen");
-        writer.WriteLine("");
-        writer.WriteLine("vSync=" + game.IsFixedTimeStep);
-        writer.WriteLine("");
-        writer.WriteLine("");
+        { settings.screenScale = 0; }
+        settings.resolution = Irbis.Irbis.tempResolution;
+        settings.vSync = game.IsFixedTimeStep;
+        settings.masterAudioLevel = Irbis.Irbis.masterAudioLevel;
+        settings.musicLevel = Irbis.Irbis.musicLevel;
+        settings.soundEffectsLevel = Irbis.Irbis.soundEffectsLevel;
+        settings.timerAccuracy = Irbis.Irbis.timerAccuracy;
+        settings.idleTimeMax = Irbis.Irbis.jamie.idleTimeMax;
+        settings.superShockwaveHoldtime = Irbis.Irbis.jamie.superShockwaveHoldtime;
+        settings.walljumpHoldtime = Irbis.Irbis.jamie.walljumpHoldtime;
+        settings.minSqrDetectDistance = Irbis.Irbis.minSqrDetectDistance;
+        settings.attack1Damage = Irbis.Irbis.jamie.attack1Damage;
+        settings.attack2Damage = Irbis.Irbis.jamie.attack2Damage;
+        settings.speed = Irbis.Irbis.jamie.speed;
+        settings.terminalVelocity = Irbis.Irbis.jamie.terminalVelocity;
+        settings.jumpTimeMax = Irbis.Irbis.jamie.jumpTimeMax;
 
-        writer.WriteLine(";AUDIO SETTINGS");
-        writer.WriteLine("masterAudioLevel=" + Irbis.Irbis.masterAudioLevel);
-        writer.WriteLine("musicLevel=" + Irbis.Irbis.musicLevel);
-        writer.WriteLine("soundEffectsLevel=" + Irbis.Irbis.soundEffectsLevel);
-        writer.WriteLine("");
-        writer.WriteLine("");
+        settings.colliderOffset = Irbis.Irbis.jamie.colliderOffset;
+        settings.colliderSize = Irbis.Irbis.jamie.colliderSize;
 
-        writer.WriteLine(";MISC SETTINGS");
-        writer.WriteLine(";How accurate is the timer (digits after the seconds' decimal)");
-        writer.WriteLine("timerAccuracy=" + (Irbis.Irbis.timerAccuracy.Length - 3));
-        writer.WriteLine("");
-        writer.WriteLine(";How long before the player is considered idle (seconds)");
-        writer.WriteLine("idleTimeMax=" + Irbis.Irbis.jamie.idleTimeMax);
-        writer.WriteLine("");
-        writer.WriteLine(";This is the time it takes to \"charge\" the super shockwave (seconds)");
-        writer.WriteLine(";Basically, how long you have to hold the shockwaveKey to use");
-        writer.WriteLine("superShockwaveHoldtime=" + Irbis.Irbis.jamie.superShockwaveHoldtime);
-        writer.WriteLine("");
-        writer.WriteLine(";The amount of time the player can hold down the left or right movement key");
-        writer.WriteLine(";during a wall jump before they drift away from the wall (seconds)");
-        writer.WriteLine("walljumpHoldtime=" + Irbis.Irbis.jamie.walljumpHoldtime);
-        writer.WriteLine("");
-        writer.WriteLine(";Minimum distance(squared) for an enemy health bar to appear(bosses override this)");
-        writer.WriteLine("minSqrDetectDistance=" + Irbis.Irbis.minSqrDetectDistance);
-        writer.WriteLine("");
-        writer.WriteLine("");
+        settings.attackColliderWidth = Irbis.Irbis.jamie.attackColliderWidth;
+        settings.attackColliderHeight = Irbis.Irbis.jamie.attackColliderHeight;
 
-        writer.WriteLine(";CHEATS");
-        writer.WriteLine(";self-explanatory");
-        writer.WriteLine("attack1Damage=" + Irbis.Irbis.jamie.attack1Damage);
-        writer.WriteLine("attack2Damage=" + Irbis.Irbis.jamie.attack2Damage);
-        writer.WriteLine("");
+        settings.maxHealth = Irbis.Irbis.jamie.maxHealth;
+        settings.maxShield = Irbis.Irbis.jamie.maxShield;
+        settings.maxEnergy = Irbis.Irbis.jamie.maxEnergy;
 
-        writer.WriteLine(";run&jump speed");
-        writer.WriteLine("speed=" + Irbis.Irbis.jamie.speed);
-        writer.WriteLine(";The maximum speed you can travel in any given direction");
-        writer.WriteLine("terminalVelocity=" + Irbis.Irbis.jamie.terminalVelocity);
-        writer.WriteLine(";how long your jumps will maintain jump velocity (seconds)");
-        writer.WriteLine("jumpTimeMax=" + Irbis.Irbis.jamie.jumpTimeMax);
-        writer.WriteLine("");
+        settings.shockwaveEffectiveDistance = Irbis.Irbis.jamie.shockwaveEffectiveDistance;
+        settings.shockwaveStunTime = Irbis.Irbis.jamie.shockwaveStunTime;
+        settings.shockwaveKnockback = Irbis.Irbis.jamie.shockwaveKnockback;
+        settings.invulnerableMaxTime = Irbis.Irbis.jamie.invulnerableMaxTime;
 
-        writer.WriteLine(";highly unrecommended to not mess with these unless you really know what you're doing");
-        writer.WriteLine(";collider size and placement relative to the 128x128 player sprite");
-        writer.WriteLine("colliderOffset=" + Irbis.Irbis.jamie.colliderOffset);
-        writer.WriteLine("colliderSize=" + Irbis.Irbis.jamie.colliderSize);
-        writer.WriteLine("");
+        settings.analogCutoff = Irbis.Irbis.analogCutoff;
+        settings.shieldRechargeRate = Irbis.Irbis.jamie.shieldRechargeRate;
+        settings.energyRechargeRate = Irbis.Irbis.jamie.energyRechargeRate;
+        settings.healthRechargeRate = Irbis.Irbis.jamie.baseHealing;
+        settings.potionRechargeRate = Irbis.Irbis.jamie.potionRechargeRate;
+        settings.potionRechargeTime = Irbis.Irbis.jamie.potionRechargeTime;
+        settings.maxNumberOfPotions = Irbis.Irbis.jamie.maxNumberOfPotions;
+        settings.shieldHealingPercentage = Irbis.Irbis.jamie.shieldHealingPercentage;
+        settings.energyUsableMargin = Irbis.Irbis.jamie.energyUsableMargin;
 
-        writer.WriteLine(";this is the size of the rectangle used as the main attack hitbox");
-        writer.WriteLine("attackColliderWidth=" + Irbis.Irbis.jamie.attackColliderWidth);
-        writer.WriteLine("attackColliderHeight=" + Irbis.Irbis.jamie.attackColliderHeight);
-        writer.WriteLine("");
+        settings.animationSpeed = Irbis.Irbis.jamie.animationSpeed;
+        settings.animationFrames = Irbis.Irbis.jamie.animationFrames;
+        settings.shieldAnimationSpeed = Irbis.Irbis.jamie.shieldAnimationSpeed;
+        settings.characterHeight = Irbis.Irbis.font.charHeight;
+        settings.characterWidth = Irbis.Irbis.font.charWidth;
 
-        writer.WriteLine(";self-explanatory");
-        writer.WriteLine("maxHealth=" + Irbis.Irbis.jamie.maxHealth);
-        writer.WriteLine("maxShield=" + Irbis.Irbis.jamie.maxShield);
-        writer.WriteLine("maxEnergy=" + Irbis.Irbis.jamie.maxEnergy);
-        writer.WriteLine("");
+        settings.debug = Irbis.Irbis.debug;
 
-
-
-        writer.WriteLine(";distance at which shockwave has no power");
-        writer.WriteLine("shockwaveEffectiveDistance=" + Irbis.Irbis.jamie.shockwaveEffectiveDistance);
-        writer.WriteLine(";shockwave multipliers");
-        writer.WriteLine("shockwaveStunTime=" + Irbis.Irbis.jamie.shockwaveStunTime);
-        writer.WriteLine("shockwaveKnockback=" + Irbis.Irbis.jamie.shockwaveKnockback);
-        writer.WriteLine("");
-
-        writer.WriteLine(";this how the player won't take damage after previously taking damage (seconds)");
-        writer.WriteLine("invulnerableMaxTime=" + Irbis.Irbis.jamie.invulnerableMaxTime);
-        writer.WriteLine("");
-
-        writer.WriteLine(";these are only the base. they may be modified in-game by potions and other ways (per second)");
-        writer.WriteLine("shieldRechargeRate=" + Irbis.Irbis.jamie.shieldRechargeRate);
-        writer.WriteLine("energyRechargeRate=" + Irbis.Irbis.jamie.energyRechargeRate);
-        writer.WriteLine("healthRechargeRate=" + Irbis.Irbis.jamie.baseHealing);
-        writer.WriteLine("potionRechargeRate=" + Irbis.Irbis.jamie.potionRechargeRate);
-        writer.WriteLine("potionRechargeTime=" + Irbis.Irbis.jamie.potionRechargeTime);
-        writer.WriteLine("maxNumberOfPotions=" + Irbis.Irbis.jamie.maxNumberOfPotions);
-        writer.WriteLine("");
-
-        writer.WriteLine(";this is the percentage of the damage absorbed by the shield that is converted back into health");
-        writer.WriteLine(";0.25 means 25% of damage absorbed by the shield is converted to health (if 20 damage is absorbed, 5 damage is healed)");
-        writer.WriteLine("shieldHealingPercentage=" + Irbis.Irbis.jamie.shieldHealingPercentage);
-        writer.WriteLine("");
-
-        writer.WriteLine(";how full the energy bar has to be before allowing you to use (95 == 95%)");
-        writer.WriteLine("energyUsableMargin=" + Irbis.Irbis.jamie.energyUsableMargin);
-        writer.WriteLine("");
-        //writer.WriteLine("");
-
-        writer.WriteLine(";ANIMATION SETTINGS");
-        writer.WriteLine(";the amount of time that is allowed to pass before the animator displays the next frame (seconds)");
-        writer.WriteLine(";(for each animation listed below)");
-        for (int i = 00; i < Irbis.Irbis.jamie.animationSpeed.Length; i++)
-        { writer.WriteLine("animationSpeed[" + i + "]=" + Irbis.Irbis.jamie.animationSpeed[i]); }
-        writer.WriteLine("");
-
-
-        writer.WriteLine(";0 is 1 frame, 1 is 2 frames, etc");
-        writer.WriteLine(";the number of frames in each animation, only edit this if you are remaking the default spritesheet");
-        for (int i = 00; i < Irbis.Irbis.jamie.animationFrames.Length; i++)
-        { writer.WriteLine("animationFrames[" + i + "]=" + Irbis.Irbis.jamie.animationFrames[i]); }
-        writer.WriteLine("");
-
-
-        writer.WriteLine(";the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)");
-        writer.WriteLine(";NOTE: there is no variable for the number of frames in the shield animation, as the shield animator");
-        writer.WriteLine(";uses the width of the shield sprite to determine when to loop.");
-        writer.WriteLine("shieldAnimationSpeed=" + Irbis.Irbis.jamie.shieldAnimationSpeed);
-
-
-        writer.WriteLine(";FONT SETTINGS");
-        writer.WriteLine(";the height of each character in the font spritesheet (pixels)");
-        writer.WriteLine("characterHeight=" + Irbis.Irbis.font.charHeight);
-        writer.WriteLine(";the width of each character in the font spritesheet (pixels)");
-        for (int i = 00; i < 100; i++)
-        { writer.WriteLine("characterWidth[" + i + "]=" + Irbis.Irbis.font.charWidth[i]); }
-        writer.WriteLine(";characterWidth[99] is used as SPACE, so it should remain blank on the spritesheet (it is the final character)");
-        writer.WriteLine("");
-        writer.WriteLine("");
-
-
-
-        writer.WriteLine(";ETC SETTINGS");
-        writer.WriteLine(";player starting position (world space)");
-        writer.WriteLine(";only used when one isn't given by the fight");
-        writer.WriteLine("initialPosition=" + Irbis.Irbis.initialPos);
-        writer.WriteLine("");
-
-        writer.WriteLine(";DEBUG MODE");
-        writer.WriteLine("debug=" + Irbis.Irbis.debug);
-        writer.WriteLine("");
-        writer.WriteLine(";//END");
-
-
-
-
-        writer.Close();
-        Irbis.Irbis.WriteLine("save successful.");
-        Irbis.Irbis.WriteLine();
+        settings.Save(filename);    
     }
 
-    public static PlayerSettings Load(string filename)                                          //CHANGE THIS BEFORE SHIPPING 
+    public void Load(string filename)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Load"); }
         Irbis.Irbis.WriteLine("loading " + filename + "...");
 
-        List<bool> checker = new List<bool>();
+        int checker = 0;
         //filename = ".\\Content\\" + filename;
-        PlayerSettings playerSettings = new PlayerSettings(true);                              //CHANGE THIS TO TRUE BEFORE SHIPPING
 
         Stream stream = TitleContainer.OpenStream(filename);
         StreamReader reader = new StreamReader(stream);
@@ -1204,6 +960,7 @@ public struct PlayerSettings
                 int intResult;
                 float floatResult;
                 Keys keyResult;
+                Buttons buttonResult;
                 bool boolResult;
                 int extraResult;        //for the index of arrays
 
@@ -1251,190 +1008,190 @@ public struct PlayerSettings
                         case "attack1damage":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.attack1Damage = floatResult;
+                                this.attack1Damage = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "attack2damage":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.attack2Damage = floatResult;
+                                this.attack2Damage = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "speed":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.speed = floatResult;
+                                this.speed = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "jumptimemax":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.jumpTimeMax = floatResult;
+                                this.jumpTimeMax = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "idletimemax":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.idleTimeMax = floatResult;
+                                this.idleTimeMax = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "maxhealth":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.maxHealth = floatResult;
+                                this.maxHealth = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "maxshield":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.maxShield = floatResult;
+                                this.maxShield = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "maxenergy":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.maxEnergy = floatResult;
+                                this.maxEnergy = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "supershockwaveholdtime":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.superShockwaveHoldtime = floatResult;
+                                this.superShockwaveHoldtime = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "shockwaveeffectivedistance":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.shockwaveEffectiveDistance = floatResult;
+                                this.shockwaveEffectiveDistance = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "shockwavestuntime":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.shockwaveStunTime = floatResult;
+                                this.shockwaveStunTime = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "invulnerablemaxtime":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.invulnerableMaxTime = floatResult;
+                                this.invulnerableMaxTime = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "shieldrechargerate":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.shieldRechargeRate = floatResult;
+                                this.shieldRechargeRate = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "energyrechargerate":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.energyRechargeRate = floatResult;
+                                this.energyRechargeRate = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "healthrechargerate":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.healthRechargeRate = floatResult;
+                                this.healthRechargeRate = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "energyusablemargin":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.energyUsableMargin = floatResult;
+                                this.energyUsableMargin = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "minsqrdetectdistance":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.minSqrDetectDistance = floatResult;
+                                this.minSqrDetectDistance = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "animationspeed":
                             if (float.TryParse(value, out floatResult))
                             {
@@ -1468,135 +1225,146 @@ public struct PlayerSettings
                         case "shieldanimationspeed":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.shieldAnimationSpeed = floatResult;
+                                this.shieldAnimationSpeed = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "shieldhealingpercentage":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.shieldHealingPercentage = floatResult;
+                                this.shieldHealingPercentage = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "cameralerpspeed":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.cameraLerpSpeed = floatResult;
+                                this.cameraLerpSpeed = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "terminalvelocity":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.terminalVelocity = floatResult;
+                                this.terminalVelocity = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "masteraudiolevel":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.masterAudioLevel = floatResult;
+                                this.masterAudioLevel = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "musiclevel":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.musicLevel = floatResult;
+                                this.musicLevel = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "soundeffectslevel":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.soundEffectsLevel = floatResult;
+                                this.soundEffectsLevel = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "potionrechargerate":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.potionRechargeRate = floatResult;
+                                this.potionRechargeRate = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "potionrechargetime":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.potionRechargeTime = floatResult;
+                                this.potionRechargeTime = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "walljumpholdtime":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.walljumpHoldtime = floatResult;
+                                this.walljumpHoldtime = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "swingmagnitude":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.swingMagnitude = floatResult;
+                                this.swingMagnitude = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "swingduration":
                             if (float.TryParse(value, out floatResult))
                             {
-                                playerSettings.swingDuration = floatResult;
+                                this.swingDuration = floatResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
+                        case "analogcutoff":
+                            if (float.TryParse(value, out floatResult))
+                            {
+                                this.analogCutoff = floatResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
 
 
 
@@ -1604,43 +1372,43 @@ public struct PlayerSettings
 
 
                         case "collideroffset":                                                         //place new floats above
-                            playerSettings.colliderOffset = PointParser(value);
-                            if (playerSettings.colliderOffset == new Point(-0112, -0112))
+                            this.colliderOffset = PointParser(value);
+                            if (this.colliderOffset == new Point(-0112, -0112))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "collidersize":
-                            playerSettings.colliderSize = PointParser(value);
-                            if (playerSettings.colliderSize == new Point(-0112, -0112))
+                            this.colliderSize = PointParser(value);
+                            if (this.colliderSize == new Point(-0112, -0112))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "attackcolliderwidth":
                             if (int.TryParse(value, out intResult))
                             {
-                                playerSettings.attackColliderWidth = intResult;
+                                this.attackColliderWidth = intResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "attackcolliderheight":
                             if (int.TryParse(value, out intResult))
                             {
-                                playerSettings.attackColliderHeight = intResult;
+                                this.attackColliderHeight = intResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "animationframes":
                             if (int.TryParse(value, out intResult))
                             {
@@ -1674,14 +1442,14 @@ public struct PlayerSettings
                         case "characterheight":
                             if (int.TryParse(value, out intResult))
                             {
-                                playerSettings.characterHeight = intResult;
+                                this.characterHeight = intResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "characterwidth":
                             if (int.TryParse(value, out intResult))
                             {
@@ -1717,27 +1485,27 @@ public struct PlayerSettings
                             if (float.TryParse(value, out floatResult))
                             {
                                 if (floatResult > 0)
-                                { playerSettings.screenScale = floatResult; }
+                                { this.screenScale = floatResult; }
                                 else
-                                { playerSettings.screenScale = 0; }
+                                { this.screenScale = 0; }
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "maxnumberofpotions":
                             if (int.TryParse(value, out intResult))
                             {
-                                playerSettings.maxNumberOfPotions = intResult;
+                                this.maxNumberOfPotions = intResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
 
                             
 
@@ -1746,282 +1514,403 @@ public struct PlayerSettings
                         case "attackkey":                                                               //place new ints above
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.attackKey = keyResult;
+                                this.attackKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altattackkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altAttackKey = keyResult;
+                                this.altAttackKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "shockwavekey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.shockwaveKey = keyResult;
+                                this.shockwaveKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altshockwavekey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altShockwaveKey = keyResult;
+                                this.altShockwaveKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "shieldkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.shieldKey = keyResult;
+                                this.shieldKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altshieldkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altShieldKey = keyResult;
+                                this.altShieldKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "jumpkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.jumpKey = keyResult;
+                                this.jumpKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altjumpkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altJumpKey = keyResult;
+                                this.altJumpKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "upkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.upKey = keyResult;
+                                this.upKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altupkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altUpKey = keyResult;
+                                this.altUpKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "downkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.downKey = keyResult;
+                                this.downKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altdownkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altDownKey = keyResult;
+                                this.altDownKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "leftkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.leftKey = keyResult;
+                                this.leftKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altleftkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altLeftKey = keyResult;
+                                this.altLeftKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "rightkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.rightKey = keyResult;
+                                this.rightKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altrightkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altRightKey = keyResult;
+                                this.altRightKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "rollkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.rollKey = keyResult;
+                                this.rollKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altrollkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altRollKey = keyResult;
+                                this.altRollKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "potionkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.potionKey = keyResult;
+                                this.potionKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altpotionkey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altPotionKey = keyResult;
+                                this.altPotionKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "usekey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.useKey = keyResult;
+                                this.useKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "altusekey":
                             if (Enum.TryParse(value, out keyResult))
                             {
-                                playerSettings.altUseKey = keyResult;
+                                this.altUseKey = keyResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
+                        case "gpattackkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPattackKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gpshockwavekey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPshockwaveKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gpshieldkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPshieldKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gpjumpkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPjumpKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gpupkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPupKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gpdownkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPdownKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gpleftkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPleftKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gprightkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPrightKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gprollkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GProllKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gppotionkey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPpotionKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "gpusekey":
+                            if (Enum.TryParse(value, out buttonResult))
+                            {
+                                this.GPuseKey = buttonResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
 
 
 
 
 
                         case "shockwaveknockback":                                                        //place new key binds above
-                            playerSettings.shockwaveKnockback = Vector2Parser(value);
-                            if (playerSettings.shockwaveKnockback == new Vector2(-0.112f, -0.112f))
+                            this.shockwaveKnockback = Vector2Parser(value);
+                            if (this.shockwaveKnockback == new Vector2(-0.112f, -0.112f))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "boundingbox":
-                            playerSettings.boundingBox = RectangleParser(value);
-                            if (playerSettings.boundingBox == new Rectangle(-0, -1, -1, -2))
+                            this.boundingBox = RectangleParser(value);
+                            if (this.boundingBox == new Rectangle(-0, -1, -1, -2))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "timeraccuracy":
                             if (int.TryParse(value, out intResult))
                             {
-                                playerSettings.timerAccuracy = "00.";
+                                this.timerAccuracy = "00.";
                                 if (intResult > 8)
                                 {
                                     for (int i = 8; i > 0; i--)
                                     {
-                                        playerSettings.timerAccuracy += "0";
+                                        this.timerAccuracy += "0";
                                     }
                                 }
                                 else
                                 {
                                     for (int i = intResult; i > 0; i--)
                                     {
-                                        playerSettings.timerAccuracy += "0";
+                                        this.timerAccuracy += "0";
                                     }
                                 }
                             }
@@ -2031,15 +1920,15 @@ public struct PlayerSettings
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
                             
-                            checker.Add(true); break;
+                            checker++; break;
                         case "resolution":
-                            playerSettings.resolution = PointParser(value);
-                            if (playerSettings.resolution == new Point(-0112, -0112))
+                            this.resolution = PointParser(value);
+                            if (this.resolution == new Point(-0112, -0112))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
 
 
 
@@ -2048,58 +1937,58 @@ public struct PlayerSettings
                         case "cameralerp":                                                                //place new "etc variable" (like vectors and rectangles) above
                             if (bool.TryParse(value, out boolResult))
                             {
-                                playerSettings.cameraLerpSetting = boolResult;
+                                this.cameraLerpSetting = boolResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "camerashakesetting":
                             if (bool.TryParse(value, out boolResult))
                             {
-                                playerSettings.cameraShakeSetting = boolResult;
+                                this.cameraShakeSetting = boolResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "fullscreen":
                             if (bool.TryParse(value, out boolResult))
                             {
-                                playerSettings.fullscreen = boolResult;
+                                this.fullscreen = boolResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "vsync":
                             if (bool.TryParse(value, out boolResult))
                             {
-                                playerSettings.vSync = boolResult;
+                                this.vSync = boolResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         case "cameraswingsetting":
                             if (bool.TryParse(value, out boolResult))
                             {
-                                playerSettings.cameraSwingSetting = boolResult;
+                                this.cameraSwingSetting = boolResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
 
 
 
@@ -2109,14 +1998,14 @@ public struct PlayerSettings
                         case "debug":                                                                     //place new bools above
                             if (int.TryParse(value, out intResult))
                             {
-                                playerSettings.debug = intResult;
+                                this.debug = intResult;
                             }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
-                            checker.Add(true); break;
+                            checker++; break;
                         default:
                             if (string.IsNullOrWhiteSpace(extra))
                             {
@@ -2136,23 +2025,23 @@ public struct PlayerSettings
 
         if (animationFrames.Count > 0)
         {
-            checker.Add(true);
+            checker++;
         }
         if (animationSpeed.Count > 0)
         {
-            checker.Add(true);
+            checker++;
         }
         if (characterWidth.Count > 0)
         {
-            checker.Add(true);
+            checker++;
         }
 
-        playerSettings.animationFrames = animationFrames.ToArray();
-        playerSettings.animationSpeed = animationSpeed.ToArray();
-        playerSettings.characterWidth = characterWidth.ToArray();
+        this.animationFrames = animationFrames.ToArray();
+        this.animationSpeed = animationSpeed.ToArray();
+        this.characterWidth = characterWidth.ToArray();
 
         bool variablesHaveEncounteredErrors = !string.IsNullOrWhiteSpace(errorVars);
-        int variablesThatHaveBeenAssigned = checker.Count;
+        int variablesThatHaveBeenAssigned = checker;
 
         //checker.count should always be == to number of variable, currently 66 variables
         if (variablesHaveEncounteredErrors || variablesThatHaveBeenAssigned < numberOfVariables)
@@ -2160,12 +2049,15 @@ public struct PlayerSettings
             if (!string.IsNullOrWhiteSpace(errorVars))
             {
                 Irbis.Irbis.WriteLine("could not load:" + errorVars + "\nthese variables.");
+                Console.WriteLine("could not load:" + errorVars + "\nthese variables.");
             }
 
             if (variablesThatHaveBeenAssigned < numberOfVariables)
             {
                 Irbis.Irbis.WriteLine("Loaded " + variablesThatHaveBeenAssigned + " variables successfully.");
+                Console.WriteLine("Loaded " + variablesThatHaveBeenAssigned + " variables successfully.");
                 Irbis.Irbis.WriteLine("Not all variables were assigned values. Is something misspelled?");
+                Console.WriteLine("Not all variables were assigned values. Is something misspelled?");
             }
         }
         else
@@ -2174,8 +2066,6 @@ public struct PlayerSettings
         }
         Irbis.Irbis.WriteLine();
         reader.Close();
-
-        return playerSettings;
     }
 
     private static Vector2 Vector2Parser(string value)

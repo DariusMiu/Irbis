@@ -7,7 +7,7 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{4A8DA6FD-4523-41E4-880B-75B2E8A0B0F9}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>irbis</RootNamespace>
     <AssemblyName>Irbis</AssemblyName>
@@ -26,8 +26,8 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <AutorunEnabled>true</AutorunEnabled>
-    <ApplicationRevision>6</ApplicationRevision>
-    <ApplicationVersion>0.2.0.6</ApplicationVersion>
+    <ApplicationRevision>8</ApplicationRevision>
+    <ApplicationVersion>0.2.0.8</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -72,7 +72,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Bars.cs" />
@@ -179,46 +179,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="content\Audio title.png" />
-    <Content Include="content\bar enemy fill.png" />
-    <Content Include="content\bar enemy.png" />
-    <Content Include="content\bar energy.png" />
-    <Content Include="content\bar health.png" />
-    <Content Include="content\bar potion 1.png" />
-    <Content Include="content\bar potion 2.png" />
-    <Content Include="content\bar potion 3.png" />
-    <Content Include="content\bar potion fill 1.png" />
-    <Content Include="content\bar shield.png" />
-    <Content Include="content\bars.png" />
-    <Content Include="content\blood enchant icon.png" />
-    <Content Include="content\Camera title.png" />
-    <Content Include="content\centerTexture.png" />
-    <Content Include="content\console texture.png" />
-    <Content Include="content\defaultTex16.png" />
-    <Content Include="content\enchant vending machine.png" />
-    <Content Include="content\enemy0.png" />
-    <Content Include="content\fire enchant icon.png" />
-    <Content Include="content\font.png" />
-    <Content Include="content\font2.png" />
-    <Content Include="content\frost enchant icon.png" />
-    <Content Include="content\icon.png" />
-    <Content Include="content\Keybinds title.png" />
-    <Content Include="content\knockback enchant icon.png" />
-    <Content Include="content\largeNullTex.png" />
-    <Content Include="content\Level Select title.png" />
-    <Content Include="content\Lizard Guy Spritesheet.png" />
-    <Content Include="content\ln2.png" />
-    <Content Include="content\Main Menu title.png" />
-    <Content Include="content\menu background.png" />
-    <Content Include="content\menu border bottom.png" />
-    <Content Include="content\menu border left.png" />
-    <Content Include="content\menu border right.png" />
-    <Content Include="content\menu border top.png" />
-    <Content Include="content\menu corner bottom left.png" />
-    <Content Include="content\menu corner bottom right.png" />
-    <Content Include="content\menu corner top left.png" />
-    <Content Include="content\menu corner top right.png" />
-    <Content Include="content\Misc title.png" />
     <Content Include="content\music\bensound-betterdays.mp3" />
     <Content Include="content\music\bensound-epic.mp3" />
     <Content Include="content\music\bensound-instinct.mp3" />
@@ -226,18 +186,100 @@
     <Content Include="content\music\bensound-relaxing.mp3" />
     <Content Include="content\music\bensound-slowmotion.mp3" />
     <Content Include="content\music\Credits.txt" />
-    <Content Include="content\nullTex.png" />
-    <Content Include="content\Options title.png" />
-    <Content Include="content\originTexture.png" />
-    <Content Include="content\patreon.png" />
-    <Content Include="content\player.png" />
-    <Content Include="content\poison enchant icon.png" />
-    <Content Include="content\popup arrow.png" />
-    <Content Include="content\sharpness enchant icon.png" />
-    <Content Include="content\shield.png" />
-    <Content Include="content\shieldbar.png" />
-    <Content Include="content\stun enchant icon.png" />
-    <Content Include="content\Video title.png" />
+    <Content Include="content\textures\bar enemy fill.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar enemy.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar energy.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar health.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar potion 1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar potion 2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar potion 3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar potion fill 1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bar shield.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\bars.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\blood enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\cave.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\console texture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\dirt.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\enchant vending machine.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\enemy0.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\fire enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\floor.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\font.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\font2.png" />
+    <Content Include="content\textures\frost enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\knockback enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\Lizard.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\mountain.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\originTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\player.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\poison enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\sharpness enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\shield.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\shieldbar.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\sky.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\stun enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="icon.bmp" />
     <Content Include="icon.ico" />
   </ItemGroup>

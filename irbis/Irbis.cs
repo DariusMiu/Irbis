@@ -1,14 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using Microsoft.Win32;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using Microsoft.Xna.Framework.Audio;
-using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.CompilerServices;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Irbis
 {
@@ -168,9 +169,9 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        static string versionNo = "0.2.0.6";
-        static string versionID = "beta";
-        static string versionTy = "debug";
+        public const string versionNo = "0.2.0.8";
+        public const string versionID = "beta";
+        public const string versionTy = "debug";
         /// Different version types: 
         /// debug
         /// release candidate
@@ -189,7 +190,7 @@ namespace Irbis
         private static double maxFPS;
         private static double maxFPStime;
         private static bool recordFPS;
-        private static int framedropfactor = 3;
+        private static int framedropfactor = 10;
 
                                                                                                     //console
         EventHandler<TextInputEventArgs> onTextEntered;
@@ -233,6 +234,13 @@ namespace Irbis
                 return keyboardState;
             }
         }
+        public static KeyboardState GetPreviousKeyboardState
+        {
+            get
+            {
+                return previousKeyboardState;
+            }
+        }
         public static MouseState GetMouseState
         {
             get
@@ -247,25 +255,32 @@ namespace Irbis
                 return previousMouseState;
             }
         }
-        public static KeyboardState GetPreviousKeyboardState
+        public static GamePadState GetGamePadState
         {
             get
             {
-                return previousKeyboardState;
+                return gamePadState;
+            }
+        }
+        public static GamePadState GetPreviousGamePadState
+        {
+            get
+            {
+                return previousGamePadState;
             }
         }
         public static bool GetEscapeKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(Keys.Escape));
+                return (keyboardState.IsKeyDown(Keys.Escape) || gamePadState.IsButtonDown(Buttons.Start));
             }
         }
         public static bool GetUseKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(useKey) || keyboardState.IsKeyDown(altUseKey));
+                return (keyboardState.IsKeyDown(useKey) || keyboardState.IsKeyDown(altUseKey) || gamePadState.IsButtonDown(GPuseKey));
             }
         }
         public static bool GetEnterKey
@@ -279,84 +294,86 @@ namespace Irbis
         {
             get
             {
-                return (keyboardState.IsKeyDown(attackKey) || keyboardState.IsKeyDown(altAttackKey));
+                return (keyboardState.IsKeyDown(attackKey) || keyboardState.IsKeyDown(altAttackKey) || gamePadState.IsButtonDown(GPattackKey));
             }
         }
         public static bool GetShockwaveKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(shockwaveKey) || keyboardState.IsKeyDown(altShockwaveKey));
+                return (keyboardState.IsKeyDown(shockwaveKey) || keyboardState.IsKeyDown(altShockwaveKey) || gamePadState.IsButtonDown(GPshockwaveKey));
             }
         }
         public static bool GetShieldKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(shieldKey) || keyboardState.IsKeyDown(altShieldKey));
+                return (keyboardState.IsKeyDown(shieldKey) || keyboardState.IsKeyDown(altShieldKey) || gamePadState.IsButtonDown(GPshieldKey));
             }
         }
         public static bool GetJumpKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(jumpKey) || keyboardState.IsKeyDown(altJumpKey));
+                return (keyboardState.IsKeyDown(jumpKey) || keyboardState.IsKeyDown(altJumpKey) || gamePadState.IsButtonDown(GPjumpKey));
             }
         }
         public static bool GetUpKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(upKey) || keyboardState.IsKeyDown(altUpKey));
+                return (keyboardState.IsKeyDown(upKey) || keyboardState.IsKeyDown(altUpKey) || gamePadState.IsButtonDown(GPupKey));
             }
         }
         public static bool GetDownKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(downKey) || keyboardState.IsKeyDown(altDownKey));
+                return (keyboardState.IsKeyDown(downKey) || keyboardState.IsKeyDown(altDownKey) || gamePadState.IsButtonDown(GPdownKey));
             }
         }
         public static bool GetLeftKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(leftKey) || keyboardState.IsKeyDown(altLeftKey));
+                return (keyboardState.IsKeyDown(leftKey) || keyboardState.IsKeyDown(altLeftKey) || gamePadState.IsButtonDown(GPleftKey)
+                     || gamePadState.ThumbSticks.Left.X < -analogCutoff);
             }
         }
         public static bool GetRightKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(rightKey) || keyboardState.IsKeyDown(altRightKey));
+                return (keyboardState.IsKeyDown(rightKey) || keyboardState.IsKeyDown(altRightKey) || gamePadState.IsButtonDown(GPrightKey)
+                    || gamePadState.ThumbSticks.Left.X > analogCutoff);
             }
         }
         public static bool GetPotionKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(potionKey) || keyboardState.IsKeyDown(altPotionKey));
+                return (keyboardState.IsKeyDown(potionKey) || keyboardState.IsKeyDown(altPotionKey) || gamePadState.IsButtonDown(GPpotionKey));
             }
         }
         public static bool GetRollKey
         {
             get
             {
-                return (keyboardState.IsKeyDown(rollKey) || keyboardState.IsKeyDown(altRollKey));
+                return (keyboardState.IsKeyDown(rollKey) || keyboardState.IsKeyDown(altRollKey) || gamePadState.IsButtonDown(GProllKey));
             }
         }
         public static bool GetEscapeKeyDown
         {
             get
             {
-                return (GetKeyDown(Keys.Escape));
+                return (GetKeyDown(Keys.Escape) || GetButtonDown(Buttons.Start));
             }
         }
         public static bool GetUseKeyDown
         {
             get
             {
-                return (GetKeyDown(useKey) || GetKeyDown(altUseKey));
+                return (GetKeyDown(useKey) || GetKeyDown(altUseKey) || GetButtonDown(GPuseKey));
             }
         }
         public static bool GetEnterKeyDown
@@ -370,70 +387,72 @@ namespace Irbis
         {
             get
             {
-                return (GetKeyDown(attackKey) || GetKeyDown(altAttackKey));
+                return (GetKeyDown(attackKey) || GetKeyDown(altAttackKey) || GetButtonDown(GPattackKey));
             }
         }
         public static bool GetShockwaveKeyDown
         {
             get
             {
-                return (GetKeyDown(shockwaveKey) || GetKeyDown(altShockwaveKey));
+                return (GetKeyDown(shockwaveKey) || GetKeyDown(altShockwaveKey) || GetButtonDown(GPshockwaveKey));
             }
         }
         public static bool GetShieldKeyDown
         {
             get
             {
-                return (GetKeyDown(shieldKey) || GetKeyDown(altShieldKey));
+                return (GetKeyDown(shieldKey) || GetKeyDown(altShieldKey) || GetButtonDown(GPshieldKey));
             }
         }
         public static bool GetJumpKeyDown
         {
             get
             {
-                return (GetKeyDown(jumpKey) || GetKeyDown(altJumpKey));
+                return (GetKeyDown(jumpKey) || GetKeyDown(altJumpKey) || GetButtonDown(GPjumpKey));
             }
         }
         public static bool GetUpKeyDown
         {
             get
             {
-                return (GetKeyDown(upKey) || GetKeyDown(altUpKey));
+                return (GetKeyDown(upKey) || GetKeyDown(altUpKey) || GetButtonDown(GPupKey));
             }
         }
         public static bool GetDownKeyDown
         {
             get
             {
-                return (GetKeyDown(downKey) || GetKeyDown(altDownKey));
+                return (GetKeyDown(downKey) || GetKeyDown(altDownKey) || GetButtonDown(GPdownKey));
             }
         }
         public static bool GetLeftKeyDown
         {
             get
             {
-                return (GetKeyDown(leftKey) || GetKeyDown(altLeftKey));
+                return (GetKeyDown(leftKey) || GetKeyDown(altLeftKey) || GetButtonDown(GPleftKey)
+                    || (gamePadState.ThumbSticks.Left.X < -analogCutoff && previousGamePadState.ThumbSticks.Left.X >= analogCutoff));
             }
         }
         public static bool GetRightKeyDown
         {
             get
             {
-                return (GetKeyDown(rightKey) || GetKeyDown(altRightKey));
+                return (GetKeyDown(rightKey) || GetKeyDown(altRightKey) || GetButtonDown(GPrightKey)
+                    || (gamePadState.ThumbSticks.Left.X > analogCutoff && previousGamePadState.ThumbSticks.Left.X <= -analogCutoff));
             }
         }
         public static bool GetPotionKeyDown
         {
             get
             {
-                return (GetKeyDown(potionKey) || GetKeyDown(altPotionKey));
+                return (GetKeyDown(potionKey) || GetKeyDown(altPotionKey) || GetButtonDown(GPpotionKey));
             }
         }
         public static bool GetRollKeyDown
         {
             get
             {
-                return (GetKeyDown(rollKey) || GetKeyDown(altRollKey));
+                return (GetKeyDown(rollKey) || GetKeyDown(altRollKey) || GetButtonDown(GProllKey));
             }
         }
         public static bool GetLeftMouseDown
@@ -447,14 +466,14 @@ namespace Irbis
         {
             get
             {
-                return (GetKeyUp(Keys.Escape));
+                return (GetKeyUp(Keys.Escape) || GetButtonUp(Buttons.Start));
             }
         }
         public static bool GetUseKeyUp
         {
             get
             {
-                return (GetKeyUp(useKey) || GetKeyUp(altUseKey));
+                return (GetKeyUp(useKey) || GetKeyUp(altUseKey) || GetButtonUp(GPuseKey));
             }
         }
         public static bool GetEnterKeyUp
@@ -468,70 +487,72 @@ namespace Irbis
         {
             get
             {
-                return (GetKeyUp(attackKey) || GetKeyUp(altAttackKey));
+                return (GetKeyUp(attackKey) || GetKeyUp(altAttackKey) || GetButtonUp(GPattackKey));
             }
         }
         public static bool GetShockwaveKeyUp
         {
             get
             {
-                return (GetKeyUp(shockwaveKey) || GetKeyUp(altShockwaveKey));
+                return (GetKeyUp(shockwaveKey) || GetKeyUp(altShockwaveKey) || GetButtonUp(GPshockwaveKey));
             }
         }
         public static bool GetShieldKeyUp
         {
             get
             {
-                return (GetKeyUp(shieldKey) || GetKeyUp(altShieldKey));
+                return (GetKeyUp(shieldKey) || GetKeyUp(altShieldKey) || GetButtonUp(GPshieldKey));
             }
         }
         public static bool GetJumpKeyUp
         {
             get
             {
-                return (GetKeyUp(jumpKey) || GetKeyUp(altJumpKey));
+                return (GetKeyUp(jumpKey) || GetKeyUp(altJumpKey) || GetButtonUp(GPjumpKey));
             }
         }
         public static bool GetUpKeyUp
         {
             get
             {
-                return (GetKeyUp(upKey) || GetKeyUp(altUpKey));
+                return (GetKeyUp(upKey) || GetKeyUp(altUpKey) || GetButtonUp(GPupKey));
             }
         }
         public static bool GetDownKeyUp
         {
             get
             {
-                return (GetKeyUp(downKey) || GetKeyUp(altDownKey));
+                return (GetKeyUp(downKey) || GetKeyUp(altDownKey) || GetButtonUp(GPdownKey));
             }
         }
         public static bool GetLeftKeyUp
         {
             get
             {
-                return (GetKeyUp(leftKey) || GetKeyUp(altLeftKey));
+                return (GetKeyUp(leftKey) || GetKeyUp(altLeftKey) || GetButtonUp(GPleftKey)
+                    || (gamePadState.ThumbSticks.Left.X >= analogCutoff && previousGamePadState.ThumbSticks.Left.X < -analogCutoff));
             }
         }
         public static bool GetRightKeyUp
         {
             get
             {
-                return (GetKeyUp(rightKey) || GetKeyUp(altRightKey));
+                return (GetKeyUp(rightKey) || GetKeyUp(altRightKey) || GetButtonUp(GPrightKey)
+                    || (gamePadState.ThumbSticks.Left.X <= -analogCutoff && previousGamePadState.ThumbSticks.Left.X > analogCutoff));
             }
         }
         public static bool GetPotionKeyUp
         {
             get
             {
-                return (GetKeyUp(potionKey) || GetKeyUp(altPotionKey));
+                return (GetKeyUp(potionKey) || GetKeyUp(altPotionKey) || GetButtonUp(GPpotionKey));
             }
         }
         public static bool GetRollKeyUp
         {
             get
             {
-                return (GetKeyUp(rollKey) || GetKeyUp(altRollKey));
+                return (GetKeyUp(rollKey) || GetKeyUp(altRollKey) || GetButtonUp(GProllKey));
             }
         }
         public static bool RandomBool
@@ -575,6 +596,7 @@ namespace Irbis
                                                                                                     //player
         public static Player jamie;
         public static Vector2 initialPos = new Vector2(156, 93);
+        public static float analogCutoff = 0.5f;
 
                                                                                                     //onslaught
         public static bool onslaughtMode;
@@ -668,6 +690,8 @@ namespace Irbis
         private static KeyboardState previousKeyboardState;
         private static MouseState mouseState;
         private static MouseState previousMouseState;
+        private static GamePadState gamePadState;
+        private static GamePadState previousGamePadState;
         public static Keys attackKey;
         public static Keys altAttackKey;
         public static Keys shockwaveKey;
@@ -690,8 +714,20 @@ namespace Irbis
         public static Keys altRollKey;
         public static Keys useKey;
         public static Keys altUseKey;
+        public static Buttons GPattackKey;
+        public static Buttons GPshockwaveKey;
+        public static Buttons GPshieldKey;
+        public static Buttons GPjumpKey;
+        public static Buttons GPupKey;
+        public static Buttons GPdownKey;
+        public static Buttons GPleftKey;
+        public static Buttons GPrightKey;
+        public static Buttons GProllKey;
+        public static Buttons GPpotionKey;
+        public static Buttons GPuseKey;
 
-                                                                                                    //threading
+
+        //threading
         private static int threadCount;
         private static bool useMultithreading = false;
         public static ManualResetEvent doneEvent;
@@ -761,6 +797,9 @@ namespace Irbis
             // TODO: Add your initialization logic here
             threadCount = Environment.ProcessorCount;
 
+            Console.WriteLine("Number of logical processors:" + threadCount);
+            Console.WriteLine(".Net: " + GetDotNet());
+
             sList = new List<Square>();
             collisionObjects = new List<ICollisionObject>();
             squareList = new List<Square>();
@@ -810,11 +849,12 @@ namespace Irbis
             Console.WriteLine("loading content");
             Texture2D fontTex2 = Content.Load<Texture2D>("font2");
             Font font2 = new Font(fontTex2, 8);
-            //consoleTex = Content.Load<Texture2D>("console texture");
+            //consoleTex = LoadTexture("console texture");
             consoleTex = null;
             developerConsole = new Print(font2);
             PrintVersion();
             Irbis.WriteLine("Number of logical processors:" + threadCount);
+            Irbis.WriteLine(".Net: " + GetDotNet());
             WriteLine();
 
             tooltipGenerator = new TooltipGenerator(game);
@@ -822,25 +862,29 @@ namespace Irbis
             testTree = new BinaryTree<float>();
             vendingMenu = -1;
 
-            autosave = ".\\content\\autosave.snep";
 
-            PlayerSettings playerSettings;
-            if (File.Exists(@".\content\playerSettings.ini"))
+            PlayerSettings playerSettings = new PlayerSettings(true);
+            if (File.Exists(@".\content\playerSettings.txt"))
             {
-                playerSettings = Load(@".\content\playerSettings.ini");
+                Console.WriteLine("loading playerSettings.txt...");
+                playerSettings.Load(@".\content\playerSettings.txt");
             }
             else
             {
-                Console.WriteLine("creating new playerSettings.ini...");
-                WriteLine("creating new playerSettings.ini...");
+                Console.WriteLine("creating new playerSettings.txt...");
+                WriteLine("creating new playerSettings.txt...");
                 playerSettings = new PlayerSettings(true);
-                PlayerSettings.Save(playerSettings, @".\content\playerSettings.ini");
-                playerSettings = Load(@".\content\playerSettings.ini");
+                Console.WriteLine("saving playerSettings.txt...");
+                playerSettings.Save(@".\content\playerSettings.txt");
             }
 
+            Load(playerSettings);
+
+            autosave = ".\\content\\autosave.snep";
             savefile = new SaveFile(true);
             if (File.Exists(autosave))
             {
+                Console.WriteLine("loading autosave.snep...");
                 savefile.Load(autosave);
             }
             else
@@ -848,15 +892,16 @@ namespace Irbis
                 Console.WriteLine("creating new autosave.snep...");
                 WriteLine("creating new autosave.snep...");
                 savefile = new SaveFile(false);
+                Console.WriteLine("saving autosave.snep...");
                 savefile.Save(autosave);
             }
 
 
             developerConsole.textScale = textScale;
-            font = new Font(Content.Load<Texture2D>("font"), playerSettings.characterHeight, playerSettings.characterWidth, false);
+            font = new Font(LoadPNG("font"), playerSettings.characterHeight, playerSettings.characterWidth, false);
 
-            Texture2D playerTex = Content.Load<Texture2D>("player");
-            Texture2D shieldTex = Content.Load<Texture2D>("shield");
+            Texture2D playerTex = LoadPNG("player");
+            Texture2D shieldTex = LoadTexture("shield");
 
             jamie = new Player(playerTex, shieldTex, playerSettings, 0.5f);
             jamie.Respawn(new Vector2(-1000f, -1000f));
@@ -864,18 +909,18 @@ namespace Irbis
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             menuTex = new Texture2D[8];
-            menuTex[0] = Content.Load<Texture2D>("Main Menu title");
-            menuTex[1] = Content.Load<Texture2D>("Options title");
-            menuTex[2] = Content.Load<Texture2D>("Keybinds title");
-            menuTex[3] = Content.Load<Texture2D>("Camera title");
-            menuTex[4] = Content.Load<Texture2D>("Video title");
-            menuTex[5] = Content.Load<Texture2D>("Audio title");
-            menuTex[6] = Content.Load<Texture2D>("Misc title");
-            menuTex[7] = Content.Load<Texture2D>("Level Select title");
+            menuTex[0] = LoadTexture("Main Menu title");
+            menuTex[1] = LoadTexture("Options title");
+            menuTex[2] = LoadTexture("Keybinds title");
+            menuTex[3] = LoadTexture("Camera title");
+            menuTex[4] = LoadTexture("Video title");
+            menuTex[5] = LoadTexture("Audio title");
+            menuTex[6] = LoadTexture("Misc title");
+            menuTex[7] = LoadTexture("Level Select title");
 
-            nullTex = Content.Load<Texture2D>("nullTex");
-            largeNullTex = Content.Load<Texture2D>("largeNullTex");
-            defaultTex = Content.Load<Texture2D>("defaultTex");
+            nullTex = LoadTexture("nullTex");
+            largeNullTex = LoadTexture("largeNullTex");
+            defaultTex = LoadTexture("defaultTex");
 
             enemySpawnPoints = new List<Vector2>();
 
@@ -941,9 +986,9 @@ namespace Irbis
 
             //loading logos
             logos = new List<Texture2D>();
-            logos.Add(Content.Load<Texture2D>("monogame"));
-            logos.Add(Content.Load<Texture2D>("ln2"));
-            logos.Add(Content.Load<Texture2D>("patreon"));
+            logos.Add(LoadTexture("monogame"));
+            logos.Add(LoadTexture("ln2"));
+            logos.Add(LoadTexture("patreon"));
 
             shadows = new List<Vector2>();
             WriteLine("creating shadowShape");
@@ -1024,7 +1069,9 @@ namespace Irbis
             buttonList.Clear();
             if (loadSettings)
             {
-                Load(@".\content\playerSettings.ini");
+                PlayerSettings playerSettings = new PlayerSettings(true);
+                playerSettings.Load(@".\content\playerSettings.txt");
+                Load(playerSettings);
             }
             //sList.Add(new Square(menuTex[scene], Color.White, Point.Zero, menuTex[scene].Width, menuTex[scene].Height, false, true, true, 0.5f));
             if (resetRequired)
@@ -1038,12 +1085,12 @@ namespace Irbis
             {
                 logos = null;
             }
-            //else if (scene == 0)
-            //{ // PATREON
-            //    Print tempPrint = new Print(font.charHeight * 4 * textScale, font, Color.White, false, new Point(((logos.Count) * 72), zeroScreenspace.Height - 28 - ((textScale * font.charHeight) / 2)), Direction.Left, 0.95f);
-            //    tempPrint.Update("/Ln2", true);
-            //    printList.Add(tempPrint);
-            //}
+            else if (scene == 0)
+            { // PATREON
+                //Print tempPrint = new Print(font.charHeight * 15 * textScale, font, Color.White, false, new Point(((logos.Count) * 72), zeroScreenspace.Height /*- 28*/ - ((textScale * font.charHeight) /*/ 2*/)), Direction.Left, 0.95f);
+                //tempPrint.Update(" patreon.com/Ln2", true);
+                //printList.Add(tempPrint);
+            }
 
             //this is where all the crazy stuff happens
             menu.Create(scene);
@@ -1076,17 +1123,16 @@ namespace Irbis
             bossSpawn = thisLevel.BossSpawn;
             bossName = thisLevel.bossName;
 
-            enemy0Tex = Content.Load<Texture2D>("enemy0");
-            Texture2D centerTex = Content.Load<Texture2D>("centerTexture");
+            enemy0Tex = LoadTexture("enemy0");
+            Texture2D centerTex = LoadTexture("centerTexture");
 
             if (loadUI)
             {
-                bars = new Bars(Content.Load<Texture2D>("bar health"), Content.Load<Texture2D>("bar shield"), Content.Load<Texture2D>("bar energy"), Content.Load<Texture2D>("bar potion fill 1"), Content.Load<Texture2D>("bar enemy fill"), Content.Load<Texture2D>("shieldBar"), Content.Load<Texture2D>("bars"), Content.Load<Texture2D>("bar enemy"), new[] { Content.Load<Texture2D>("bar potion 1"), Content.Load<Texture2D>("bar potion 2"), Content.Load<Texture2D>("bar potion 3")});
+                bars = new Bars(LoadTexture("bar health"), LoadTexture("bar shield"), LoadTexture("bar energy"), LoadTexture("bar potion fill 1"), LoadTexture("bar enemy fill"), LoadTexture("shieldBar"), LoadTexture("bars"), LoadTexture("bar enemy"), new[] { LoadTexture("bar potion 1"), LoadTexture("bar potion 2"), LoadTexture("bar potion 3")});
                 if (jamie != null)
-                {
-                    jamie.Respawn(initialPos);
-                    //camera = screenSpacePlayerPos = mainCamera = (initialPos + halfResolution.ToVector2());
-                }
+                { jamie.Respawn(initialPos); }
+                else
+                { LoadPlayer(); }
             }
             else
             {
@@ -1095,6 +1141,8 @@ namespace Irbis
                     jamie.Respawn(new Vector2(-1000f, -1000f));
                     camera = screenSpacePlayerPos = mainCamera = halfResolution.ToVector2();
                 }
+                else
+                { LoadPlayer(); }
             }
 
             if (onslaughtMode)
@@ -1106,7 +1154,7 @@ namespace Irbis
                 string[] vendingMachineTextures = thisLevel.VendingMachineTextures;
                 for (int i = 0; i < vendingMachineTextures.Length; i++)
                 {
-                    onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i], new Point(64, 64)), Content.Load<Texture2D>(vendingMachineTextures[i]), 0.35f));
+                    onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i], new Point(64, 64)), LoadTexture(vendingMachineTextures[i]), 0.35f));
                 }
 
                 onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.Left, 0.6f);
@@ -1133,7 +1181,7 @@ namespace Irbis
             }
 
             //{
-            //    Texture2D squareTex = Content.Load<Texture2D>("mountain");
+            //    Texture2D squareTex = LoadTexture("mountain");
             //    Square tempSquare = new Square(LoadTexture("mountain"), Color.White, new Point(141, 0), Point.Zero, screenScale, false, true, 1);
             //    collisionObjects.Add(tempSquare);
             //    squareList.Add(tempSquare);
@@ -1141,22 +1189,22 @@ namespace Irbis
 
             for (int i = 0; i < thisLevel.backgroundSquareDepths.Count; i++)                                                                                              //backgrounds
             {
-                Texture2D squareTex = Content.Load<Texture2D>(thisLevel.backgroundTextures[i]);
+                Texture2D squareTex = LoadTexture(thisLevel.backgroundTextures[i]);
                 Square tempSquare = new Square(squareTex, BackgroundSquares[i], screenScale, true, false, thisLevel.backgroundSquareDepths[i]);
                 backgroundSquareList.Add(tempSquare);
             }
             //{
-            //    Texture2D squareTex = Content.Load<Texture2D>("cave");
+            //    Texture2D squareTex = LoadTexture("cave");
             //    Square tempSquare = new Square(squareTex, new Point(300, squareTex.Bounds.Height / 2), screenScale, true, 1f);
             //    backgroundSquareList.Add(tempSquare);
             //}
             //{
-            //    Texture2D squareTex = Content.Load<Texture2D>("sky");
+            //    Texture2D squareTex = LoadTexture("sky");
             //    Square tempSquare = new Square(squareTex, new Point(300, squareTex.Bounds.Height / 2), screenScale, true, 0.9f);
             //    backgroundSquareList.Add(tempSquare);
             //}
             //{
-            //    Texture2D squareTex = Content.Load<Texture2D>("dirt");
+            //    Texture2D squareTex = LoadTexture("dirt");
             //    Square tempSquare = new Square(squareTex, new Point(300, squareTex.Bounds.Height / 2), screenScale, true, 0.5f);
             //    backgroundSquareList.Add(tempSquare);
             //}
@@ -1179,11 +1227,25 @@ namespace Irbis
 
         public static Texture2D LoadTexture(string TextureFile)
         {
-            WriteLine(TextureFile);
-            if (string.IsNullOrWhiteSpace(TextureFile))
-            { return game.Content.Load<Texture2D>("defaultTex"); }
+            WriteLine("loading texture: " + TextureFile);
+            if (string.IsNullOrWhiteSpace(TextureFile) || !File.Exists(@".\content\" + TextureFile + ".xnb"))
+            { return LoadPNG(TextureFile); }
             else
             { return game.Content.Load<Texture2D>(TextureFile); }
+        }
+
+        public static Texture2D LoadPNG(string TextureFile)
+        {
+            WriteLine("loading .png: " + TextureFile);
+            if (string.IsNullOrWhiteSpace(TextureFile) || !File.Exists(@".\content\textures\" + TextureFile + ".png"))
+            { return game.Content.Load<Texture2D>("defaultTex"); }
+            else
+            {
+                FileStream fileStream = new FileStream(@".\content\textures\" + TextureFile + ".png", FileMode.Open);
+                Texture2D spriteAtlas = Texture2D.FromStream(graphics.GraphicsDevice, fileStream);
+                fileStream.Dispose();
+                return spriteAtlas;
+            }
         }
 
 
@@ -1194,7 +1256,6 @@ namespace Irbis
         /// </summary>
         protected override void UnloadContent()
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.UnloadContent"); }
             // TODO: Unload any non ContentManager Content here
         }
 
@@ -1206,8 +1267,11 @@ namespace Irbis
             doneEvent = new ManualResetEvent(false);
             keyboardState = Keyboard.GetState();
             mouseState = Mouse.GetState();
+            gamePadState = GamePad.GetState(PlayerIndex.One);
+            elapsedTime = gameTime.ElapsedGameTime.TotalSeconds;
+
             //if (debug > 0)
-            {
+            //{
                 if (useMultithreading)
                 {
                     QueueThread(new WaitCallback(DebugUpdate));
@@ -1216,10 +1280,9 @@ namespace Irbis
                 {
                     DebugUpdate(null);
                 }
-            }
+            //}
 
             smartFPS.Update(gameTime.ElapsedGameTime.TotalSeconds);
-            elapsedTime = gameTime.ElapsedGameTime.TotalSeconds;
             deltaTime = (float)elapsedTime * timeScale;
 
             if (!sceneIsMenu && !acceptTextInput)
@@ -1241,7 +1304,7 @@ namespace Irbis
                     }
 
                     if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||*/
-                        (GetKeyDown(Keys.Escape) || (GetKeyDown(Keys.Pause))))
+                        (GetEscapeKeyDown))
                     {
                         LoadMenu(0, 0, false);
                         levelEditor = false;
@@ -1303,8 +1366,9 @@ namespace Irbis
                 shadowShape.Vertices = shadows.ToArray();
             }
 
-            previousMouseState = mouseState;
             previousKeyboardState = keyboardState;
+            previousMouseState = mouseState;
+            previousGamePadState = gamePadState;
             if (pendingThreads <= 0) { doneEvent.Set(); }
             doneEvent.WaitOne();
             base.Update(gameTime);
@@ -1371,15 +1435,12 @@ namespace Irbis
 
                 Bars.healthBar.UpdateValue(jamie.health);
                 Bars.shieldBar.UpdateValue(jamie.shield, jamie.shielded);
-                //Bars.shieldBar.UpdateValue(jamie.shield, false);
                 Bars.energyBar.UpdateValue(jamie.energy);
 
                 if (useMultithreading)
                 {
                     for (int i = 0; i < enemyList.Count; i++)
-                    {
-                        QueueThread(enemyList[i].ThreadPoolCallback);
-                    }
+                    { QueueThread(enemyList[i].ThreadPoolCallback); }
                     QueueThread(new WaitCallback(UpdateEnemyHealthBar));
                 }
                 else
@@ -1482,8 +1543,7 @@ namespace Irbis
                 }
             }
 
-            if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||*/
-                (GetKeyDown(Keys.Escape) || (GetKeyDown(Keys.Pause))))
+            if (GetEscapeKeyDown)
             {
                 if (vendingMenu >= 0)
                 {
@@ -1732,6 +1792,33 @@ namespace Irbis
             camera.Y = (Lerp(camera.Y, mainCamera.Y, cameraLerpSpeed * DeltaTime));
         }
 
+        private void LoadPlayer()
+        {
+            PlayerSettings playerSettings = new PlayerSettings(true);
+            if (File.Exists(@".\content\playerSettings.txt"))
+            {
+                Console.WriteLine("loading playerSettings.txt...");
+                playerSettings.Load(@".\content\playerSettings.txt");
+            }
+            else
+            {
+                Console.WriteLine("creating new playerSettings.txt...");
+                WriteLine("creating new playerSettings.txt...");
+                playerSettings = new PlayerSettings(true);
+                Console.WriteLine("saving playerSettings.txt...");
+                playerSettings.Save(@".\content\playerSettings.txt");
+                Console.WriteLine("loading playerSettings.txt...");
+                playerSettings.Load(@".\content\playerSettings.txt");
+            }
+
+            Load(playerSettings);
+
+            Texture2D playerTex = LoadPNG("player");
+            Texture2D shieldTex = LoadTexture("shield");
+
+            jamie = new Player(playerTex, shieldTex, playerSettings, 0.5f);
+        }
+
         private static bool LoadMusic()
         {
             //string[] tempMusicList = Directory.GetFiles(".\\music");
@@ -1777,9 +1864,10 @@ namespace Irbis
         {
             try
             {
-                if (!console && elapsedTime > (framedropfactor * elapsedTime))
+                if (!console && consoleMoveTimer <= 0 && (deltaTime / timeScale) < (elapsedTime / framedropfactor))
                 {
-                    WriteLine("recording framedrop(1/" + framedropfactor + ")\nold fps: " + (1 / elapsedTime) + ", new fps: " + (1 / elapsedTime) + "\ntimer: " + Timer);
+                    WriteLine("recording framedrop (1/" + framedropfactor + 
+                        ")\nold fps:" + (timeScale / deltaTime) + " new fps:" + (1 / elapsedTime) + " timer: " + Timer);
                 }
                 if (recordFPS)
                 {
@@ -1831,9 +1919,7 @@ namespace Irbis
             finally
             {
                 if (Interlocked.Decrement(ref Irbis.pendingThreads) <= 0)
-                {
-                    Irbis.doneEvent.Set();
-                }
+                { Irbis.doneEvent.Set(); }
             }
         }
 
@@ -1851,12 +1937,13 @@ namespace Irbis
                 debuginfo.Update("\n    maxFPS:" + maxFPS.ToString("0000.0"));
             }
             debuginfo.Update("\n     timer:" + TimerText(timer));
-            debuginfo.Update("\nnextFrameTimer:" + nextFrameTimer);
             if (jamie != null)
             {
                 debuginfo.Update("\n     input:" + jamie.input + "  isRunning:" + jamie.isRunning);
                 debuginfo.Update("\n prevInput:" + jamie.prevInput);
                 debuginfo.Update("\n\nwallJumpTimer:" + jamie.wallJumpTimer);
+                debuginfo.Update("\njumpable:" + jamie.jumpable);
+                debuginfo.Update("\njumpTime:" + jamie.jumpTime);
                 debuginfo.Update("\n\n  player info");
                 debuginfo.Update("\nHealth:" + jamie.health + "\nShield:" + jamie.shield + "\nEnergy:" + jamie.energy);
                 debuginfo.Update("\n    pos:" + jamie.position);
@@ -1872,11 +1959,18 @@ namespace Irbis
                 debuginfo.Update("\nattackin:" + jamie.attacking);
                 debuginfo.Update("\nattackID:" + jamie.attackID);
                 debuginfo.Update("\nactivity:" + jamie.activity);
+                debuginfo.Update("\nprevActivity:" + jamie.prevActivity);
+                debuginfo.Update("\ndirection:" + jamie.direction);
+                debuginfo.Update("\nactivityChanged:" + jamie.activityChanged);
+                debuginfo.Update("\nidleTime:" + jamie.idleTime);
+                debuginfo.Update("\nspecialTime:" + jamie.specialTime);
+                debuginfo.Update("\nfallableSquare:" + jamie.fallableSquare); 
                 debuginfo.Update("\n          animation:" + jamie.currentAnimation);
                 debuginfo.Update("\nanimationSourceRect:" + jamie.animationSourceRect);
                 debuginfo.Update("\n    animationNoLoop:" + jamie.animationNoLoop);
             }
-            debuginfo.Update("\ncurrentLevel:" + currentLevel);
+            debuginfo.Update("\nThumbSticks.Left:" + GetGamePadState.ThumbSticks.Left);
+            debuginfo.Update("\n\ncurrentLevel:" + currentLevel);
             debuginfo.Update("\n onslaught:" + onslaughtMode);
             if (onslaughtMode && onslaughtSpawner != null)
             {
@@ -1934,7 +2028,7 @@ namespace Irbis
 
                 for (int i = 0; i < enemyList.Count; i++)
                 {
-                    debuginfo.Update("\n enemy: " + enemyList[i].GetType() + "\nhealth: " + enemyList[i].Health + "\n  stun: " + enemyList[i].StunTime);
+                    debuginfo.Update("\n enemy: " + enemyList[i].Name + "\nhealth: " + enemyList[i].Health + "\n  stun: " + enemyList[i].StunTime);
                 }
             }
             //debuginfo.Update("\nDistance  :" + Distance(testRectangle, Irbis.jamie.Collider));
@@ -2123,7 +2217,7 @@ namespace Irbis
                     else
                     {
                         WriteLine("spawning block with defaultTex texture at " + worldSpaceMouseLocation);
-                        Texture2D defaultSquareTex = Content.Load<Texture2D>("defaultTex");
+                        Texture2D defaultSquareTex = LoadTexture("defaultTex");
                         Square tempSquare = new Square(defaultSquareTex, worldSpaceMouseLocation, screenScale, false, true, 0.3f);
                         squareList.Add(tempSquare);
                     }
@@ -2327,13 +2421,13 @@ namespace Irbis
         {
             List <Texture2D> texlist= new List<Texture2D>();
 
-            texlist.Add(game.Content.Load<Texture2D>("blood enchant icon"));
-            texlist.Add(game.Content.Load<Texture2D>("fire enchant icon"));
-            texlist.Add(game.Content.Load<Texture2D>("frost enchant icon"));
-            texlist.Add(game.Content.Load<Texture2D>("knockback enchant icon"));
-            texlist.Add(game.Content.Load<Texture2D>("poison enchant icon"));
-            texlist.Add(game.Content.Load<Texture2D>("sharpness enchant icon"));
-            texlist.Add(game.Content.Load<Texture2D>("stun enchant icon"));
+            texlist.Add(LoadTexture("blood enchant icon"));
+            texlist.Add(LoadTexture("fire enchant icon"));
+            texlist.Add(LoadTexture("frost enchant icon"));
+            texlist.Add(LoadTexture("knockback enchant icon"));
+            texlist.Add(LoadTexture("poison enchant icon"));
+            texlist.Add(LoadTexture("sharpness enchant icon"));
+            texlist.Add(LoadTexture("stun enchant icon"));
 
             return texlist.ToArray();
         }
@@ -2683,32 +2777,32 @@ namespace Irbis
 
         private static bool GetKey(Keys key)
         {
-            //if (debug > 4) { methodLogger.AppendLine("Irbis.GetKey"); }
-            if (keyboardState.IsKeyDown(key))
-            {
-                return true;
-            }
-            return false;
+            return (keyboardState.IsKeyDown(key));
         }
 
         private static bool GetKeyDown(Keys key)
         {
-            ////if (debug > 4) { methodLogger.AppendLine("Irbis.GetKeyDown"); }
-            if (keyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key))
-            {
-                return true;
-            }
-            return false;
+            return (keyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key)) ;
         }
 
         private static bool GetKeyUp(Keys key)
         {
-            ////if (debug > 4) { methodLogger.AppendLine("Irbis.GetKeyDown"); }
-            if (keyboardState.IsKeyUp(key) && previousKeyboardState.IsKeyDown(key))
-            {
-                return true;
-            }
-            return false;
+            return (keyboardState.IsKeyUp(key) && previousKeyboardState.IsKeyDown(key));
+        }
+
+        private static bool GetButton(Buttons button)
+        {
+            return (gamePadState.IsButtonDown(button));
+        }
+
+        private static bool GetButtonDown(Buttons button)
+        {
+            return (gamePadState.IsButtonDown(button) && previousGamePadState.IsButtonUp(button));
+        }
+
+        private static bool GetButtonUp(Buttons button)
+        {
+            return (gamePadState.IsButtonUp(button) && previousGamePadState.IsButtonDown(button));
         }
 
         public string TimerText(double timer)
@@ -2818,7 +2912,7 @@ namespace Irbis
                 switch (Boss.Trim().ToLower())
                 {
                     case "lizard":
-                        LizardGuy tempLizardGuy = new LizardGuy(Content.Load<Texture2D>("Lizard"), Location, 999, 50, 500, null, 0.45f);
+                        LizardGuy tempLizardGuy = new LizardGuy(LoadTexture("Lizard"), Location, 999, 50, 500, null, 0.45f);
                         enemyList.Add(tempLizardGuy);
                         collisionObjects.Add(tempLizardGuy);
                         break;
@@ -2851,53 +2945,65 @@ namespace Irbis
             WriteLine("done.");
         }
 
-        public PlayerSettings Load(string filename)
+        public void Load(PlayerSettings settings)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Load"); }
-            PlayerSettings playerSettings = PlayerSettings.Load(filename);
+            attackKey = settings.attackKey;
+            altAttackKey = settings.altAttackKey;
+            shockwaveKey = settings.shockwaveKey;
+            altShockwaveKey = settings.altShockwaveKey;
+            shieldKey = settings.shieldKey;
+            altShieldKey = settings.altShieldKey;
+            jumpKey = settings.jumpKey;
+            altJumpKey = settings.altJumpKey;
+            upKey = settings.upKey;
+            altUpKey = settings.altUpKey;
+            downKey = settings.downKey;
+            altDownKey = settings.altDownKey;
+            leftKey = settings.leftKey;
+            altLeftKey = settings.altLeftKey;
+            rightKey = settings.rightKey;
+            altRightKey = settings.altRightKey;
+            rollKey = settings.rollKey;
+            altRollKey = settings.altRollKey;
+            potionKey = settings.potionKey;
+            altPotionKey = settings.altPotionKey;
+            useKey = settings.useKey;
+            altUseKey = settings.altUseKey;
 
-            attackKey = playerSettings.attackKey;
-            altAttackKey = playerSettings.altAttackKey;
-            shockwaveKey = playerSettings.shockwaveKey;
-            altShockwaveKey = playerSettings.altShockwaveKey;
-            shieldKey = playerSettings.shieldKey;
-            altShieldKey = playerSettings.altShieldKey;
-            jumpKey = playerSettings.jumpKey;
-            altJumpKey = playerSettings.altJumpKey;
-            upKey = playerSettings.upKey;
-            altUpKey = playerSettings.altUpKey;
-            downKey = playerSettings.downKey;
-            altDownKey = playerSettings.altDownKey;
-            leftKey = playerSettings.leftKey;
-            altLeftKey = playerSettings.altLeftKey;
-            rightKey = playerSettings.rightKey;
-            altRightKey = playerSettings.altRightKey;
-            rollKey = playerSettings.rollKey;
-            altRollKey = playerSettings.altRollKey;
-            potionKey = playerSettings.potionKey;
-            altPotionKey = playerSettings.altPotionKey;
-            useKey = playerSettings.useKey;
-            altUseKey = playerSettings.altUseKey;
+            GPattackKey = settings.GPattackKey;
+            GPshockwaveKey = settings.GPshockwaveKey;
+            GPshieldKey = settings.GPshieldKey;
+            GPjumpKey = settings.GPjumpKey;
+            GPupKey = settings.GPupKey;
+            GPdownKey = settings.GPdownKey;
+            GPleftKey = settings.GPleftKey;
+            GPrightKey = settings.GPrightKey;
+            GProllKey = settings.GProllKey;
+            GPpotionKey = settings.GPpotionKey;
+            GPuseKey = settings.GPuseKey;
 
-            cameraLerp = cameraLerpSetting = playerSettings.cameraLerpSetting;
-            cameraLerpSpeed = playerSettings.cameraLerpSpeed;
+            analogCutoff = settings.analogCutoff;
+
+            cameraLerp = cameraLerpSetting = settings.cameraLerpSetting;
+            cameraLerpSpeed = settings.cameraLerpSpeed;
         
             //debug = playerSettings.debug;
-            minSqrDetectDistance = playerSettings.minSqrDetectDistance;
-            cameraShakeSetting = playerSettings.cameraShakeSetting;
-            cameraSwingSetting = playerSettings.cameraSwingSetting;
-            swingDuration = playerSettings.swingDuration;
-            swingMagnitude = playerSettings.swingMagnitude;
-            timerAccuracy = playerSettings.timerAccuracy;
-            graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = playerSettings.vSync;
-            tempResolution = playerSettings.resolution;
-            masterAudioLevel = playerSettings.masterAudioLevel;
-            musicLevel = playerSettings.musicLevel;
-            soundEffectsLevel = playerSettings.soundEffectsLevel;
+            minSqrDetectDistance = settings.minSqrDetectDistance;
+            cameraShakeSetting = settings.cameraShakeSetting;
+            cameraSwingSetting = settings.cameraSwingSetting;
+            swingDuration = settings.swingDuration;
+            swingMagnitude = settings.swingMagnitude;
+            timerAccuracy = settings.timerAccuracy;
+            graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = settings.vSync;
+            tempResolution = settings.resolution;
+            masterAudioLevel = settings.masterAudioLevel;
+            musicLevel = settings.musicLevel;
+            soundEffectsLevel = settings.soundEffectsLevel;
 
             if (!resetRequired)
             {
-                tempResolution = playerSettings.resolution;
+                tempResolution = settings.resolution;
 
                 if (tempResolution != Point.Zero)
                 {
@@ -2908,10 +3014,10 @@ namespace Irbis
                     tempResolution = new Point(graphics.GraphicsDevice.DisplayMode.Width, graphics.GraphicsDevice.DisplayMode.Height);
                     SetResolution(tempResolution);
                 }
-                graphics.IsFullScreen = playerSettings.fullscreen;
+                graphics.IsFullScreen = settings.fullscreen;
             }
 
-            SetScreenScale(playerSettings.screenScale);
+            SetScreenScale(settings.screenScale);
 
             if ((int)(screenScale / 2) == (screenScale / 2))
             {
@@ -2925,10 +3031,10 @@ namespace Irbis
             projection.M11 = 4f / (resolution.X);
             projection.M22 = 4f / (resolution.Y);
 
-            graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = playerSettings.vSync;
+            graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = settings.vSync;
             graphics.ApplyChanges();
 
-            boundingBox = playerSettings.boundingBox;
+            boundingBox = settings.boundingBox;
             if (boundingBox == Rectangle.Empty)
             {
                 boundingBox = new Rectangle((resolution.ToVector2() * 0.3f).ToPoint(), (resolution.ToVector2() * 0.4f).ToPoint());
@@ -2936,10 +3042,8 @@ namespace Irbis
 
             if (jamie != null)
             {
-                jamie.Load(playerSettings);
+                jamie.Load(settings);
             }
-
-            return playerSettings;
         }
 
         public static void SetResolution(Point newResolution)
@@ -2963,16 +3067,7 @@ namespace Irbis
         public static bool Use()
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Use"); }
-            if ((keyboardState.IsKeyDown(shockwaveKey) && !previousKeyboardState.IsKeyDown(shockwaveKey)) ||
-                (keyboardState.IsKeyDown(altShockwaveKey) && !previousKeyboardState.IsKeyDown(altShockwaveKey)) ||
-                (keyboardState.IsKeyDown(attackKey) && !previousKeyboardState.IsKeyDown(attackKey)) ||
-                (keyboardState.IsKeyDown(altAttackKey) && !previousKeyboardState.IsKeyDown(altAttackKey)) ||
-                (keyboardState.IsKeyDown(jumpKey) && !previousKeyboardState.IsKeyDown(jumpKey)) ||
-                (keyboardState.IsKeyDown(altJumpKey) && !previousKeyboardState.IsKeyDown(altJumpKey)))
-            {
-                return true;
-            }
-            return false;
+            return (GetJumpKeyDown || GetAttackKeyDown || GetEnterKeyDown);
         }
 
         public static float Lerp(float value1, float value2, float amount)
@@ -3073,7 +3168,7 @@ namespace Irbis
             acceptTextInput = console = !console;
             if (consoleTex == null)
             {
-                Texture2D tempConsoleTex = Content.Load<Texture2D>("console texture");
+                Texture2D tempConsoleTex = LoadTexture("console texture");
                 float tempScale = 0f;
                 Vector2 tempLocation = Vector2.Zero;
                 if (((float)consoleRect.Width / (float)tempConsoleTex.Bounds.Width) > ((float)consoleRect.Height / (float)tempConsoleTex.Bounds.Height))
@@ -3098,7 +3193,7 @@ namespace Irbis
             }
             if (jamie != null)
             {
-                jamie.inputEnabled = !console;
+                //jamie.inputEnabled = !console;
                 //framebyframe = console;
             }
             consoleLine = developerConsole.lines + 1;
@@ -3168,8 +3263,7 @@ namespace Irbis
                 textInputBuffer = string.Empty;
             }
 
-            if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||*/
-                (GetKeyDown(Keys.Escape) || (GetKeyDown(Keys.Pause))))
+            if (GetEscapeKeyDown)
             {
                 OpenConsole();
             }
@@ -3242,6 +3336,33 @@ namespace Irbis
             developerConsole.Write(line);
         }
 
+        private static string GetDotNet()
+        {
+            using (RegistryKey ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\"))
+            {
+                int releaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
+                if (releaseKey >= 393273)
+                {
+                    return "4.6 RC or later";
+                }
+                if ((releaseKey >= 379893))
+                {
+                    return "4.5.2 or later";
+                }
+                if ((releaseKey >= 378675))
+                {
+                    return "4.5.1 or later";
+                }
+                if ((releaseKey >= 378389))
+                {
+                    return "4.5 or later";
+                }
+                // This line should never execute. A non-null release key should mean 
+                // that 4.5 or later is installed. 
+                return "No 4.5 or later version detected";
+            }
+        }
+
         public static void SetScreenScale(float newScale)
         {
             if (newScale > 0)
@@ -3256,7 +3377,7 @@ namespace Irbis
             //change the location of everything
             if (bars != null)
             {
-                bars = new Bars(game.Content.Load<Texture2D>("bar health"), game.Content.Load<Texture2D>("bar shield"), game.Content.Load<Texture2D>("bar energy"), game.Content.Load<Texture2D>("bar potion fill 1"), game.Content.Load<Texture2D>("bar enemy fill"), game.Content.Load<Texture2D>("shieldBar"), game.Content.Load<Texture2D>("bars"), game.Content.Load<Texture2D>("bar enemy"), new[] { game.Content.Load<Texture2D>("bar potion 1"), game.Content.Load<Texture2D>("bar potion 2"), game.Content.Load<Texture2D>("bar potion 3")});
+                bars = new Bars(LoadTexture("bar health"), LoadTexture("bar shield"), LoadTexture("bar energy"), LoadTexture("bar potion fill 1"), LoadTexture("bar enemy fill"), LoadTexture("shieldBar"), LoadTexture("bars"), LoadTexture("bar enemy"), new[] { LoadTexture("bar potion 1"), LoadTexture("bar potion 2"), LoadTexture("bar potion 3")});
             }
             if ((int)(screenScale / 2) == (screenScale / 2))
             {
@@ -3287,7 +3408,7 @@ namespace Irbis
                           Reiji
 
                        Animation:
-                        someone
+                      KrampusParty
 ";
 
             string returncredits = string.Empty;
@@ -4358,14 +4479,14 @@ Thank you, Ze Frank, for the inspiration.";
                             if (string.IsNullOrWhiteSpace(value))
                             {
                                 WriteLine("spawning block with defaultTex texture at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
-                                Texture2D defaultSquareTex = Content.Load<Texture2D>("defaultTex");
+                                Texture2D defaultSquareTex = LoadTexture("defaultTex");
                                 Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), screenScale, false, true, 0.3f);
                                 squareList.Add(tempSquare);
                             }
                             else
                             {
                                 WriteLine("spawning block with" + value + " texture at " + new Point((int)(camera.X % 32), (int)(camera.Y % 32)));
-                                Texture2D defaultSquareTex = Content.Load<Texture2D>(value);
+                                Texture2D defaultSquareTex = LoadTexture(value);
                                 Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X % 32), (int)(camera.Y % 32)), screenScale, false, true, 0.3f);
                                 squareList.Add(tempSquare);
                             }
@@ -4569,7 +4690,7 @@ Thank you, Ze Frank, for the inspiration.";
                             if (string.IsNullOrWhiteSpace(value))
                             {
                                 WriteLine("spawning enchant vending machine at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
-                                VendingMachine tempvend = new VendingMachine(200, VendingType.Enchant, new Rectangle(new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), new Point(64, 64)), Content.Load<Texture2D>("enchant vending machine"), 0.35f);
+                                VendingMachine tempvend = new VendingMachine(200, VendingType.Enchant, new Rectangle(new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), new Point(64, 64)), LoadTexture("enchant vending machine"), 0.35f);
                                 onslaughtSpawner.vendingMachineList.Add(tempvend);
 
                             }
@@ -4579,7 +4700,7 @@ Thank you, Ze Frank, for the inspiration.";
                                 if (Enum.TryParse(value, out vendtype))
                                 {
                                     WriteLine("spawning " + value + " vending machine at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
-                                    VendingMachine tempvend = new VendingMachine(200, vendtype, new Rectangle(new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), new Point(64, 64)), Content.Load<Texture2D>("enchant vending machine"), 0.35f);
+                                    VendingMachine tempvend = new VendingMachine(200, vendtype, new Rectangle(new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), new Point(64, 64)), LoadTexture("enchant vending machine"), 0.35f);
                                     onslaughtSpawner.vendingMachineList.Add(tempvend);
                                 }
                                 else
@@ -4843,6 +4964,23 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         WriteLine();
                         break;
+                    case "stunme":
+                        if (float.TryParse(value, out floatResult))
+                        {
+                            jamie.Stun(floatResult);
+                            WriteLine("player stunned for \"" + value + "\" seconds");
+                        }
+                        else
+                        {
+                            WriteLine("error: \"" + value + "\" could not be parsed");
+                        }
+                        break;
+                    case "crash":
+                        if (string.IsNullOrWhiteSpace(value))
+                        { throw new Exception("test exception"); }
+                        else
+                        { throw new Exception(value); }
+                        break;
 
 
 
@@ -4998,7 +5136,7 @@ Thank you, Ze Frank, for the inspiration.";
                 RectangleBorder.Draw(spriteBatch, new Rectangle(Point.Zero, screenspace.Size), Color.Magenta, false);
                 //if (levelEditor)
                 //{
-                //    Texture2D squareTex = Content.Load<Texture2D>("originTexture");
+                //    Texture2D squareTex = LoadTexture("originTexture");
                 //    foreach (Vector2 p in enemySpawnPoints)
                 //    {
                 //        Square tempSquare = new Square(squareTex, p.ToPoint(), screenScale, false, 0.9f);
@@ -5088,7 +5226,7 @@ Thank you, Ze Frank, for the inspiration.";
                     { // everything in this if is displayed ONLY on the main menu before a game has been started
                         if (logos != null)
                         {
-                            for (int i = 0; i < logos.Count - 1 /*remove -1 to enable patreon logo*/; i++)
+                            for (int i = 0; i < logos.Count -1 /*remove -1 to enable patreon logo*/; i++)
                             { // PATREON
                                 spriteBatch.Draw(logos[i], new Vector2((i * 72) + 5, zeroScreenspace.Height - 69), null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.9f);
                             }

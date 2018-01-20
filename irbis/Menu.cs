@@ -46,7 +46,7 @@ public class Menu
                 if (!Irbis.Irbis.resetRequired)
                 {
                     Print op11t = new Print(Irbis.Irbis.resolution.X - 32, Irbis.Irbis.font, Color.White, false, new Point(Irbis.Irbis.resolution.X - 32, Irbis.Irbis.resolution.Y - 26), Direction.Right, 0.5f);
-                    op11t.Update("For even more options and details, view the playerSettings.ini file");
+                    op11t.Update("For even more options and details, view the playerSettings.txt file");
                     Irbis.Irbis.printList.Add(op11t);
                 }
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f / 8f)), Irbis.Irbis.resolution.Y - (tempLP.Y - 000000000000000000000000000000000000), (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "Controls", ">Controls", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
@@ -761,7 +761,7 @@ public class Menu
                         switch (Irbis.Irbis.menuSelection)
                         {
                             case 22: //save
-                                PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                                PlayerSettings.Save(game, @".\content\playerSettings.txt");
                                 game.LoadMenu(1, 0, false);
                                 break;
                             case 23: //cancel
@@ -775,7 +775,7 @@ public class Menu
 
                     if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
-                        PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                        PlayerSettings.Save(game, @".\content\playerSettings.txt");
                         game.LoadMenu(1, 0, false);
                     }
                 }
@@ -999,7 +999,7 @@ public class Menu
                                 Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.cameraShakeSetting.ToString() + "<";
                                 break;
                             case 7: //save
-                                PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                                PlayerSettings.Save(game, @".\content\playerSettings.txt");
                                 game.LoadMenu(1, 1, false);
                                 break;
                             case 8: //cancel
@@ -1016,7 +1016,7 @@ public class Menu
 
                     if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
-                        PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                        PlayerSettings.Save(game, @".\content\playerSettings.txt");
                         game.LoadMenu(1, 1, false);
                     }
                 }
@@ -1093,7 +1093,7 @@ public class Menu
                                     Irbis.Irbis.tempResolution.X = int.Parse(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].buttonStatement);
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.tempResolution.X.ToString();
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.tempResolution.X.ToString() + "<";
-                                    PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                                    PlayerSettings.Save(game, @".\content\playerSettings.txt");
                                     Irbis.Irbis.resetRequired = true;
                                     game.LoadMenu(4, 8, false);
                                 }
@@ -1108,7 +1108,7 @@ public class Menu
                                     Irbis.Irbis.tempResolution.Y = int.Parse(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].buttonStatement);
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.tempResolution.Y.ToString();
                                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.tempResolution.Y.ToString() + "<";
-                                    PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                                    PlayerSettings.Save(game, @".\content\playerSettings.txt");
                                     Irbis.Irbis.resetRequired = true;
                                     game.LoadMenu(4, 9, false);
                                 }
@@ -1123,7 +1123,7 @@ public class Menu
                 {
                     if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
-                        PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                        PlayerSettings.Save(game, @".\content\playerSettings.txt");
                         game.LoadMenu(1, 2, false);
                     }
                     for (int i = 0; i < Irbis.Irbis.buttonList.Count; i++)
@@ -1246,7 +1246,7 @@ public class Menu
                                 Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + game.IsFixedTimeStep.ToString() + "<";
                                 break;
                             case 6:                         //Save
-                                PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                                PlayerSettings.Save(game, @".\content\playerSettings.txt");
                                 game.LoadMenu(1, 2, false);
                                 break;
                             case 7:                         //Cancel
@@ -1394,7 +1394,7 @@ public class Menu
                     if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
                     {
                         Irbis.Irbis.sliderList.Clear();
-                        PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                        PlayerSettings.Save(game, @".\content\playerSettings.txt");
                         game.LoadMenu(1, 3, false);
                     }
                     if (Irbis.Irbis.sliderPressed < 0)
@@ -1611,7 +1611,7 @@ public class Menu
                                         break;
                                     case 3:                         //Save
                                         Irbis.Irbis.sliderList.Clear();
-                                        PlayerSettings.Save(game, @".\content\playerSettings.ini");
+                                        PlayerSettings.Save(game, @".\content\playerSettings.txt");
                                         game.LoadMenu(1, 3, false);
                                         break;
                                     case 4:                         //Cancel

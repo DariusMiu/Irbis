@@ -1,4 +1,4 @@
-## Build Version: 0.2.0.4  
+## Build Version: 0.2.0.8  
 ## | Beta!!  
 
 
@@ -8,6 +8,9 @@
 `03.` Camera swing causes weird things and has been disabled for the time being  
 `04.` Boss strike attack during bury phase sometimes hits twice  
 `05.` Tailwhip and strike seem to not trigger their knockbacks occasionally  
+`06.` Reworked player animation and movement
+`07.` Added Coyote Time
+`08.` Slopes now work properly, and animations play seamlessly
 
 
 ### Important Notes  
@@ -15,7 +18,7 @@
 `02.` C0O0 is a test level. There is no content there, only an extremely early version of a 'survival mode'  
 `03.` Keep in mind that you can wall jump in this game.  
 `04.` There is no death screen (yet!)  
-`05.` Some animations are missing. The lizard boss has none, and only uses concept art. And the player is missing attack and roll animations.  
+`05.` Some animations are missing. The lizard boss has none, and only uses concept art. And the player is missing attack, roll, and shockwave animations.  
 
 
 ### Controls 
