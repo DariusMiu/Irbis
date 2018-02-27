@@ -48,13 +48,14 @@ namespace Irbis
         Falling = 4,
         Landing = 5,
         Attacking = 6,
+        Slamming = 7,
     }
     public enum Attacking
     {
         No = 0,
         Attack1 = 1,
         Attack2 = 2,
-
+        Slam = 3,
     }
     public enum AI
     {
@@ -169,7 +170,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        public const string versionNo = "0.2.0.8";
+        public const string versionNo = "0.2.0.9";
         public const string versionID = "beta";
         public const string versionTy = "debug";
         /// Different version types: 
@@ -530,7 +531,7 @@ namespace Irbis
             get
             {
                 return (GetKeyUp(leftKey) || GetKeyUp(altLeftKey) || GetButtonUp(GPleftKey)
-                    || (gamePadState.ThumbSticks.Left.X >= analogCutoff && previousGamePadState.ThumbSticks.Left.X < -analogCutoff));
+                    || (gamePadState.ThumbSticks.Left.X >= -analogCutoff && previousGamePadState.ThumbSticks.Left.X < -analogCutoff));
             }
         }
         public static bool GetRightKeyUp
@@ -538,7 +539,7 @@ namespace Irbis
             get
             {
                 return (GetKeyUp(rightKey) || GetKeyUp(altRightKey) || GetButtonUp(GPrightKey)
-                    || (gamePadState.ThumbSticks.Left.X <= -analogCutoff && previousGamePadState.ThumbSticks.Left.X > analogCutoff));
+                    || (gamePadState.ThumbSticks.Left.X <= analogCutoff && previousGamePadState.ThumbSticks.Left.X > analogCutoff));
             }
         }
         public static bool GetPotionKeyUp
@@ -864,18 +865,18 @@ namespace Irbis
 
 
             PlayerSettings playerSettings = new PlayerSettings(true);
-            if (File.Exists(@".\content\playerSettings.txt"))
+            if (File.Exists(@".\content\playerSettings.ini"))
             {
-                Console.WriteLine("loading playerSettings.txt...");
-                playerSettings.Load(@".\content\playerSettings.txt");
+                Console.WriteLine("loading playerSettings.ini...");
+                playerSettings.Load(@".\content\playerSettings.ini");
             }
             else
             {
-                Console.WriteLine("creating new playerSettings.txt...");
-                WriteLine("creating new playerSettings.txt...");
+                Console.WriteLine("creating new playerSettings.ini...");
+                WriteLine("creating new playerSettings.ini...");
                 playerSettings = new PlayerSettings(true);
-                Console.WriteLine("saving playerSettings.txt...");
-                playerSettings.Save(@".\content\playerSettings.txt");
+                Console.WriteLine("saving playerSettings.ini...");
+                playerSettings.Save(@".\content\playerSettings.ini");
             }
 
             Load(playerSettings);
@@ -1070,7 +1071,7 @@ namespace Irbis
             if (loadSettings)
             {
                 PlayerSettings playerSettings = new PlayerSettings(true);
-                playerSettings.Load(@".\content\playerSettings.txt");
+                playerSettings.Load(@".\content\playerSettings.ini");
                 Load(playerSettings);
             }
             //sList.Add(new Square(menuTex[scene], Color.White, Point.Zero, menuTex[scene].Width, menuTex[scene].Height, false, true, true, 0.5f));
@@ -1282,8 +1283,11 @@ namespace Irbis
                 }
             //}
 
-            smartFPS.Update(gameTime.ElapsedGameTime.TotalSeconds);
-            deltaTime = (float)elapsedTime * timeScale;
+            smartFPS.Update(elapsedTime);
+            if (elapsedTime > 0.2d)
+            { deltaTime = 0.2f * timeScale; }
+            else
+            { deltaTime = (float)elapsedTime * timeScale; }
 
             if (!sceneIsMenu && !acceptTextInput)
             {
@@ -1795,20 +1799,20 @@ namespace Irbis
         private void LoadPlayer()
         {
             PlayerSettings playerSettings = new PlayerSettings(true);
-            if (File.Exists(@".\content\playerSettings.txt"))
+            if (File.Exists(@".\content\playerSettings.ini"))
             {
-                Console.WriteLine("loading playerSettings.txt...");
-                playerSettings.Load(@".\content\playerSettings.txt");
+                Console.WriteLine("loading playerSettings.ini...");
+                playerSettings.Load(@".\content\playerSettings.ini");
             }
             else
             {
-                Console.WriteLine("creating new playerSettings.txt...");
-                WriteLine("creating new playerSettings.txt...");
+                Console.WriteLine("creating new playerSettings.ini...");
+                WriteLine("creating new playerSettings.ini...");
                 playerSettings = new PlayerSettings(true);
-                Console.WriteLine("saving playerSettings.txt...");
-                playerSettings.Save(@".\content\playerSettings.txt");
-                Console.WriteLine("loading playerSettings.txt...");
-                playerSettings.Load(@".\content\playerSettings.txt");
+                Console.WriteLine("saving playerSettings.ini...");
+                playerSettings.Save(@".\content\playerSettings.ini");
+                Console.WriteLine("loading playerSettings.ini...");
+                playerSettings.Load(@".\content\playerSettings.ini");
             }
 
             Load(playerSettings);
@@ -4948,8 +4952,11 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                         WriteLine();
                         break;
+                    case "ons":
+                        goto case "onslaught";
                     case "onslaught":
                         onslaughtMode = !onslaughtMode;
+                        WriteLine("onslaught mode: " + onslaughtMode);
                         WriteLine();
                         break;
                     case "enemies":

@@ -223,7 +223,7 @@ public struct PlayerSettings
             //run&jump speed
             speed = 275f;
             //The maximum speed you can travel in any given direction
-            terminalVelocity = 5000f;
+            terminalVelocity = 800f;
             //how long your jumps will maintain jump velocity (seconds)
             jumpTimeMax = 0.25f;
 
@@ -246,7 +246,7 @@ public struct PlayerSettings
             shockwaveEffectiveDistance = 100f;
             //shockwave multipliers
             shockwaveStunTime = 2f;
-            shockwaveKnockback = new Vector2(5f, -2.5f);
+            shockwaveKnockback = new Vector2(2f, -1f);
 
             //this how the player won't take damage after previously taking damage (seconds)
             invulnerableMaxTime = 0.1f;
@@ -269,15 +269,23 @@ public struct PlayerSettings
             //ANIMATION SETTINGS
             //the amount of time that is allowed to pass before the animator displays the next frame (seconds)
             //(for each animation listed below)
-            animationSpeed = new float[30];
+            animationSpeed = new float[40];
             for (int i = 0; i < animationSpeed.Length; i++)
             { animationSpeed[i] = 0.1f; }
+            for (int i = 0; i < 7; i++)
+            { animationSpeed[i] = 0.125f; }
+            for (int i = 7; i < 9; i++)
+            { animationSpeed[i] = 0.1f; }
+            for (int i = 9; i < 15; i++)
+            { animationSpeed[i] = 0.125f; }
+            for (int i = 23; i < 27; i++)
+            { animationSpeed[i] = 0.05f; }
             //animationSpeed[19] = 0.3f;
             //animationSpeed[20] = 0.3f;
 
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
-            animationFrames = new int[30];
+            animationFrames = new int[40];
             animationFrames[00] = 3;
             animationFrames[01] = 15;
             animationFrames[02] = 3;
@@ -301,7 +309,13 @@ public struct PlayerSettings
             animationFrames[20] = 2;
             animationFrames[21] = 2;
             animationFrames[22] = 2;
-            for (int i = 23; i < animationFrames.Length; i++)
+            animationFrames[23] = 3;
+            animationFrames[24] = 3;
+            animationFrames[25] = 1;
+            animationFrames[26] = 1;
+            animationFrames[27] = 1;
+            animationFrames[28] = 1;
+            for (int i = 29; i < animationFrames.Length; i++)
             { animationFrames[i] = 0; }
 
             //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)

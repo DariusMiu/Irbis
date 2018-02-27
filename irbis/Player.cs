@@ -187,6 +187,7 @@ public class Player
     public float attackDamage;
     public float attack1Damage;
     public float attack2Damage;
+    public float slamDamage = 50f;
     public int attackID;
     public int lastAttackID;
     int attackIDtracker;
@@ -196,6 +197,8 @@ public class Player
 
     public int attackColliderWidth;
     public int attackColliderHeight;
+    public int slamColliderWidth = 60;
+    public int slamColliderHeight = 50;
 
     public float wallJumpTimer;
     public float jumpable;
@@ -284,7 +287,7 @@ public class Player
         enchantList = new List<Enchant>();
 
         rollTimeMax = 0.25f;
-        rollSpeed = 1500f;
+        rollSpeed = 500f;
         rollTime = 0f;
 
         shieldtimeSinceLastFrame = 0f;
@@ -330,10 +333,10 @@ public class Player
 
             if (direction != Direction.Forward)
             {
-                if (Irbis.Irbis.GetUpKey) //up
-                { input.Y++; }
-                if (Irbis.Irbis.GetDownKey) //down
-                { input.Y--; }
+                //if (Irbis.Irbis.GetUpKey) //up
+                //{ input.Y++; }
+                //if (Irbis.Irbis.GetDownKey) //down
+                //{ input.Y--; }
                 if (Irbis.Irbis.GetShieldKey) //shield
                 {
                     if (shield <= 0)
@@ -364,14 +367,25 @@ public class Player
                     potions--;
                     Bars.potionBar.Update(potions);
                 }
-                if (Irbis.Irbis.GetJumpKey || Irbis.Irbis.GetUpKey)
+                if (Irbis.Irbis.GetJumpKey)
                 {
-                    input.Y++;
+                    if (Irbis.Irbis.GetDownKeyDown && walled.Bottom <= 0 && jumpTime <= 0)
+                    { Attack(Attacking.Slam); SetActivity(Activity.Slamming); inputEnabled = false; }
+                    else
+                    { input.Y++; }
                 }
                 else //just jumped, reset to zero
                 { jumpTime = 0; }
-                if (Irbis.Irbis.GetJumpKeyDown && walled.Bottom <= 0)
-                { interruptAttack = true; /*jump key was just pressed, interrupt an attack(this is here so that attacks in-air are not interrupted)*/}
+                if (Irbis.Irbis.GetJumpKeyDown)
+                {
+                    if (walled.Bottom <= 0)
+                    {
+                        if (Irbis.Irbis.GetDownKey)
+                        { Attack(Attacking.Slam); SetActivity(Activity.Slamming); inputEnabled = false; jumpTime = 0; }
+                        else
+                        { interruptAttack = true; } /*jump key was just pressed, interrupt an attack(this is here so that attacks in-air are not interrupted)*/
+                    }
+                }
                 if (rollTime <= 0 && walled.Bottom > 0 && (Irbis.Irbis.GetRollKeyDown))
                 { // roll
                     inputEnabled = false;
@@ -393,19 +407,30 @@ public class Player
                 superShockwave = 0;
             }
         }
-
+        else
+        {
+            input = Point.Zero;
+            shielded = false;
+            jumpTime = 0;
+            superShockwave = 0;
+        }
         if (Irbis.Irbis.GetKeyboardState != Irbis.Irbis.GetPreviousKeyboardState)
         { frameInput = true; }
 
         if (input != prevInput && input != Point.Zero)
         { interruptAttack = true; }
 
-        if (interruptAttack)
+        if (attacking != Attacking.Slam)
         {
-            attacking = Attacking.No;
-            attackCollider = Rectangle.Empty;
-            interruptAttack = false;
+            if (interruptAttack)
+            {
+                attacking = Attacking.No;
+                attackCollider = Rectangle.Empty;
+                interruptAttack = false;
+            }
         }
+        else if (walled.Bottom > 0) //end slam
+        { Slam(); }
 
 
         if (invulnerable > 0)
@@ -491,7 +516,6 @@ public class Player
         else if (jumpable > -0.05)
         { jumpable -= Irbis.Irbis.DeltaTime; }
 
-
         if (noclip)
         {
             if (Irbis.Irbis.GetRollKey)
@@ -505,17 +529,21 @@ public class Player
                 velocity.Y = Irbis.Irbis.Lerp(velocity.Y, input.Y * (-speed * 0.1f), movementLerpSlowdown * Irbis.Irbis.DeltaTime);
             }
         }
+        else if (attacking == Attacking.Slam && activity == Activity.Slamming)
+        {
+            velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
+        }
         else
         {
             if (rollTime > 0)
             {
                 if (direction == Direction.Right)
                 {
-                    velocity.X = Irbis.Irbis.Lerp(velocity.X, rollSpeed, movementLerpAir * Irbis.Irbis.DeltaTime);
+                    velocity.X = Irbis.Irbis.Lerp(velocity.X, rollSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
                 }
                 else
                 {
-                    velocity.X = Irbis.Irbis.Lerp(velocity.X, -rollSpeed, movementLerpAir * Irbis.Irbis.DeltaTime);
+                    velocity.X = Irbis.Irbis.Lerp(velocity.X, -rollSpeed, movementLerpBuildup * Irbis.Irbis.DeltaTime);
                 }
                 debugspeed = rollSpeed;
 
@@ -724,7 +752,7 @@ public class Player
         collider.Y = (int)Math.Round((double)position.Y) + colliderOffset.Y;
         collider.Size = colliderSize;
     }
-
+     
     public void Animate()
     {                                                        //animator
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
@@ -739,11 +767,7 @@ public class Player
             specialTime += Irbis.Irbis.DeltaTime;
         }
 
-        if (attacking != Attacking.No)
-        {
-            SetActivity(Activity.Attacking);
-        }
-        else
+        if (attacking == Attacking.No)
         {
             if (input != Point.Zero)
             {
@@ -817,7 +841,7 @@ public class Player
 
         if (currentFrame > animationFrames[currentAnimation])
         {
-            if (attacking != Attacking.No)
+            if (attacking != Attacking.No && attacking != Attacking.Slam)
             {
                 if (attackImmediately)
                 {
@@ -854,6 +878,11 @@ public class Player
                     case 16:
                         SetAnimation(3, false);
                         SetActivity(Activity.Idle);
+                        break;
+                    case 23:
+                        goto case 24;
+                    case 24:
+                        SetAnimation(25, false);
                         break;
                     default:
                         SetAnimation();
@@ -945,6 +974,9 @@ public class Player
                 break;
             case Activity.Rolling:
                 SetAnimation(17, false);
+                break;
+            case Activity.Slamming:
+                SetAnimation(23, true);
                 break;
             case Activity.Attacking:
                 while (attackAnimation == prevAttackAnimation)
@@ -1238,9 +1270,11 @@ public class Player
             position.X = (int)Math.Round((double)position.X);
         }
 
-        if (floatTime <= 0 && walled.Bottom <= 0 && jumpTime <= 0)
+        if (floatTime <= 0 && walled.Bottom <= 0 && jumpTime <= 0 && velocity.Y < terminalVelocity)
         {
-            if (attacking != Attacking.No && velocity.Y > 0)
+            if (activity == Activity.Slamming && attacking == Attacking.Slam)
+            { velocity.Y += (Irbis.Irbis.gravity * 5) * mass * Irbis.Irbis.DeltaTime; }
+            else if (attacking != Attacking.No && velocity.Y > 0)
             { velocity.Y += (Irbis.Irbis.gravity / 2) * mass * Irbis.Irbis.DeltaTime; }
             else
             { velocity.Y += Irbis.Irbis.gravity * mass * Irbis.Irbis.DeltaTime; }
@@ -1352,6 +1386,31 @@ public class Player
         }
     }
 
+    public void Slam()
+    {
+        attackDamage = slamDamage;
+        if (direction == Direction.Left)
+        { attackCollider.X = collider.Center.X - slamColliderWidth; }
+        else
+        { attackCollider.X = collider.Center.X; }
+        attackCollider.Y = collider.Center.Y - slamColliderHeight / 2;
+        attackCollider.Width = slamColliderWidth;
+        attackCollider.Height = slamColliderHeight;
+        OnPlayerAttack(attackCollider, Attacking.Slam);
+
+        energy -= 30;
+        if (energy < 0)
+        { energy = 0; }
+        Irbis.Irbis.CameraShake(0.1f, 5f);
+        OnPlayerShockwave(collider.Center, shockwaveEffectiveDistanceSquared, (int)shockwaveEffectiveDistance, 1);
+
+        Stun(0.2f);
+        activity = Activity.Idle; attacking = Attacking.No;
+        SetAnimation(27, true);
+
+        //perform slam (shockwave + damage)
+    }
+
     public void Shockwave(List<IEnemy> enemyList)
     {
         //energyed = true;
@@ -1387,24 +1446,18 @@ public class Player
     {
         //change attackCollider based on if (attacking) and current animation
         attacking = attack;
+        SetActivity(Activity.Attacking);
         switch (attack)
         {
             case (Attacking.Attack1):
                 attackDamage = attack1Damage;
                 if (direction == Direction.Left)
-                {
-                    attackCollider.X = collider.Center.X - attackColliderWidth;
-                    attackCollider.Y = collider.Center.Y - attackColliderHeight / 2;
-                    attackCollider.Width = attackColliderWidth;
-                    attackCollider.Height = attackColliderHeight;
-                }
+                { attackCollider.X = collider.Center.X - attackColliderWidth; }
                 else
-                {
-                    attackCollider.X = collider.Center.X;
-                    attackCollider.Y = collider.Center.Y - attackColliderHeight / 2;
-                    attackCollider.Width = attackColliderWidth;
-                    attackCollider.Height = attackColliderHeight;
-                }
+                { attackCollider.X = collider.Center.X; }
+                attackCollider.Y = collider.Center.Y - attackColliderHeight / 2;
+                attackCollider.Width = attackColliderWidth;
+                attackCollider.Height = attackColliderHeight;
                 OnPlayerAttack(attackCollider, Attacking.Attack1);
                 break;
             //case (Attacking.Attack2):
@@ -1450,7 +1503,8 @@ public class Player
     public void Stun(float duration)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Stun"); }
-        stunTime += duration;
+        if (stunTime < duration)
+        { stunTime = duration; }
         inputEnabled = false;
     }
 
