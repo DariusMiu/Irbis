@@ -1,5 +1,5 @@
 # IRBIS
-## Build Version: 0.2.0.9 | Slam!  
+## Build Version: `0.2.0.9` | Slam!  
 
 
 ### Known Bug List  
