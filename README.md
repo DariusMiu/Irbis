@@ -34,9 +34,9 @@
 `Escape:` Quits to previous menu (exits the game on main menu)  
 
 
-### Playable Version
-You can download a playable version of the latest build of the game here: https://Ln2.co/irbis
-(windows only right now, I'm afraid)
+### Playable Version  
+You can download a playable version of the latest build of the game here: https://Ln2.co/irbis  
+(windows only right now, I'm afraid)  
 
 
 ### Run Requirements  
