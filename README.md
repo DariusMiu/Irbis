@@ -1,5 +1,5 @@
-## Build Version: 0.2.0.9  
-## | Slam!  
+# IRBIS
+## Build Version: 0.2.0.9 | Slam!  
 
 
 ### Known Bug List  
@@ -36,6 +36,7 @@
 
 ### Playable Version
 You can download a playable version of the latest build of the game here: https://Ln2.co/irbis
+(windows only right now, I'm afraid)
 
 
 ### Run Requirements  
