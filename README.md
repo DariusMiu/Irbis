@@ -18,20 +18,20 @@
 
 
 ### Controls  
-`~     A:` Move left  
-`~     D:` Move right  
-`~ Space:` Jump  
-`~     Q:` Shield  
-`~     E:` Shockwave (hold&release for stronger shockwave)  
-`~S+Jump:` Slam  
-`~     G:` End frame-by-frame mode  
-`~     N:` Enter frame-by-frame mode (and next frame when in frame-by-frame mode)  
-`~     R:` Use vending machine  
-`~     K:` Spawn some dudes!  
-`~LShift:` Roll  
-`~ Enter:` Attack  
-`~ Tilde:` Open developer console  
-`~Escape:` Quits to previous menu (exits the game on main menu)  
+`     A:` Move left  
+`     D:` Move right  
+` Space:` Jump  
+`     Q:` Shield  
+`     E:` Shockwave (hold&release for stronger shockwave)  
+`S+Jump:` Slam  
+`     G:` End frame-by-frame mode  
+`     N:` Enter frame-by-frame mode (and next frame when in frame-by-frame mode)  
+`     R:` Use vending machine  
+`     K:` Spawn some dudes!  
+`LShift:` Roll  
+` Enter:` Attack  
+` Tilde:` Open developer console  
+`Escape:` Quits to previous menu (exits the game on main menu)  
 
 
 ### Playable Version
