@@ -1398,6 +1398,7 @@ public class Player
         attackCollider.Height = slamColliderHeight;
         OnPlayerAttack(attackCollider, Attacking.Slam);
 
+        //autocast shockwave
         energy -= 30;
         if (energy < 0)
         { energy = 0; }

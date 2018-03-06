@@ -1861,6 +1861,8 @@ namespace Irbis
                 //MediaPlayer.Stop();
                 return true;
             }
+            else
+            { MediaPlayer.Stop(); }
             return false;
         }
 
@@ -2139,10 +2141,18 @@ namespace Irbis
 
         public void EnableLevelEditor()
         {
-            ClearUI();
-            levelEditor = sceneIsMenu = true;
-            jamie = null;
-            enemyList.Clear();
+            if (levelEditor)
+            {
+                LoadMenu(0, 0, false);
+                levelEditor = false;
+            }
+            else
+            {
+                ClearUI();
+                levelEditor = sceneIsMenu = true;
+                //jamie = null;
+                enemyList.Clear();
+            }
         }
 
         public void LevelEditor(Object threadContext)
