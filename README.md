@@ -1,5 +1,5 @@
 # IRBIS
-## Build Version: `0.2.0.9` | Slam!  
+## Build Version: `0.2.0.10` | Lights!  
 
 
 ### Known Bug List  
@@ -15,7 +15,7 @@
 `02.` C0O0 is a test level. There is no content there, only an extremely early version of a 'survival mode'  
 `03.` There is no death screen (yet!)  
 `04.` Some animations are missing. The lizard boss has none, and only uses concept art. And the player is missing attack and roll animations.  
-
+`05.` Move the torch by clicking on the screen (change the darkness of the scene with console command "`darkness={float}`")
 
 ### Controls  
 `     A:` Move left  

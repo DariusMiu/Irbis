@@ -163,6 +163,7 @@ namespace Irbis
         void Hurt(float damage);
         void Stun(float duration);
         void Draw(SpriteBatch sb);
+        void Light(SpriteBatch sb);
     }
 
     public class Irbis : Game
@@ -170,7 +171,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        public const string versionNo = "0.2.0.9";
+        public const string versionNo = "0.2.0.10";
         public const string versionID = "beta";
         public const string versionTy = "debug";
         /// Different version types: 
@@ -570,10 +571,20 @@ namespace Irbis
                 return (float)RAND.NextDouble();
             }
         }
-
+        public static Point WorldSpaceMouseLocation
+        {
+            get
+            {
+                return (mouseState.Position.ToVector2() / screenScale).ToPoint() + (camera / screenScale).ToPoint() - (halfResolution.ToVector2() / screenScale).ToPoint();
+            }
+        }
                                                                                                     //graphics
         public static GraphicsDeviceManager graphics;
         private static SpriteBatch spriteBatch;
+        private static RenderTarget2D sceneRenderTarget;
+        private static RenderTarget2D lightingRenderTarget;
+        public static float darkness = 0.5f;
+        public static bool lightingEnabled = true;
 
                                                                                                     //save info
         private static string autosave;
@@ -739,7 +750,8 @@ namespace Irbis
         public delegate bool AttackEventDelegate(Rectangle AttackCollider, Attacking Attack);
         public delegate bool ShockwaveEventDelegate(Point Origin, int RangeSquared, int Range, float Power);
 
-                                                                                                    //etc
+
+        //etc
         public static float gravity;
         private static Random RAND;
         public static Texture2D nullTex;
@@ -749,6 +761,7 @@ namespace Irbis
         public static BinaryTree<float> testTree;
         private static float nextFrameTimer;
         private static BasicEffect basicEffect;
+        //private static BasicEffect lighting;
         private static Matrix projection = Matrix.Identity;
         private static Ray[] debugrays = new Ray[50];
         private static Line[] debuglines = new Line[5];
@@ -756,12 +769,22 @@ namespace Irbis
         private static Shape shadowShape;
         private static List<Vector2> shadows;
         public static TooltipGenerator tooltipGenerator;
-        private Point worldSpaceMouseLocation;
         public static List<Song> music;
         public static List<string> musicList;
         public static List<Texture2D> logos;
         public static Rectangle testRectangle = new Rectangle(300, 500, 0,0);
+        static Torch torch;
 
+
+        public static BlendState multiplicativeBlend = new BlendState
+        {
+            AlphaBlendFunction = BlendFunction.ReverseSubtract,
+            AlphaSourceBlend = Blend.One,
+            AlphaDestinationBlend = Blend.One,
+
+            ColorBlendFunction = BlendFunction.Add,
+            ColorDestinationBlend = Blend.InverseSourceColor,
+        };
 
 
         public Irbis()
@@ -819,6 +842,13 @@ namespace Irbis
             basicEffect = new BasicEffect(graphics.GraphicsDevice);
             basicEffect.TextureEnabled = false;
             basicEffect.VertexColorEnabled = true;// = Color.Red;
+            /*//lighting.EnableDefaultLighting();
+            lighting = new BasicEffect(graphics.GraphicsDevice);
+            lighting.LightingEnabled = true;      // red  green  blue
+            lighting.AmbientLightColor = new Vector3(0.5f, 0.5f, 0.5f);
+            lighting.DiffuseColor      = new Vector3(0.1f, 0.1f, 0.8f);
+            lighting.World = Matrix.Identity;
+            lighting.View = Matrix.Identity;/**/
 
             cameraShakeLerpTimeMax = 0.025f;
             cameraShakeLerpTime = 0f;
@@ -897,6 +927,8 @@ namespace Irbis
                 savefile.Save(autosave);
             }
 
+            sceneRenderTarget = new RenderTarget2D(GraphicsDevice, resolution.X, resolution.Y);
+            lightingRenderTarget = new RenderTarget2D(GraphicsDevice, resolution.X, resolution.Y);
 
             developerConsole.textScale = textScale;
             font = new Font(LoadPNG("font"), playerSettings.characterHeight, playerSettings.characterWidth, false);
@@ -935,6 +967,8 @@ namespace Irbis
             console = false;
 
             Debug(debug);
+
+            torch = new Torch(Point.Zero);
 
             printList.Add(debuginfo);
             printList.Add(consoleWriteline);
@@ -1292,6 +1326,7 @@ namespace Irbis
             if (!sceneIsMenu && !acceptTextInput)
             {
                 LevelUpdate(gameTime);
+                torch.Update();
             }
             else
             {
@@ -1320,7 +1355,6 @@ namespace Irbis
                 }
                 previousMouseState = mouseState;
             }
-
             if (GetKeyDown(Keys.OemTilde))
             {
                 if (!sceneIsMenu && false)
@@ -2210,14 +2244,13 @@ namespace Irbis
                 screenspace.X = (int)(camera.X - halfResolution.X);
                 screenspace.Y = (int)(camera.Y - halfResolution.Y);
 
-                worldSpaceMouseLocation = (mouseState.Position.ToVector2() / screenScale).ToPoint() + (camera / screenScale).ToPoint() - (halfResolution.ToVector2() / screenScale).ToPoint();
                 if (mouseState.RightButton == ButtonState.Pressed && previousMouseState.RightButton != ButtonState.Pressed)
                 {
                     int destroyBlock = -1;
 
                     for (int i = 0; i < squareList.Count; i++)
                     {
-                        if (squareList[i].Collider.Contains(worldSpaceMouseLocation))
+                        if (squareList[i].Collider.Contains(WorldSpaceMouseLocation))
                         {
                             destroyBlock = i;
                         }
@@ -2225,14 +2258,14 @@ namespace Irbis
                     if (destroyBlock >= 0)
                     {
 
-                        WriteLine("destroying block " + destroyBlock + " at " + worldSpaceMouseLocation);
+                        WriteLine("destroying block " + destroyBlock + " at " + WorldSpaceMouseLocation);
                         squareList.RemoveAt(destroyBlock);
                     }
                     else
                     {
-                        WriteLine("spawning block with defaultTex texture at " + worldSpaceMouseLocation);
+                        WriteLine("spawning block with defaultTex texture at " + WorldSpaceMouseLocation);
                         Texture2D defaultSquareTex = LoadTexture("defaultTex");
-                        Square tempSquare = new Square(defaultSquareTex, worldSpaceMouseLocation, screenScale, false, true, 0.3f);
+                        Square tempSquare = new Square(defaultSquareTex, WorldSpaceMouseLocation, screenScale, false, true, 0.3f);
                         squareList.Add(tempSquare);
                     }
                 }
@@ -2242,7 +2275,7 @@ namespace Irbis
                     selectedBlock = -1;
                     for (int i = 0; i < squareList.Count; i++)
                     {
-                        if (squareList[i].Collider.Contains(worldSpaceMouseLocation))
+                        if (squareList[i].Collider.Contains(WorldSpaceMouseLocation))
                         {
                             selectedBlock = i;
                         }
@@ -2255,7 +2288,7 @@ namespace Irbis
 
                 if (mouseState.LeftButton == ButtonState.Pressed && selectedBlock >= 0)
                 {
-                    squareList[selectedBlock].Position = worldSpaceMouseLocation.ToVector2();
+                    squareList[selectedBlock].Position = WorldSpaceMouseLocation.ToVector2();
                 }
             }
             finally
@@ -2462,7 +2495,7 @@ namespace Irbis
         }
 
         /// <summary>
-        /// returns a random number between 0 and the passed value
+        /// returns a random number between 0 and the passed value (not including the value)
         /// </summary>
         public static int RandomInt(int maxValue)
         {
@@ -2926,9 +2959,18 @@ namespace Irbis
                 switch (Boss.Trim().ToLower())
                 {
                     case "lizard":
-                        LizardGuy tempLizardGuy = new LizardGuy(LoadTexture("Lizard"), Location, 999, 50, 500, null, 0.45f);
-                        enemyList.Add(tempLizardGuy);
-                        collisionObjects.Add(tempLizardGuy);
+                        {
+                            LizardGuy tempLizardGuy = new LizardGuy(LoadTexture("Lizard"), Location, 999, 50, 500, null, 0.45f);
+                            enemyList.Add(tempLizardGuy);
+                            collisionObjects.Add(tempLizardGuy);
+                        }
+                        break;
+                    case "wizard":
+                        {
+                            WizardGuy tempWizardGuy = new WizardGuy(LoadTexture("Wizard"), Location, 999, 50, 500, null, 0.45f);
+                            enemyList.Add(tempWizardGuy);
+                            collisionObjects.Add(tempWizardGuy);
+                        }
                         break;
                 }
             }
@@ -3969,8 +4011,37 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
                         }
                         break;
-                    //public float potionRechargeRate;
-                    //public float potionRechargeTime;
+                    case "darkness":
+                        if (float.TryParse(value, out floatResult))
+                        {
+                            darkness = floatResult;
+                        }
+                        else
+                        {
+                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                        }
+                        break;
+                    case "lightbrightness":
+                        if (float.TryParse(value, out floatResult))
+                        {
+                            jamie.lightBrightness = floatResult;
+                        }
+                        else
+                        {
+                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                        }
+                        break;
+                    case "lightsize":
+                        if (float.TryParse(value, out floatResult))
+                        {
+                            jamie.lightSize = floatResult;
+                        }
+                        else
+                        {
+                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                        }
+                        break;
+
 
 
 
@@ -4363,6 +4434,10 @@ Thank you, Ze Frank, for the inspiration.";
                         {
                             WriteLine("Use this command to summon X number of enemies: \"summonenemies=X\"");
                         }
+                        break;
+                    case "summonboss":
+                        SummonBoss(value, Vector2.Zero);
+                        //WriteLine("debug: " + debug);
                         break;
                     case "notarget":
                         AIenabled = !AIenabled;
@@ -4992,6 +5067,10 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("error: \"" + value + "\" could not be parsed");
                         }
                         break;
+                    case "lighting":
+                        lightingEnabled = !lightingEnabled;
+                        WriteLine("lightingEnabled:" + lightingEnabled);
+                        break;
                     case "crash":
                         if (string.IsNullOrWhiteSpace(value))
                         { throw new Exception("test exception"); }
@@ -5123,9 +5202,10 @@ Thank you, Ze Frank, for the inspiration.";
         protected override void Draw(GameTime gameTime)
         {
             //if (debug > 4) { methodLogger.AppendLine("Irbis.Draw"); }
-            GraphicsDevice.Clear(Color.CornflowerBlue);
             // TODO: Add your drawing code here    --------------------------------------------------------------------------------------------
-            
+
+            GraphicsDevice.SetRenderTarget(sceneRenderTarget);
+            GraphicsDevice.Clear(Color.CornflowerBlue);
             //spritebatch for BACKGROUNDS
             spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, background);
             foreach (Square b in backgroundSquareList)
@@ -5147,6 +5227,7 @@ Thank you, Ze Frank, for the inspiration.";
                     e.Draw(spriteBatch);
                 }
             }
+            torch.Draw(spriteBatch);
             if (jamie != null) { jamie.Draw(spriteBatch); }
             if (debug > 1)
             {
@@ -5171,6 +5252,32 @@ Thank you, Ze Frank, for the inspiration.";
                 }
             }
             spriteBatch.End();
+            if (lightingEnabled)
+            {
+                GraphicsDevice.SetRenderTarget(lightingRenderTarget);
+                GraphicsDevice.Clear(new Color(0f, 0f, 0f, darkness));
+
+
+                //spritebatch for LIGHTING
+                spriteBatch.Begin(blendState: multiplicativeBlend, transformMatrix: foreground);
+                torch.Light(spriteBatch);
+                if (jamie != null) { jamie.Light(spriteBatch); }
+                spriteBatch.End();
+                GraphicsDevice.SetRenderTarget(null);
+                GraphicsDevice.Clear(Color.Black);
+                spriteBatch.Begin();
+                spriteBatch.Draw(sceneRenderTarget, zeroScreenspace, Color.White);
+                spriteBatch.Draw(lightingRenderTarget, zeroScreenspace, Color.White);
+                spriteBatch.End();
+            }
+            else
+            {
+                GraphicsDevice.SetRenderTarget(null);
+                GraphicsDevice.Clear(Color.Transparent);
+                spriteBatch.Begin();
+                spriteBatch.Draw(sceneRenderTarget, zeroScreenspace, Color.White);
+                spriteBatch.End();
+            }
 
             if (debug > 4)
             {

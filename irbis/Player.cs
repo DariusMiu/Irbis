@@ -1,12 +1,12 @@
 ﻿using Irbis;
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Graphics;
 
 
 public class Player
@@ -89,6 +89,9 @@ public class Player
     public float maxShield;
     public float energy;
     public float maxEnergy;
+
+    public float lightBrightness = 1f;
+    public float lightSize = 1f;
 
     public float invulnerable;
     public float invulnerableOnTouch;
@@ -892,7 +895,7 @@ public class Player
             else
             { currentFrame = 0; }
         }
-        else if (prevActivity == Activity.Running && activity == Activity.Falling && velocity.Y > fallingVelocity)
+        else if (activity == Activity.Falling && (velocity.Y - baseVelocity.Y) > fallingVelocity && baseVelocity.Y >= 0)
         { SetAnimation(); }
         else if (activityChanged || direction != prevDirection)
         { SetAnimation(); }
@@ -964,13 +967,12 @@ public class Player
                 SetAnimation(11, false);
                 break;
             case Activity.Falling:
-                if (prevActivity == Activity.Running && velocity.Y < fallingVelocity)
-                { }
-                else
+                if ((velocity.Y - baseVelocity.Y) > fallingVelocity && baseVelocity.Y >= 0)
                 { SetAnimation(13, false); }
                 break;
             case Activity.Landing:
-                SetAnimation(15, true);
+                // if (currentAnimation == 13 || currentAnimation == 14)
+                { SetAnimation(15, true); }
                 break;
             case Activity.Rolling:
                 SetAnimation(17, false);
@@ -1585,5 +1587,12 @@ public class Player
                 { sb.Draw(shieldTex, (position + shieldOffset) * Irbis.Irbis.screenScale, shieldSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth + 0.001f); }
                 break;
         }
+    }
+
+    public void Light(SpriteBatch sb)
+    {
+        sb.Draw(tex, (position - new Vector2(64) /*- (new Vector2(128) * (lightSize - 1f))*/) * Irbis.Irbis.screenScale, new Rectangle(2304, 3584, 256, 256), Color.Black * lightBrightness, 0f, Vector2.Zero, Irbis.Irbis.screenScale /** lightSize*/, SpriteEffects.None, 0);
+        //if (shielded)
+        //{ sb.Draw(tex, (position - new Vector2(64)) * Irbis.Irbis.screenScale, new Rectangle(2048, 3584, 256, 256), Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0); }
     }
 }

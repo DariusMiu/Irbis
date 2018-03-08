@@ -92,6 +92,8 @@
     <Compile Include="Level.cs" />
     <Compile Include="Menu.cs" />
     <Compile Include="ObjectCollided.cs" />
+    <Compile Include="Particle.cs" />
+    <Compile Include="ParticleSystem.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="PlayerSettings.cs" />
     <Compile Include="Print.cs" />
@@ -107,12 +109,14 @@
     <Compile Include="Square.cs" />
     <Compile Include="Tooltip.cs" />
     <Compile Include="TooltipGenerator.cs" />
+    <Compile Include="Torch.cs" />
     <Compile Include="TotalMeanFramerate.cs" />
     <Compile Include="UIElementDiscreteSlider.cs" />
     <Compile Include="UIElementSlider.cs" />
     <Compile Include="VendingMachine.cs" />
     <Compile Include="VendingMenu.cs" />
     <Compile Include="Wall.cs" />
+    <Compile Include="WizardGuy.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
@@ -225,6 +229,9 @@
     <Content Include="content\textures\console texture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="content\textures\defaultlight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="content\textures\dirt.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -278,6 +285,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="content\textures\stun enchant icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\torchflame.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="content\textures\torchstick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="icon.bmp" />

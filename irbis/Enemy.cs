@@ -1321,4 +1321,7 @@ public class Enemy : IEnemy
                 break;
         }
     }
+
+    public void Light(SpriteBatch sb)
+    { }
 }
