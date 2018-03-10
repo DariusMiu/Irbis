@@ -1187,6 +1187,6 @@ class WizardGuy : IEnemy
         }
     }
 
-    public void Light(SpriteBatch sb)
+    public void Light(SpriteBatch sb, bool UseColor)
     { }
 }

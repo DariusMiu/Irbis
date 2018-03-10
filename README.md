@@ -1,5 +1,5 @@
 # IRBIS
-## Build Version: `0.2.0.10` | Lights!  
+## Build Version: `0.2.0.11` | PARTICLES!  
 
 
 ### Known Bug List  
@@ -8,6 +8,7 @@
 `03.` Camera swing causes weird things and has been disabled for the time being  
 `04.` Boss strike attack during bury phase sometimes hits twice  
 `05.` Tailwhip and strike seem to not trigger their knockbacks occasionally  
+`06.` Player death causes freeze with multithreading  
 
 
 ### Important Notes  

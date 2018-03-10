@@ -38,6 +38,30 @@ public struct Level
 
     public string bossName;
 
+    // Particle Systems
+    float[] PSInitialVelocityX;
+    float[] PSInitialVelocityY;
+    float[] PSForceX;
+    float[] PSForceY;
+    float[][] PSTimes;
+    float[][] PSScales;
+    float[] PSSpawnDelay;
+    float[] PSDepth;
+    float[][] PSRandomness;
+    int[] PSSpawnX;
+    int[] PSSpawnY;
+    int[] PSSpawnW;
+    int[] PSSpawnH;
+    string[][] PSTextures;
+    uint[][] PSColors;
+    int[][] PSFrames;
+    float[] PSAnimationDelay;
+    float[][] PSLightScales;
+    uint[][] PSLightColors;
+
+    // lighting
+    public float darkness;
+
     public Point[] VendingMachineLocations
     {
         get
@@ -60,7 +84,6 @@ public struct Level
             }
         }
     }
-
     public string[] VendingMachineTextures
     {
         get
@@ -72,7 +95,6 @@ public struct Level
             vendingMachineTextures = value;
         }
     }
-
     public VendingType[] VendingMachineTypes
     {
         get
@@ -84,7 +106,6 @@ public struct Level
             vendingMachineTypes = value;
         }
     }
-
     public List<Point> SquareSpawnPoints
     {
         get
@@ -107,7 +128,6 @@ public struct Level
             }
         }
     }
-
     public List<Point> BackgroundSquares
     {
         get
@@ -130,7 +150,6 @@ public struct Level
             }
         }
     }
-
     public Vector2 PlayerSpawn
     {
         get
@@ -143,7 +162,6 @@ public struct Level
             playerSpawnY = value.Y;
         }
     }
-
     public Vector2 BossSpawn
     {
         get
@@ -156,7 +174,6 @@ public struct Level
             bossSpawnY = value.Y;
         }
     }
-
     public List<Vector2> EnemySpawnPoints
     {
         get
@@ -179,7 +196,69 @@ public struct Level
             }
         }
     }
+    public ParticleSystem[] ParticleSystems
+    {
+        get
+        {
+            try
+            {
+                int length = PSInitialVelocityX.Length;
+                if (PSAnimationDelay.Length == length && PSFrames.Length == length && PSColors.Length == length && PSTextures.Length == length &&
+                    PSSpawnX.Length == length && PSSpawnY.Length == length && PSSpawnW.Length == length && PSSpawnH.Length == length && PSRandomness.Length == length &&
+                    PSDepth.Length == length && PSSpawnDelay.Length == length && PSScales.Length == length && PSTimes.Length == length && PSForceX.Length == length &&
+                    PSForceY.Length == length && PSInitialVelocityY.Length == length && PSLightScales.Length == length)
+                {
+                    ParticleSystem[] particleSystems = new ParticleSystem[length];
+                    for (int i = 0; i < length; i++)
+                    {
+                        particleSystems[i] = new ParticleSystem(new Vector2(PSInitialVelocityX[i],PSInitialVelocityY[i]), new Vector2(PSForceX[i],PSForceY[i]),PSTimes[i],PSScales[i],PSLightScales[i],PSSpawnDelay[i],PSDepth[i],
+                            PSRandomness[i], new Rectangle(PSSpawnX[i],PSSpawnY[i],PSSpawnW[i],PSSpawnH[i]),LoadTextureArray(PSTextures[i]),LoadColorArray(PSColors[i]),LoadColorArray(PSLightColors[i]),PSFrames[i],PSAnimationDelay[i]);
+                    }
+                    return particleSystems;
+                }
+                else { throw new ArraysNotSameLengthException(); }
+            }
+            catch (Exception e)
+            { Irbis.Irbis.WriteLine("Exception: " + e.Message); Console.WriteLine("Exception: " + e.Message); }
+            return new ParticleSystem[0];
+        }
+        set
+        {
+            int length = value.Length;
+            InitializeParticleSystem(length);
+            for (int i = 0; i < length; i++)
+            {
+                PSInitialVelocityX[i] = value[i].initialVelocity.X;
+                PSInitialVelocityY[i] = value[i].initialVelocity.Y;
+                PSForceX[i] = value[i].force.X;
+                PSForceY[i] = value[i].force.Y;
+                PSTimes[i] = value[i].stateTimes;
+                PSScales[i] = value[i].stateScales;
+                PSLightScales[i] = value[i].stateLightScales;
+                PSSpawnDelay[i] = value[i].spawnDelay;
+                PSDepth[i] = value[i].depth;
+                PSRandomness[i] = value[i].randomness;
+                PSSpawnX[i] = value[i].spawnArea.X;
+                PSSpawnY[i] = value[i].spawnArea.Y;
+                PSSpawnW[i] = value[i].spawnArea.Width;
+                PSSpawnH[i] = value[i].spawnArea.Height;
 
+                PSTextures[i] = new string[value[i].textures.Length];
+                for (int j = 0; j < value[i].textures.Length; j++)
+                { PSTextures[i][j] = value[i].textures[j].Name; Console.WriteLine("texture:" + value[i].textures[j].Name); }
+
+                PSColors[i] = new uint[value[i].stateColors.Length];
+                for (int j = 0; j < value[i].stateColors.Length; j++)
+                { PSColors[i][j] = ColorToUInt(value[i].stateColors[j]); }
+                PSLightColors[i] = new uint[value[i].stateLightColors.Length];
+                for (int j = 0; j < value[i].stateLightColors.Length; j++)
+                { PSLightColors[i][j] = ColorToUInt(value[i].stateLightColors[j]); }
+
+                PSFrames[i] = value[i].animationFrames;
+                PSAnimationDelay[i] = value[i].animationDelay;
+            }
+        }
+    }
 
 
     public Level(bool construct)
@@ -208,6 +287,77 @@ public struct Level
         vendingMachineTypes = new VendingType[0];
 
         bossName = string.Empty;
+
+        PSInitialVelocityX = new float[0];
+        PSInitialVelocityY = new float[0];
+        PSForceX = new float[0];
+        PSForceY = new float[0];
+        PSTimes = new float[0][];
+        PSScales = new float[0][];
+        PSLightScales = new float[0][];
+        PSSpawnDelay = new float[0];
+        PSDepth = new float[0];
+        PSRandomness = new float[0][];
+        PSSpawnX = new int[0];
+        PSSpawnY = new int[0];
+        PSSpawnW = new int[0];
+        PSSpawnH = new int[0];
+        PSTextures = new string[0][];
+        PSColors = new uint[0][];
+        PSLightColors = new uint[0][];
+        PSFrames = new int[0][];
+        PSAnimationDelay = new float[0];
+
+        darkness = 0.5f;
+    }
+
+    private uint ColorToUInt(Color color)
+    {
+        return (uint)((color.A << 24) | (color.R << 16) |
+                      (color.G << 8) | (color.B << 0));
+    }
+
+    private Color[] LoadColorArray(uint[] colors)
+    {
+        Color[] colorArray = new Color[colors.Length];
+
+        for (int i = 0; i < colors.Length; i++)
+        { colorArray[i] = new Color(colors[i]); }
+
+        return colorArray;
+    }
+
+    public Texture2D[] LoadTextureArray(string[] textures)
+    {
+        Texture2D[] textureArray = new Texture2D[textures.Length];
+
+        for (int i = 0; i < textures.Length; i++)
+        { textureArray[i] = Irbis.Irbis.LoadTexture(textures[i]); }
+
+        return textureArray;
+    }
+
+    public void InitializeParticleSystem(int length)
+    {
+        PSInitialVelocityX = new float[length];
+        PSInitialVelocityY = new float[length];
+        PSForceX = new float[length];
+        PSForceY = new float[length];
+        PSTimes = new float[length][];
+        PSScales = new float[length][];
+        PSLightScales = new float[length][];
+        PSSpawnDelay = new float[length];
+        PSDepth = new float[length];
+        PSRandomness = new float[length][];
+        PSSpawnX = new int[length];
+        PSSpawnY = new int[length];
+        PSSpawnW = new int[length];
+        PSSpawnH = new int[length];
+        PSTextures = new string[length][];
+        PSColors = new uint[length][];
+        PSLightColors = new uint[length][];
+        PSFrames = new int[length][];
+        PSAnimationDelay = new float[length];
     }
 
     public void Load(string filename)
@@ -227,12 +377,13 @@ public struct Level
         {
             Console.WriteLine("failed.\n" + e.Message);
             Irbis.Irbis.WriteLine("failed.\n" + e.Message);
-            throw;
+            Irbis.Irbis.WriteLine("attempting conversion...\n");
+            stream.Close();
+            thisLevel = Irbis.Irbis.ConvertOldLevelFileToNew(filename);
         }
         finally
         {
             Irbis.Irbis.WriteLine();
-            stream.Close();
         }
     }
 
@@ -263,42 +414,18 @@ public struct Level
     private void AssignLocalVariables(Level level)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.AssignLocalVariables"); }
-        squareSpawnPointsX = level.squareSpawnPointsX;
-        squareSpawnPointsY = level.squareSpawnPointsY;
-        squareTextures = level.squareTextures;
-        squareDepths = level.squareDepths;
+        this = level;
         Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
-        backgroundSquaresX = level.backgroundSquaresX;
-        backgroundSquaresY = level.backgroundSquaresY;
-        backgroundTextures = level.backgroundTextures;
-        backgroundSquareDepths = level.backgroundSquareDepths;
         Irbis.Irbis.WriteLine("       background squares: " + backgroundSquareDepths.Count);
-        levelName = level.levelName;
         Irbis.Irbis.WriteLine("               level name: " + levelName);
-        enemySpawnPointsX = level.enemySpawnPointsX;
-        enemySpawnPointsY = level.enemySpawnPointsY;
         Irbis.Irbis.WriteLine("       enemy spawn points: " + EnemySpawnPoints.Count);
-        isOnslaught = level.isOnslaught;
         Irbis.Irbis.WriteLine("              isOnslaught: " + isOnslaught);
-        playerSpawnX = level.playerSpawnX;
-        playerSpawnY = level.playerSpawnY;
         Irbis.Irbis.WriteLine("             player spawn: " + PlayerSpawn);
-        bossSpawnX = level.bossSpawnX;
-        bossSpawnY = level.bossSpawnY;
-        bossName = level.bossName;
         Irbis.Irbis.WriteLine("               boss spawn: " + BossSpawn);
-        vendingMachineTextures = level.vendingMachineTextures;
-        vendingMachineTypes = level.vendingMachineTypes;
-        vendingMachineLocationsX = level.vendingMachineLocationsX;
-        vendingMachineLocationsY = level.vendingMachineLocationsY;
         if (vendingMachineTextures.Length == vendingMachineTypes.Length && vendingMachineTextures.Length == vendingMachineLocationsX.Length && vendingMachineTextures.Length == vendingMachineLocationsY.Length)
-        {
-            Irbis.Irbis.WriteLine("         vending Machines: " + vendingMachineTextures.Length);
-        }
+        { Irbis.Irbis.WriteLine("         vending Machines: " + vendingMachineTextures.Length); }
         else
-        {
-            Irbis.Irbis.WriteLine("error loading vending machines, improper array lengths");
-        }
+        { Irbis.Irbis.WriteLine("error loading vending machines, improper array lengths"); }
     }
 
     public override string ToString()

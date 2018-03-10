@@ -1,8 +1,6 @@
 ﻿using Irbis;
 using System;
-using System.IO;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
@@ -470,6 +468,21 @@ public class Player
         Animate();
 
         return true;
+    }
+
+    public void ThreadPoolCallback(Object threadContext)
+    {
+        try
+        {
+            Update();
+            if (health <= 0)
+            { Irbis.Irbis.PlayerDeath(); }
+        }
+        finally
+        {
+            if (Interlocked.Decrement(ref Irbis.Irbis.pendingThreads) <= 0)
+            { Irbis.Irbis.doneEvent.Set(); }
+        }
     }
 
     private bool Player_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack)
@@ -1312,7 +1325,6 @@ public class Player
     /// </summary>
     public bool Hurt(float damage)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Hurt"); }
         if (invulnerable <= 0)
         {
             if (shielded)
@@ -1345,7 +1357,6 @@ public class Player
     /// </summary>
     public bool HurtOnTouch(float damage)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Hurt"); }
         if (invulnerableOnTouch <= 0 && invulnerable <= 0)
         {
             invulnerableOnTouch = 1;
@@ -1589,10 +1600,18 @@ public class Player
         }
     }
 
-    public void Light(SpriteBatch sb)
+    public void Light(SpriteBatch sb, bool UseColor)
     {
-        sb.Draw(tex, (position - new Vector2(64) /*- (new Vector2(128) * (lightSize - 1f))*/) * Irbis.Irbis.screenScale, new Rectangle(2304, 3584, 256, 256), Color.Black * lightBrightness, 0f, Vector2.Zero, Irbis.Irbis.screenScale /** lightSize*/, SpriteEffects.None, 0);
-        //if (shielded)
-        //{ sb.Draw(tex, (position - new Vector2(64)) * Irbis.Irbis.screenScale, new Rectangle(2048, 3584, 256, 256), Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0); }
+        if (UseColor)
+        {
+            if (shielded)
+            { sb.Draw(tex, (position - new Vector2(64)) * Irbis.Irbis.screenScale, new Rectangle(2048, 3584, 256, 256), Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0); }
+        }
+        else
+        {
+            sb.Draw(tex, (position - new Vector2(64) /*- (new Vector2(128) * (lightSize - 1f))*/) * Irbis.Irbis.screenScale, new Rectangle(2304, 3584, 256, 256), Color.Black * lightBrightness, 0f, Vector2.Zero, Irbis.Irbis.screenScale /** lightSize*/, SpriteEffects.None, 0);
+            //if (shielded)
+            //{ sb.Draw(tex, (position - new Vector2(64)) * Irbis.Irbis.screenScale, new Rectangle(2048, 3584, 256, 256), Color.Black, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0); }
+        }
     }
 }

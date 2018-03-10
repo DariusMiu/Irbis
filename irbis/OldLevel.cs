@@ -16,30 +16,83 @@ public struct OldLevel
     //public List<Square> squareList;
     private List<int> squareSpawnPointsX;
     private List<int> squareSpawnPointsY;
-    private List<float> enemySpawnPointsX;
-    private List<float> enemySpawnPointsY;
+    public List<string> squareTextures;
+    public List<float> squareDepths;
     private List<int> backgroundSquaresX;
     private List<int> backgroundSquaresY;
-
-    public string[] squareTextures;
-    public float squareDepth;
-    public string[] backgroundTextures;
-    public float[] backgroundSquareDepths;
+    public List<string> backgroundTextures;
+    public List<float> backgroundSquareDepths;
     public string levelName;
+    private List<float> enemySpawnPointsX;
+    private List<float> enemySpawnPointsY;
     public bool isOnslaught;
     private float playerSpawnX;
     private float playerSpawnY;
     private float bossSpawnX;
     private float bossSpawnY;
 
-    public Point[] SquareSpawnPoints
+    private string[] vendingMachineTextures;
+    private VendingType[] vendingMachineTypes;
+    private int[] vendingMachineLocationsX;
+    private int[] vendingMachineLocationsY;
+
+    public string bossName;
+
+    public Point[] VendingMachineLocations
     {
         get
         {
-            Point[] squareSpawns = new Point[squareSpawnPointsX.Count];
-            for (int i = 0; i < squareSpawns.Length; i++)
+            Point[] vendingMachines = new Point[vendingMachineLocationsX.Length];
+            for (int i = 0; i < vendingMachineLocationsX.Length; i++)
             {
-                squareSpawns[i] = new Point(squareSpawnPointsX[i], squareSpawnPointsY[i]);
+                vendingMachines[i] = new Point(vendingMachineLocationsX[i], vendingMachineLocationsY[i]);
+            }
+            return vendingMachines;
+        }
+        set
+        {
+            vendingMachineLocationsX = new int[value.Length];
+            vendingMachineLocationsY = new int[value.Length];
+            for (int i = 0; i < value.Length; i++)
+            {
+                vendingMachineLocationsX[i] = value[i].X;
+                vendingMachineLocationsY[i] = value[i].Y;
+            }
+        }
+    }
+
+    public string[] VendingMachineTextures
+    {
+        get
+        {
+            return vendingMachineTextures;
+        }
+        set
+        {
+            vendingMachineTextures = value;
+        }
+    }
+
+    public VendingType[] VendingMachineTypes
+    {
+        get
+        {
+            return vendingMachineTypes;
+        }
+        set
+        {
+            vendingMachineTypes = value;
+        }
+    }
+
+    public List<Point> SquareSpawnPoints
+    {
+        get
+        {
+            List<Point> squareSpawns = new List<Point>();
+            for (int i = 0; i < squareSpawnPointsX.Count; i++)
+            {
+                squareSpawns.Add(new Point(squareSpawnPointsX[i], squareSpawnPointsY[i]));
             }
             return squareSpawns;
         }
@@ -55,14 +108,14 @@ public struct OldLevel
         }
     }
 
-    public Point[] BackgroundSquares
+    public List<Point> BackgroundSquares
     {
         get
         {
-            Point[] bgSquares = new Point[backgroundSquaresX.Count];
+            List<Point> bgSquares = new List<Point>();
             for (int i = 0; i < backgroundSquaresX.Count; i++)
             {
-                bgSquares[i] = new Point(backgroundSquaresX[i], backgroundSquaresY[i]);
+                bgSquares.Add(new Point(backgroundSquaresX[i], backgroundSquaresY[i]));
             }
             return bgSquares;
         }
@@ -134,12 +187,12 @@ public struct OldLevel
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.OldLevel"); }
         squareSpawnPointsX = new List<int>();
         squareSpawnPointsY = new List<int>();
-        squareTextures = new string[0];
+        squareTextures = new List<string>();
         backgroundSquaresX = new List<int>();
         backgroundSquaresY = new List<int>();
-        backgroundTextures = new string[0];
-        backgroundSquareDepths = new float[0];
-        squareDepth = 0f;
+        backgroundTextures = new List<string>();
+        backgroundSquareDepths = new List<float>();
+        squareDepths = new List<float>();
         levelName = string.Empty;
         enemySpawnPointsX = new List<float>();
         enemySpawnPointsY = new List<float>();
@@ -148,6 +201,13 @@ public struct OldLevel
         playerSpawnY = 0;
         bossSpawnX = 0;
         bossSpawnY = 0;
+
+        vendingMachineTextures = new string[0];
+        vendingMachineLocationsX = new int[0];
+        vendingMachineLocationsY = new int[0];
+        vendingMachineTypes = new VendingType[0];
+
+        bossName = string.Empty;
     }
 
     public void Load(string filename)
@@ -200,104 +260,75 @@ public struct OldLevel
         }
     }
 
-    public static void Save(OldLevel level, string filename)
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.Save"); }
-        BinaryFormatter formatter = new BinaryFormatter();
-        FileStream stream = new FileStream(filename, FileMode.Create);
-        try
-        {
-            formatter.Serialize(stream, level);
-        }
-        catch (SerializationException e)
-        {
-            Console.WriteLine("failed.\n" + e.Message);
-            throw;
-        }
-        finally
-        {
-            stream.Close();
-        }
-    }
-
-    private void AssignLocalVariables(OldLevel OldLevel)
+    private void AssignLocalVariables(OldLevel level)
     {
         //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.AssignLocalVariables"); }
-        squareSpawnPointsX = OldLevel.squareSpawnPointsX;
-        squareSpawnPointsY = OldLevel.squareSpawnPointsY;
-        squareTextures = OldLevel.squareTextures;
-        squareDepth = OldLevel.squareDepth;
-        Irbis.Irbis.WriteLine("           squares: " + squareTextures.Length);
-        backgroundSquaresX = OldLevel.backgroundSquaresX;
-        backgroundSquaresY = OldLevel.backgroundSquaresY;
-        backgroundTextures = OldLevel.backgroundTextures;
-        backgroundSquareDepths = OldLevel.backgroundSquareDepths;
-        Irbis.Irbis.WriteLine("background squares: " + backgroundSquareDepths.Length);
-        levelName = OldLevel.levelName;
-        Irbis.Irbis.WriteLine("        OldLevel name: " + levelName);
-        enemySpawnPointsX = OldLevel.enemySpawnPointsX;
-        enemySpawnPointsY = OldLevel.enemySpawnPointsY;
-        Irbis.Irbis.WriteLine("enemy spawn points: " + EnemySpawnPoints.Count);
-        isOnslaught = OldLevel.isOnslaught;
-        Irbis.Irbis.WriteLine("       isOnslaught: " + isOnslaught);
-        playerSpawnX = OldLevel.playerSpawnX;
-        playerSpawnY = OldLevel.playerSpawnY;
-        Irbis.Irbis.WriteLine("      player spawn: " + PlayerSpawn);
-        bossSpawnX = OldLevel.bossSpawnX;
-        bossSpawnY = OldLevel.bossSpawnY;
-        Irbis.Irbis.WriteLine("        boss spawn: " + BossSpawn);
+        squareSpawnPointsX = level.squareSpawnPointsX;
+        squareSpawnPointsY = level.squareSpawnPointsY;
+        squareTextures = level.squareTextures;
+        squareDepths = level.squareDepths;
+        Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
+        backgroundSquaresX = level.backgroundSquaresX;
+        backgroundSquaresY = level.backgroundSquaresY;
+        backgroundTextures = level.backgroundTextures;
+        backgroundSquareDepths = level.backgroundSquareDepths;
+        Irbis.Irbis.WriteLine("       background squares: " + backgroundSquareDepths.Count);
+        levelName = level.levelName;
+        Irbis.Irbis.WriteLine("               level name: " + levelName);
+        enemySpawnPointsX = level.enemySpawnPointsX;
+        enemySpawnPointsY = level.enemySpawnPointsY;
+        Irbis.Irbis.WriteLine("       enemy spawn points: " + EnemySpawnPoints.Count);
+        isOnslaught = level.isOnslaught;
+        Irbis.Irbis.WriteLine("              isOnslaught: " + isOnslaught);
+        playerSpawnX = level.playerSpawnX;
+        playerSpawnY = level.playerSpawnY;
+        Irbis.Irbis.WriteLine("             player spawn: " + PlayerSpawn);
+        bossSpawnX = level.bossSpawnX;
+        bossSpawnY = level.bossSpawnY;
+        bossName = level.bossName;
+        Irbis.Irbis.WriteLine("               boss spawn: " + BossSpawn);
+        vendingMachineTextures = level.vendingMachineTextures;
+        vendingMachineTypes = level.vendingMachineTypes;
+        vendingMachineLocationsX = level.vendingMachineLocationsX;
+        vendingMachineLocationsY = level.vendingMachineLocationsY;
+        if (vendingMachineTextures.Length == vendingMachineTypes.Length && vendingMachineTextures.Length == vendingMachineLocationsX.Length && vendingMachineTextures.Length == vendingMachineLocationsY.Length)
+        {
+            Irbis.Irbis.WriteLine("         vending Machines: " + vendingMachineTextures.Length);
+        }
+        else
+        {
+            Irbis.Irbis.WriteLine("error loading vending machines, improper array lengths");
+        }
     }
 
-    public void Debug()
+    public override string ToString()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.Debug"); }
-        Irbis.Irbis.WriteLine("           squares: " + squareTextures.Length);
-        for (int i = 0; i < squareTextures.Length; i++)
+        string returnstring = "squares: " + squareTextures.Count;
+        for (int i = 0; i < squareTextures.Count; i++)
         {
-            Irbis.Irbis.WriteLine("square[" + i + "] tex: " + squareTextures[i]);
-            Irbis.Irbis.WriteLine("square[" + i + "] pos: {X:" + squareSpawnPointsX[i] + " Y:" + squareSpawnPointsY[i] + "}");
+            returnstring += "\nsquare[" + i + "] tex: " + squareTextures[i];
+            returnstring += "\nsquare[" + i + "] pos: {X:" + squareSpawnPointsX[i] + " Y:" + squareSpawnPointsY[i] + "}";
         }
+        returnstring += "\nEnemy Spawn Points: " + EnemySpawnPoints.Count;
         for (int i = 0; i < EnemySpawnPoints.Count; i++)
         {
-            Irbis.Irbis.WriteLine("enemy[" + i + "] pos: " + EnemySpawnPoints[i]);
+            returnstring += "\nenemy[" + i + "] pos: " + EnemySpawnPoints[i];
         }
-
-    }
-
-    public void Debug(bool mow)
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Debug"); }
-        Console.WriteLine("           squares: " + squareTextures.Length);
-        for (int i = 0; i < squareTextures.Length; i++)
+        returnstring += "\nVending Machine Locations: " + VendingMachineLocations.Length;
+        for (int i = 0; i < VendingMachineLocations.Length; i++)
         {
-            Console.WriteLine("square[" + i + "] tex: " + squareTextures[i]);
-            Console.WriteLine("square[" + i + "] pos: {X:" + squareSpawnPointsX[i] + " Y:" + squareSpawnPointsY[i] + "}");
+            returnstring += "\nvendingMachineLocations[" + i + "]: " + VendingMachineLocations[i];
         }
-        for (int i = 0; i < EnemySpawnPoints.Count; i++)
+        returnstring += "\nVending Machine Textures: " + VendingMachineTextures.Length;
+        for (int i = 0; i < VendingMachineTextures.Length; i++)
         {
-            Console.WriteLine("enemy[" + i + "] pos: " + EnemySpawnPoints[i]);
+            returnstring += "\nVendingMachineTextures[" + i + "]: " + VendingMachineTextures[i];
         }
-    }
-
-    public static OldLevel LevelConverter(Level level)
-    {
-        OldLevel thislevel = new OldLevel(true);
-
-        thislevel.SquareSpawnPoints = level.SquareSpawnPoints.ToArray();
-        thislevel.squareTextures = level.squareTextures.ToArray();
-        for (int i = 0; i < thislevel.squareTextures.Length; i ++)
+        returnstring += "\nVending Machine Types: " + VendingMachineTypes.Length;
+        for (int i = 0; i < VendingMachineTypes.Length; i++)
         {
-            thislevel.squareDepth = 0.3f;
+            returnstring += "\nVendingMachineTypes[" + i + "]: " + VendingMachineTypes[i];
         }
-        thislevel.BackgroundSquares = level.BackgroundSquares.ToArray();
-        thislevel.backgroundTextures = level.backgroundTextures.ToArray();
-        thislevel.backgroundSquareDepths = level.backgroundSquareDepths.ToArray();
-        thislevel.levelName = level.levelName;
-        thislevel.EnemySpawnPoints = level.EnemySpawnPoints;
-        thislevel.isOnslaught = level.isOnslaught;
-        thislevel.PlayerSpawn = level.PlayerSpawn;
-        thislevel.BossSpawn = level.BossSpawn;
-
-        return thislevel;
+        return returnstring;
     }
 }

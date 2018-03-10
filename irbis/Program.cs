@@ -21,7 +21,7 @@ namespace Irbis
             //catch (Exception e)
             //{
             //    Irbis.WriteLine("Exception: " + e.Message);
-            //    Console.WriteLine("Exception:", e.Message);
+            //    Console.WriteLine("Exception: " + e.Message);
             //}
             //finally
             //{ if (Irbis.Crash) { Irbis.ExportConsole(); } }

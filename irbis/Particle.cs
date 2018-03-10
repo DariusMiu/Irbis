@@ -35,6 +35,7 @@ public class Particle
     float[] stateTimes = new float[4];
     // size in each state (beginning of birth is birthsize, end of death is death size)
     float[] stateScales = new float[4];
+    float[] stateLightScales = new float[4];
 
     // animation system
     float timeSinceLastFrame;
@@ -44,12 +45,15 @@ public class Particle
     Rectangle animationSourceRect;
     Rectangle lightSourceRect;
     Color renderColor;
+    Color lightColor;
     float renderScale;
+    float lightScale;
     float depth;
     float currentStateTime;
 
     // colors
     Color[] stateColors = new Color[4];
+    Color[] stateLightColors = new Color[4];
 
     // current state. controls Draw()
     public State state = State.Birth;
@@ -67,7 +71,8 @@ public class Particle
     /// <param name="Times">total time each state will last: [0]=birthTime, [1]=lifeTime, [2]=deathTime</param>
     /// <param name="Scales">[0]=birthSize, [1]=lifeSize, [2]=deathSize</param>
     /// <param name="Colors">[0]=birthColor, [1]=lifeColor, [2]=deathColor</param>
-    public Particle(Texture2D Texture, int[] Frames, float AnimationDelay, Vector2 InitialPosition, Vector2 InitialVelocity, Vector2 Force, float[] Times, float[] Scales, Color[] Colors, float Depth)
+    public Particle(Texture2D Texture, int[] Frames, float AnimationDelay, Vector2 InitialPosition, Vector2 InitialVelocity, Vector2 Force,
+        float[] Times, float[] Scales, float[] LightScales, Color[] Colors, Color[] LightColors, float Depth)
     {
         tex = Texture;
         texSize = Texture.Height / 5;
@@ -90,14 +95,20 @@ public class Particle
             if (Times.Length > i)
             { stateTimes[i] = Times[i]; }
             if (Scales.Length > i)
-            { stateScales[i] = Scales[i]; }
+            { stateLightScales[i] = stateScales[i] = Scales[i]; }
+            if (LightScales.Length > i)
+            { stateLightScales[i] = LightScales[i]; }
             if (Colors.Length > i)
             { stateColors[i] = Colors[i]; }
             else
             { stateColors[i] = Color.Transparent; }
+            if (LightColors.Length > i)
+            { stateLightColors[i] = LightColors[i]; }
+            else
+            { stateLightColors[i] = Color.Transparent; }
         }
 
-        renderColor = Colors[0];
+        renderColor = stateColors[0];
     }
 
     public void Update()
@@ -105,15 +116,18 @@ public class Particle
         velocity -= force * Irbis.Irbis.DeltaTime;
         position += velocity * Irbis.Irbis.DeltaTime;
         prevState = state;
-        if (currentStateTime < stateTimes[(int)state])
+        if (currentStateTime <= stateTimes[(int)state])
         {
             currentStateTime += Irbis.Irbis.DeltaTime;
             if (currentStateTime >= stateTimes[(int)state])
-            { state++; currentStateTime = 0; currentFrame = 0; }
+            {
+                currentStateTime -= stateTimes[(int)state];
+                state++;
+                currentFrame = 0;
+            }
         }
 
-        if (state != State.Dead)
-        { Animate(); }
+        Animate();
     }
 
     private void Animate()
@@ -141,8 +155,14 @@ public class Particle
         }
 
         //lightSourceRect.X = currentFrame * texSize * 2;
-        renderColor = Color.Lerp(stateColors[(int)state], stateColors[(int)state + 1], currentStateTime / stateTimes[(int)state]);
-        renderScale = Irbis.Irbis.Lerp(stateScales[(int)state], stateScales[(int)state + 1], currentStateTime / stateTimes[(int)state]);
+        if (state != State.Dead)
+        {
+            float lerppercent = currentStateTime / stateTimes[(int)state];
+            renderColor = Color.Lerp(stateColors[(int)state], stateColors[(int)state + 1], lerppercent);
+            lightColor = Color.Lerp(stateLightColors[(int)state], stateLightColors[(int)state + 1], lerppercent);
+            renderScale = Irbis.Irbis.Lerp(stateScales[(int)state], stateScales[(int)state + 1], lerppercent);
+            lightScale = Irbis.Irbis.Lerp(stateLightScales[(int)state], stateLightScales[(int)state + 1], lerppercent);
+        }
     }
 
     public void Draw(SpriteBatch sb)
@@ -152,6 +172,11 @@ public class Particle
 
     public void Light(SpriteBatch sb)
     {
-        sb.Draw(tex, position * Irbis.Irbis.screenScale, lightSourceRect,  Color.Black, 0f, new Vector2(texSize), Irbis.Irbis.screenScale * renderScale, SpriteEffects.None, depth);
+        sb.Draw(tex, (position) * Irbis.Irbis.screenScale, lightSourceRect, Color.Black /*new Color(Color.Black, lightColor.A)*/, 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
+    }
+
+    public void ColoredLight(SpriteBatch sb)
+    {
+        sb.Draw(tex, (position) * Irbis.Irbis.screenScale, lightSourceRect, lightColor, 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
     }
 }

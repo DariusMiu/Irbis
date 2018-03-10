@@ -163,11 +163,11 @@ namespace Irbis
         void Hurt(float damage);
         void Stun(float duration);
         void Draw(SpriteBatch sb);
-        void Light(SpriteBatch sb);
+        void Light(SpriteBatch sb, bool UseColor);
     }
 
     public class Irbis : Game
-    {                                                                                               //version info
+    {                                                                                               // version info
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
@@ -179,7 +179,7 @@ namespace Irbis
         /// release candidate
         /// release
 
-                                                                                                    //debug
+                                                                                                    // debug
         public static int debug = 0;
         public static bool Crash = true;
         private static Print debuginfo;
@@ -194,7 +194,7 @@ namespace Irbis
         private static bool recordFPS;
         private static int framedropfactor = 10;
 
-                                                                                                    //console
+                                                                                                    // console
         EventHandler<TextInputEventArgs> onTextEntered;
         public static bool acceptTextInput;
         public static string textInputBuffer;
@@ -208,7 +208,7 @@ namespace Irbis
         private static Color consoleRectColor = new Color(31, 29, 37, 255);
         private static Texture2D consoleTex;
 
-                                                                                                    //properties
+                                                                                                    // properties
         public static float DeltaTime
         {
             get
@@ -578,15 +578,16 @@ namespace Irbis
                 return (mouseState.Position.ToVector2() / screenScale).ToPoint() + (camera / screenScale).ToPoint() - (halfResolution.ToVector2() / screenScale).ToPoint();
             }
         }
-                                                                                                    //graphics
+                                                                                                    // graphics
         public static GraphicsDeviceManager graphics;
         private static SpriteBatch spriteBatch;
         private static RenderTarget2D sceneRenderTarget;
         private static RenderTarget2D lightingRenderTarget;
+        private static RenderTarget2D coloredLightingRenderTarget;
         public static float darkness = 0.5f;
         public static bool lightingEnabled = true;
 
-                                                                                                    //save info
+                                                                                                    // save info
         private static string autosave;
         public static SaveFile savefile;
         public static bool isMenuScrollable;
@@ -594,7 +595,7 @@ namespace Irbis
         public static int levelListCounter;
         public static string currentLevel;
 
-                                                                                                    //lists
+                                                                                                    // lists
         private static List<Square> backgroundSquareList;
         public static List<ICollisionObject> collisionObjects;
         public static List<Square> sList;
@@ -605,18 +606,18 @@ namespace Irbis
         public static List<UIElementSlider> sliderList;
         public static string[] levelList;
 
-                                                                                                    //player
+                                                                                                    // player
         public static Player jamie;
         public static Vector2 initialPos = new Vector2(156, 93);
         public static float analogCutoff = 0.5f;
 
-                                                                                                    //onslaught
+                                                                                                    // onslaught
         public static bool onslaughtMode;
         public static OnslaughtSpawner onslaughtSpawner;
         private static Print onslaughtDisplay;
         public static int vendingMachineUseDistanceSqr;
 
-                                                                                                    //camera
+                                                                                                    // camera
 
         /// <summary>
         /// camera is what is displayed on-screen
@@ -656,8 +657,7 @@ namespace Irbis
         static Vector2 cameraSwingHeading;
         public static bool cameraSwingSetting;
 
-
-                                                                                                    //menu
+                                                                                                    // menu
         public static Menu menu;
         private static Texture2D[] menuTex;
         public static int menuSelection;
@@ -666,18 +666,24 @@ namespace Irbis
         public static int levelLoaded;
         public static int scene;
         public static bool sceneIsMenu;
-        public static bool levelEditor;
-        int selectedBlock;
         public static VendingMenu vendingMachineMenu;
 
-                                                                                                    //enemy/AI variables
+                                                                                                    // leveleditor
+        public static bool levelEditor;
+        int selectedBlock;
+        int lastEditedBlock;
+        Texture2D selectedTexture;
+        static List<Texture2D> availableTextures;
+        static Rectangle texturePanel;
+
+                                                                                                    // enemy/AI variables
         public static bool AIenabled;
         Texture2D enemy0Tex;
         private Vector2 bossSpawn;
         private string bossName;
         public List<Vector2> enemySpawnPoints;
 
-                                                                                                    //UI
+                                                                                                    // UI
         public static Font font;
         public static Bars bars;
         public static Print timerDisplay;
@@ -688,7 +694,7 @@ namespace Irbis
         public static SpriteFont spriteFont2;
         public static int vendingMenu;
 
-                                                                                                    //settings vars
+                                                                                                    // settings vars
         public static Point halfResolution;
         public static Point tempResolution;
         public static float masterAudioLevel;
@@ -697,7 +703,7 @@ namespace Irbis
         public float randomTimer;
         public static int sliderPressed;
 
-                                                                                                    //keyboard/keys
+                                                                                                    // keyboard/keys
         private static KeyboardState keyboardState;
         private static KeyboardState previousKeyboardState;
         private static MouseState mouseState;
@@ -739,25 +745,25 @@ namespace Irbis
         public static Buttons GPuseKey;
 
 
-        //threading
+                                                                                                    // threading
         private static int threadCount;
         private static bool useMultithreading = false;
         public static ManualResetEvent doneEvent;
         public static int pendingThreads;
         private static object listLock = new object();
 
-                                                                                                    //events
+                                                                                                    // events
         public delegate bool AttackEventDelegate(Rectangle AttackCollider, Attacking Attack);
         public delegate bool ShockwaveEventDelegate(Point Origin, int RangeSquared, int Range, float Power);
 
 
-        //etc
+                                                                                                    // etc
         public static float gravity;
         private static Random RAND;
         public static Texture2D nullTex;
         public static Texture2D largeNullTex;
         public static Texture2D defaultTex;
-        public static Game game;
+        public static Irbis game;
         public static BinaryTree<float> testTree;
         private static float nextFrameTimer;
         private static BasicEffect basicEffect;
@@ -773,6 +779,7 @@ namespace Irbis
         public static List<string> musicList;
         public static List<Texture2D> logos;
         public static Rectangle testRectangle = new Rectangle(300, 500, 0,0);
+        static List<ParticleSystem> particleSystems;
         static Torch torch;
 
 
@@ -929,6 +936,7 @@ namespace Irbis
 
             sceneRenderTarget = new RenderTarget2D(GraphicsDevice, resolution.X, resolution.Y);
             lightingRenderTarget = new RenderTarget2D(GraphicsDevice, resolution.X, resolution.Y);
+            coloredLightingRenderTarget = new RenderTarget2D(GraphicsDevice, resolution.X, resolution.Y);
 
             developerConsole.textScale = textScale;
             font = new Font(LoadPNG("font"), playerSettings.characterHeight, playerSettings.characterWidth, false);
@@ -953,7 +961,7 @@ namespace Irbis
 
             nullTex = LoadTexture("nullTex");
             largeNullTex = LoadTexture("largeNullTex");
-            defaultTex = LoadTexture("defaultTex");
+            selectedTexture = defaultTex = LoadTexture("defaultTex");
 
             enemySpawnPoints = new List<Vector2>();
 
@@ -968,6 +976,7 @@ namespace Irbis
 
             Debug(debug);
 
+            particleSystems = new List<ParticleSystem>();
             torch = new Torch(Point.Zero);
 
             printList.Add(debuginfo);
@@ -1153,7 +1162,7 @@ namespace Irbis
             Point[] BackgroundSquares = thisLevel.BackgroundSquares.ToArray();
 
             onslaughtMode = thisLevel.isOnslaught;
-            //initialPos = thisLevel.PlayerSpawn;
+            initialPos = thisLevel.PlayerSpawn;
             enemySpawnPoints = thisLevel.EnemySpawnPoints;
             bossSpawn = thisLevel.BossSpawn;
             bossName = thisLevel.bossName;
@@ -1244,6 +1253,16 @@ namespace Irbis
             //    backgroundSquareList.Add(tempSquare);
             //}
 
+            darkness = thisLevel.darkness;
+
+            particleSystems = new List<ParticleSystem>(thisLevel.ParticleSystems);
+
+            particleSystems.Add(new ParticleSystem(Vector2.Zero, new Vector2(-.1f,-.2f), new float[]{1,1,1}, new float[]{.2f,.2f,.2f,.2f},
+                new float[]{.4f,.4f,.4f,.4f}, 0.025f, 0.8f, new float[]{0,1f,0,0.01f,0.01f,0.01f},new Rectangle(-50,0,500,100),
+                new Texture2D[]{LoadTexture("godray1"),LoadTexture("godray2"),LoadTexture("godray3"),LoadTexture("godray4"),LoadTexture("godray5"),LoadTexture("godray6")},
+                new Color[]{},
+                new Color[]{Color.Transparent,new Color(1f,1f,1f,.2f),new Color(1f,1f,1f,.2f)}, new int[]{0,0,0,0}, 5)); /**/
+
             if (levelLoaded < 0) //THIS MEANS WE ARE LOADING A LEVEL FOR THE TITLESCREEN
             {
                 levelLoaded = 0;
@@ -1272,13 +1291,17 @@ namespace Irbis
         public static Texture2D LoadPNG(string TextureFile)
         {
             WriteLine("loading .png: " + TextureFile);
+            if (TextureFile.ToLower().EndsWith(".png"))
+            { TextureFile = TextureFile.Substring(0, TextureFile.Length - 4); }
             if (string.IsNullOrWhiteSpace(TextureFile) || !File.Exists(@".\content\textures\" + TextureFile + ".png"))
-            { return game.Content.Load<Texture2D>("defaultTex"); }
+            { Write(" failed. (" + TextureFile + ")"); return game.Content.Load<Texture2D>("defaultTex"); }
             else
             {
                 FileStream fileStream = new FileStream(@".\content\textures\" + TextureFile + ".png", FileMode.Open);
                 Texture2D spriteAtlas = Texture2D.FromStream(graphics.GraphicsDevice, fileStream);
                 fileStream.Dispose();
+                spriteAtlas.Name = TextureFile;
+                WriteLine();
                 return spriteAtlas;
             }
         }
@@ -1308,13 +1331,9 @@ namespace Irbis
             //if (debug > 0)
             //{
                 if (useMultithreading)
-                {
-                    QueueThread(new WaitCallback(DebugUpdate));
-                }
+                { QueueThread(new WaitCallback(DebugUpdate)); }
                 else
-                {
-                    DebugUpdate(null);
-                }
+                { DebugUpdate(null); }
             //}
 
             smartFPS.Update(elapsedTime);
@@ -1374,17 +1393,27 @@ namespace Irbis
             {
                 UpdateConsole();
             }
-            
+            else
+            {
+                if (useMultithreading)
+                {
+                    foreach (ParticleSystem p in particleSystems)
+                    { QueueThread(p.ThreadPoolCallback); }
+                }
+                else
+                {
+                    foreach (ParticleSystem p in particleSystems)
+                    { p.Update(); }
+                }
+            }
+
             //just don't even touch this
-            if (debug > 3)      
+            if (debug > 4)      
             {
 
-                if (mouseState.LeftButton == ButtonState.Pressed)
+                for (int i = 0; i < debugrays.Length; i++)
                 {
-                    for (int i = 0; i < debugrays.Length; i++)
-                    {
-                        debugrays[i] = new Ray(mouseState.Position.ToVector2() / screenScale, debugrays[i].Direction);
-                    }
+                    debugrays[i] = new Ray(screenSpacePlayerPos / screenScale, debugrays[i].Direction);
                 }
 
                 shadows.Clear();
@@ -1450,21 +1479,19 @@ namespace Irbis
 
 
 
-                jamie.Update();    // multithread this eventually
-                if (jamie.health <= 0)
-                {
-                    PlayerDeath();
-                    LoadLevel(currentLevel, true);
-                }
 
 
 
                 if (useMultithreading)
                 {
+                    QueueThread(jamie.ThreadPoolCallback);
                     QueueThread(new WaitCallback(Camera));
                 }
                 else
                 {
+                    jamie.Update();
+                    if (jamie.health <= 0)
+                    { Irbis.PlayerDeath(); }
                     Camera(null);
                 }
                                 
@@ -2179,13 +2206,25 @@ namespace Irbis
             {
                 LoadMenu(0, 0, false);
                 levelEditor = false;
+                availableTextures.Clear();
+                sliderList.Clear();
             }
             else
             {
                 ClearUI();
                 levelEditor = sceneIsMenu = true;
-                //jamie = null;
                 enemyList.Clear();
+                texturePanel = new Rectangle((int)((float)resolution.X * 0.8f),0,(int)((float)resolution.X * 0.2f),resolution.Y);
+                buttonList.Add(new Button(new Rectangle(texturePanel.X+10,10,30*textScale,16*textScale), Direction.Forward, "01", ">01",
+                    new Color(223, 227, 236), nullTex, font, Color.Magenta, false, true, 0.9f));
+                sliderList.Add(new UIElementSlider(Direction.Left, new Rectangle(texturePanel.X+(40*textScale),10,texturePanel.Width-50*textScale,20*textScale),
+                    Point.Zero, 1, new Color(166,030,030), Color.White, Color.White, Color.Red, nullTex, null, null, true, null, false, 0.9f, 0.899f, 0.901f, 0.902f));
+                sliderList[0].UpdateValue(0.5f);
+                string[] texlist = Directory.GetFiles(".\\content\\textures\\environment");
+                availableTextures = new List<Texture2D>();
+                availableTextures.Add(defaultTex);
+                foreach (string s in texlist)
+                { availableTextures.Add(LoadTexture(s.Substring(31))); }
             }
         }
 
@@ -2193,8 +2232,7 @@ namespace Irbis
         {
             try
             {
-                //if (debug > 4) { methodLogger.AppendLine("Irbis.LevelEditor"); }
-                debug = 3;
+                //debug = 0;
                 this.IsMouseVisible = sceneIsMenu = true;
                 //PrintDebugInfo();
                 if (!acceptTextInput)
@@ -2250,45 +2288,96 @@ namespace Irbis
 
                     for (int i = 0; i < squareList.Count; i++)
                     {
-                        if (squareList[i].Collider.Contains(WorldSpaceMouseLocation))
-                        {
-                            destroyBlock = i;
-                        }
+                        if (new Rectangle(squareList[i].Position.ToPoint(),squareList[i].texture.Bounds.Size).Contains(WorldSpaceMouseLocation))
+                        { destroyBlock = i; }
                     }
                     if (destroyBlock >= 0)
                     {
-
                         WriteLine("destroying block " + destroyBlock + " at " + WorldSpaceMouseLocation);
                         squareList.RemoveAt(destroyBlock);
                     }
                     else
                     {
-                        WriteLine("spawning block with defaultTex texture at " + WorldSpaceMouseLocation);
-                        Texture2D defaultSquareTex = LoadTexture("defaultTex");
-                        Square tempSquare = new Square(defaultSquareTex, WorldSpaceMouseLocation, screenScale, false, true, 0.3f);
-                        squareList.Add(tempSquare);
+                        WriteLine("spawning square with " + selectedTexture.Name + " at " + WorldSpaceMouseLocation);
+                        squareList.Add(new Square(selectedTexture, WorldSpaceMouseLocation, screenScale, false, true, 0.3f));
+                        selectedBlock = squareList.Count - 1;
                     }
                 }
 
-                if (mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton != ButtonState.Pressed)
+                while (acceptTextInput && selectedBlock >= 0 && textInputBuffer.Length > 0)
                 {
-                    selectedBlock = -1;
-                    for (int i = 0; i < squareList.Count; i++)
+                    if ((char.IsDigit(textInputBuffer[0])) && buttonList[0].buttonStatement.Length < 8) //-
                     {
-                        if (squareList[i].Collider.Contains(WorldSpaceMouseLocation))
+                        buttonList[0].Update(textInputBuffer[0].ToString(), false);
+                    }
+                    textInputBuffer = textInputBuffer.Substring(1);
+                    if (GetEnterKey || GetEscapeKey)
+                    {
+                        acceptTextInput = false;
+                        if (buttonList[0].buttonStatement.Length <= 0)
                         {
-                            selectedBlock = i;
+                            buttonList[0].buttonStatement = buttonList[0].originalStatement;
+                        }
+                        else
+                        {
+                            float floatResult;
+                            if (float.TryParse(buttonList[0].buttonStatement, out floatResult))
+                            {
+                                sList[selectedBlock].depth = floatResult;
+                            }
+                            else
+                            {
+                                buttonList[0].buttonStatement = buttonList[0].originalStatement;
+                            }
+                            buttonList[0].originalStatement = sList[selectedBlock].depth.ToString("0.00");
+                            buttonList[0].highlightStatement = ">" + sList[selectedBlock].depth.ToString("0.00");
+                            sliderList[0].UpdateValue(sList[selectedBlock].depth);
+                            //update sound effects volume
                         }
                     }
-                    if (selectedBlock >= 0)
-                    {
-                        WriteLine("moving block " + selectedBlock);
-                    }
                 }
 
-                if (mouseState.LeftButton == ButtonState.Pressed && selectedBlock >= 0)
+                if (mouseState.LeftButton == ButtonState.Pressed)
                 {
-                    squareList[selectedBlock].Position = WorldSpaceMouseLocation.ToVector2();
+                    if (previousMouseState.LeftButton != ButtonState.Pressed)
+                    {
+                        if (buttonList[0].Contains(mouseState))
+                        {
+                            acceptTextInput = true;
+                            menuSelection = 0;
+                        }
+                        else if (sliderList[0].Contains(mouseState))
+                        { sliderPressed = 0; }
+                        else
+                        {
+                            lastEditedBlock = -1;
+                            for (int i = 0; i < squareList.Count; i++)
+                            {
+                                if (new Rectangle(squareList[i].Position.ToPoint(), squareList[i].texture.Bounds.Size).Contains(WorldSpaceMouseLocation))
+                                { lastEditedBlock = i; }
+                            }
+                            if (lastEditedBlock >= 0)
+                            {
+                                WriteLine("moving block " + lastEditedBlock);
+                                selectedBlock = lastEditedBlock;
+                            }
+                        }
+                    }
+                    if (sliderPressed >= 0 && selectedBlock >= 0)
+                    {
+                        sList[selectedBlock].depth = ((float)(GetMouseState.X - sliderList[0].bounds.Left) / (float)(sliderList[0].bounds.Width));
+                        buttonList[0].originalStatement = sList[selectedBlock].depth.ToString("0.00");
+                        buttonList[0].highlightStatement = ">" + sList[selectedBlock].depth.ToString("0.00");
+                        sliderList[0].UpdateValue(sList[selectedBlock].depth);
+
+                    }
+                }
+                else
+                { sliderPressed = -1; }
+
+                if (mouseState.LeftButton == ButtonState.Pressed && lastEditedBlock >= 0)
+                {
+                    squareList[lastEditedBlock].Position = WorldSpaceMouseLocation.ToVector2();
                 }
             }
             finally
@@ -2300,53 +2389,55 @@ namespace Irbis
             }
         }
 
-        public bool ConvertOldLevelFilesToNew()
+        public static Level ConvertOldLevelFileToNew(string fileName)
         {
-            string[] leeevelList = Directory.GetFiles(".\\levels");
-            Console.WriteLine("length pre format check: " + leeevelList.Length);
+            //string[] leeevelList = Directory.GetFiles(".\\levels");
+            //Console.WriteLine("length pre format check: " + leeevelList.Length);
 
-            if (true)
-            {
-                List<string> tempLevelList = new List<string>();
+            //if (true)
+            //{
+            //    List<string> tempLevelList = new List<string>();
 
-                foreach (string s in leeevelList)
-                {
-                    tempLevelList.Add(s);
-                }
+            //    foreach (string s in leeevelList)
+            //    {
+            //        tempLevelList.Add(s);
+            //    }
 
-                for (int i = 0; i < tempLevelList.Count; i++)
-                {
-                    if (tempLevelList[i].StartsWith(".\\levels\\") && tempLevelList[i].EndsWith(".lvl"))
-                    {
-                        //tempLevelList[i] = tempLevelList[i].Substring(9);
-                        //tempLevelList[i] = tempLevelList[i].Remove(tempLevelList[i].Length - 4);
-                    }
-                    else
-                    {
-                        tempLevelList.RemoveAt(i);
-                    }
-                }
+            //    for (int i = 0; i < tempLevelList.Count; i++)
+            //    {
+            //        if (tempLevelList[i].StartsWith(".\\levels\\") && tempLevelList[i].EndsWith(".lvl"))
+            //        {
+            //            //tempLevelList[i] = tempLevelList[i].Substring(9);
+            //            //tempLevelList[i] = tempLevelList[i].Remove(tempLevelList[i].Length - 4);
+            //        }
+            //        else
+            //        {
+            //            tempLevelList.RemoveAt(i);
+            //        }
+            //    }
 
-                leeevelList = tempLevelList.ToArray();
-            }
+            //    leeevelList = tempLevelList.ToArray();
+            //}
 
-            Console.WriteLine("length post format check: " + leeevelList.Length);
+            //Console.WriteLine("length post format check: " + leeevelList.Length);
 
 
-            foreach (string s in leeevelList)
-            {
+            //foreach (string s in leeevelList)
+            //{
                 Level lvl = new Level(true);
-                Console.WriteLine("attempting load on: " + s);
-                lvl.Load(s);
-                Console.WriteLine(lvl.ToString());
-                OldLevel.Save(OldLevel.LevelConverter(lvl), s);
-                OldLevel testlvl = new OldLevel(true);
-                testlvl.Load(s);
-                testlvl.Debug(true);
-            }
+            //Console.WriteLine("attempting load on: " + fileName);
+            //lvl.Load(fileName);
+            //Console.WriteLine(lvl.ToString());
+            //OldLevel.Save(OldLevel.LevelConverter(lvl), fileName);
+
+            OldLevel testlvl = new OldLevel(true);
+            testlvl.Load(fileName);
+            testlvl.Load(fileName);
+            //testlvl.Debug();
+            //}
 
 
-            return true;
+            return lvl;
         }
 
         public void SaveLevel(string levelname)
@@ -2416,6 +2507,9 @@ namespace Irbis
             thisLevel.BossSpawn = bossSpawn;
             thisLevel.bossName = bossName;
             thisLevel.EnemySpawnPoints = enemySpawnPoints;
+
+            thisLevel.ParticleSystems = particleSystems.ToArray();
+            thisLevel.darkness = darkness;
 
 
             thisLevel.Save(".\\levels\\" + levelname + ".lvl");
@@ -2913,6 +3007,10 @@ namespace Irbis
 
             WriteLine("PlayerDeath");
             savefile.Save(autosave);
+
+            game.LoadLevel(currentLevel, true);
+            Irbis.pendingThreads = 0;
+            //jamie.Respawn(initialPos);
         }
 
         public void SummonGenericEnemy()
@@ -3084,8 +3182,9 @@ namespace Irbis
                 textScale = (int)(screenScale / 2) + 1;
             }
 
-            projection.M11 = 4f / (resolution.X);
-            projection.M22 = 4f / (resolution.Y);
+            projection.M11 = screenScale / (resolution.X);
+            projection.M22 = screenScale / (resolution.Y);
+            //projection = Matrix.CreateOrthographicOffCenter(0, graphics.GraphicsDevice.Viewport.Width, graphics.GraphicsDevice.Viewport.Height, 0, 0, 1);
 
             graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = settings.vSync;
             graphics.ApplyChanges();
@@ -4568,15 +4667,13 @@ Thank you, Ze Frank, for the inspiration.";
                             if (string.IsNullOrWhiteSpace(value))
                             {
                                 WriteLine("spawning block with defaultTex texture at " + new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))));
-                                Texture2D defaultSquareTex = LoadTexture("defaultTex");
-                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), screenScale, false, true, 0.3f);
+                                Square tempSquare = new Square(defaultTex, new Point((int)(camera.X - (camera.X % 32)), (int)(camera.Y - (camera.Y % 32))), screenScale, false, true, 0.3f);
                                 squareList.Add(tempSquare);
                             }
                             else
                             {
                                 WriteLine("spawning block with" + value + " texture at " + new Point((int)(camera.X % 32), (int)(camera.Y % 32)));
-                                Texture2D defaultSquareTex = LoadTexture(value);
-                                Square tempSquare = new Square(defaultSquareTex, new Point((int)(camera.X % 32), (int)(camera.Y % 32)), screenScale, false, true, 0.3f);
+                                Square tempSquare = new Square(defaultTex, new Point((int)(camera.X % 32), (int)(camera.Y % 32)), screenScale, false, true, 0.3f);
                                 squareList.Add(tempSquare);
                             }
                         }
@@ -4703,6 +4800,18 @@ Thank you, Ze Frank, for the inspiration.";
                             jamie.position.Y += tempPoint.X;
 
                             WriteLine("moved player to " + jamie.position);
+                        }
+                        break;
+                    case "testparticles":
+                        particleSystems.Add(new ParticleSystem(new Vector2(0, -10), new Vector2(0, 25), new float[] { 0.2f, 1f, 0.2f },
+                        new float[] { 0.1f, 0.1f, 0.05f, 0f }, new float[] { }, 0.01f, 0.6f, new float[] { 10, 25, 0, 0, 0.05f, 0.1f },
+                        new Rectangle(PointParser(value), new Point(3, 5)), new Texture2D[] { Irbis.LoadTexture("torchflame") },
+                        new Color[] {Color.White,Color.White,Color.Black},new Color[] {Color.White}, new int[] {1,1,3,1}, 0.1f));
+                        break;
+                    case "particles":
+                        for (int i = 0; i < particleSystems.Count; i++)
+                        {
+                            Irbis.WriteLine("ParticleSystem[" + i + "] spawnArea:" + particleSystems[i].spawnArea);
                         }
                         break;
                     case "random":
@@ -5227,6 +5336,9 @@ Thank you, Ze Frank, for the inspiration.";
                     e.Draw(spriteBatch);
                 }
             }
+
+            foreach (ParticleSystem p in particleSystems)
+            { p.Draw(spriteBatch); }
             torch.Draw(spriteBatch);
             if (jamie != null) { jamie.Draw(spriteBatch); }
             if (debug > 1)
@@ -5256,18 +5368,34 @@ Thank you, Ze Frank, for the inspiration.";
             {
                 GraphicsDevice.SetRenderTarget(lightingRenderTarget);
                 GraphicsDevice.Clear(new Color(0f, 0f, 0f, darkness));
-
-
                 //spritebatch for LIGHTING
                 spriteBatch.Begin(blendState: multiplicativeBlend, transformMatrix: foreground);
-                torch.Light(spriteBatch);
-                if (jamie != null) { jamie.Light(spriteBatch); }
+                foreach (ParticleSystem p in particleSystems)
+                { p.Light(spriteBatch, false); }
+                torch.Light(spriteBatch, false);
+                if (jamie != null) { jamie.Light(spriteBatch, false); }
                 spriteBatch.End();
+
+
+                GraphicsDevice.SetRenderTarget(coloredLightingRenderTarget);
+                GraphicsDevice.Clear(Color.Transparent);
+                //spritebatch for COLORED LIGHTING
+                spriteBatch.Begin(blendState: BlendState.Additive, transformMatrix: foreground);
+                foreach (ParticleSystem p in particleSystems)
+                { p.Light(spriteBatch, true); }
+                torch.Light(spriteBatch, true);
+                if (jamie != null) { jamie.Light(spriteBatch, true); }
+                spriteBatch.End();
+
+
                 GraphicsDevice.SetRenderTarget(null);
                 GraphicsDevice.Clear(Color.Black);
-                spriteBatch.Begin();
+                spriteBatch.Begin(blendState: BlendState.AlphaBlend);
                 spriteBatch.Draw(sceneRenderTarget, zeroScreenspace, Color.White);
                 spriteBatch.Draw(lightingRenderTarget, zeroScreenspace, Color.White);
+                GraphicsDevice.BlendState = BlendState.Additive;
+                spriteBatch.Draw(coloredLightingRenderTarget, zeroScreenspace, Color.White);
+                GraphicsDevice.BlendState = BlendState.AlphaBlend;
                 spriteBatch.End();
             }
             else
@@ -5281,6 +5409,7 @@ Thank you, Ze Frank, for the inspiration.";
 
             if (debug > 4)
             {
+                basicEffect.Projection = projection;
                 foreach (EffectPass effectPass in basicEffect.CurrentTechnique.Passes)
                 {
                     effectPass.Apply();
@@ -5357,6 +5486,23 @@ Thank you, Ze Frank, for the inspiration.";
                         }
                     }
                 }
+                else
+                {
+                    spriteBatch.Draw(nullTex, texturePanel, null, new Color(31, 29, 37, 205), 0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                    int texwidth = (int)((float)resolution.X*0.1f);
+                    for (int i = 0; i < availableTextures.Count; i+=2)
+                    {
+                        spriteBatch.Draw(availableTextures[i], new Rectangle(texturePanel.X,(int)(texwidth*(i/2f)+(30*textScale)),texwidth,texwidth), null, new Color(255, 255, 255, 205), 0f, Vector2.Zero, SpriteEffects.None, 0.95f);
+                        if (mouseState.LeftButton == ButtonState.Pressed && (new Rectangle(texturePanel.X,(int)(texwidth*(i/2f)+(30*textScale)),texwidth,texwidth)).Contains(mouseState.Position))
+                        { selectedTexture = availableTextures[i]; }
+                    }
+                    for (int i = 1; i < availableTextures.Count; i += 2)
+                    {
+                        spriteBatch.Draw(availableTextures[i], new Rectangle(texturePanel.X+texwidth,(int)(texwidth*((i-1)/2f)+(30*textScale)),texwidth,texwidth), null, new Color(255, 255, 255, 205), 0f, Vector2.Zero, SpriteEffects.None, 0.95f);
+                        if (mouseState.LeftButton == ButtonState.Pressed && (new Rectangle(texturePanel.X+texwidth,(int)(texwidth*((i-1)/2f)+(30*textScale)),texwidth,texwidth)).Contains(mouseState.Position))
+                        { selectedTexture = availableTextures[i]; }
+                    }
+                }
 
                 // debug stuff
                 debuginfo.Draw(spriteBatch);
@@ -5366,12 +5512,9 @@ Thank you, Ze Frank, for the inspiration.";
                     RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false);
                 }
 
-                if (scene == 5)
+                foreach (UIElementSlider s in sliderList)
                 {
-                    foreach (UIElementSlider s in sliderList)
-                    {
-                        s.Draw(spriteBatch);
-                    }
+                    s.Draw(spriteBatch);
                 }
 
                 foreach (Button b in buttonList)

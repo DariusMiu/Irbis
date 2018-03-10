@@ -258,10 +258,7 @@ public struct Shape
                 Irbis.Irbis.WriteLine("Triangulation failed.");
                 Irbis.Irbis.WriteLine("untriangulated vertices:" + vertexList.Count);
                 for (int i = 0; i < vertexList.Count; i++)
-                {
-                    Irbis.Irbis.Write(" vertex[" + vertexList[i] + "]:" + vertices[vertexList[i]]);
-
-                }
+                { Irbis.Irbis.Write(" vertex[" + vertexList[i] + "]:" + vertices[vertexList[i]]); }
                 Irbis.Irbis.WriteLine();
                 Irbis.Irbis.WriteLine();
             }
