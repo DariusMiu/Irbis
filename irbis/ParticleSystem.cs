@@ -67,6 +67,14 @@ public class ParticleSystem
             { stateScales[i] = Scales[i]; }
             if (LightScales.Length > i)
             { stateLightScales[i] = LightScales[i]; }
+            if (Colors.Length > i)
+            { stateColors[i] = Colors[i]; }
+            else
+            { stateColors[i] = Color.Transparent; }
+            if (LightColors.Length > i)
+            { stateLightColors[i] = LightColors[i]; }
+            else
+            { stateLightColors[i] = Color.Transparent; }
         }
         depth = Depth;
         for (int i = 0; i < 7; i++)
@@ -76,8 +84,6 @@ public class ParticleSystem
         }
         spawnArea = Spawn;
         textures = Textures;
-        stateColors = Colors;
-        stateLightColors = LightColors;
         animationFrames = Frames;
         animationDelay = AnimationDelay;
 
@@ -89,11 +95,16 @@ public class ParticleSystem
         if (timeSinceLastSpawn >= nextDelay)
         {
             particleList.Add(
-                new Particle(textures[Irbis.Irbis.RandomInt(textures.Length)], animationFrames, animationDelay,
+                new Particle(this, Irbis.Irbis.RandomInt(textures.Length),
                 new Vector2(spawnArea.X + (Irbis.Irbis.RandomFloat * spawnArea.Width), spawnArea.Y + (Irbis.Irbis.RandomFloat * spawnArea.Height)),
                 new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.Y),
                 new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.Y),
-                stateTimes, stateScales, stateLightScales, stateColors, stateLightColors, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[6]) + depth)
+                stateTimes, stateScales, stateLightScales,((Irbis.Irbis.RandomFloat - 0.5f) * randomness[6]) + depth)
+                /*ref textures[Irbis.Irbis.RandomInt(textures.Length)], animationFrames, animationDelay,
+                new Vector2(spawnArea.X + (Irbis.Irbis.RandomFloat * spawnArea.Width), spawnArea.Y + (Irbis.Irbis.RandomFloat * spawnArea.Height)),
+                new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.Y),
+                new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.Y),
+                stateTimes, stateScales, stateLightScales, stateColors, stateLightColors, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[6]) + depth)/**/
             ); particles++;
             timeSinceLastSpawn = 0;
             nextDelay = ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[5]) + spawnDelay;

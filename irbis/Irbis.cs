@@ -977,7 +977,7 @@ namespace Irbis
             Debug(debug);
 
             particleSystems = new List<ParticleSystem>();
-            torch = new Torch(Point.Zero);
+            //torch = new Torch(Point.Zero);
 
             printList.Add(debuginfo);
             printList.Add(consoleWriteline);
@@ -1131,9 +1131,9 @@ namespace Irbis
             }
             else if (scene == 0)
             { // PATREON
-                //Print tempPrint = new Print(font.charHeight * 15 * textScale, font, Color.White, false, new Point(((logos.Count) * 72), zeroScreenspace.Height /*- 28*/ - ((textScale * font.charHeight) /*/ 2*/)), Direction.Left, 0.95f);
-                //tempPrint.Update(" patreon.com/Ln2", true);
-                //printList.Add(tempPrint);
+                Print tempPrint = new Print(font.charHeight * 15 * textScale, font, Color.White, false, new Point(((logos.Count) * 72), zeroScreenspace.Height /*- 28*/ - ((textScale * font.charHeight) /*/ 2*/)), Direction.Left, 0.95f);
+                tempPrint.Update("patreon.com/Ln2", true);
+                printList.Add(tempPrint);
             }
 
             //this is where all the crazy stuff happens
@@ -1171,13 +1171,7 @@ namespace Irbis
             Texture2D centerTex = LoadTexture("centerTexture");
 
             if (loadUI)
-            {
-                bars = new Bars(LoadTexture("bar health"), LoadTexture("bar shield"), LoadTexture("bar energy"), LoadTexture("bar potion fill 1"), LoadTexture("bar enemy fill"), LoadTexture("shieldBar"), LoadTexture("bars"), LoadTexture("bar enemy"), new[] { LoadTexture("bar potion 1"), LoadTexture("bar potion 2"), LoadTexture("bar potion 3")});
-                if (jamie != null)
-                { jamie.Respawn(initialPos); }
-                else
-                { LoadPlayer(); }
-            }
+            { LoadUI(); }
             else
             {
                 if (jamie != null)
@@ -1257,11 +1251,11 @@ namespace Irbis
 
             particleSystems = new List<ParticleSystem>(thisLevel.ParticleSystems);
 
-            particleSystems.Add(new ParticleSystem(Vector2.Zero, new Vector2(-.1f,-.2f), new float[]{1,1,1}, new float[]{.2f,.2f,.2f,.2f},
-                new float[]{.4f,.4f,.4f,.4f}, 0.025f, 0.8f, new float[]{0,1f,0,0.01f,0.01f,0.01f},new Rectangle(-50,0,500,100),
-                new Texture2D[]{LoadTexture("godray1"),LoadTexture("godray2"),LoadTexture("godray3"),LoadTexture("godray4"),LoadTexture("godray5"),LoadTexture("godray6")},
-                new Color[]{},
-                new Color[]{Color.Transparent,new Color(1f,1f,1f,.2f),new Color(1f,1f,1f,.2f)}, new int[]{0,0,0,0}, 5)); /**/
+            /*particleSystems.Add(new ParticleSystem(Vector2.Zero, new Vector2(-.1f,-.2f), new float[]{2,3,2}, new float[]{1,1,1,1},
+                new float[]{2,2,2,2}, 0.25f, 0.8f, new float[]{0,1f,0,0.01f,0.01f,0.01f},new Rectangle(-50,0,500,100),
+                new Texture2D[]{LoadTexture("godray1")//,LoadTexture("godray2"),LoadTexture("godray3"),LoadTexture("godray4"),LoadTexture("godray5"),LoadTexture("godray6")
+                },new Color[]{Color.Transparent,Color.White,Color.White},new Color[]{Color.Transparent,new Color(1f,1f,0.5f,1f),new Color(1f,1f,1f,.5f)},
+                new int[]{0,0,0,0}, 5)); /**/
 
             if (levelLoaded < 0) //THIS MEANS WE ARE LOADING A LEVEL FOR THE TITLESCREEN
             {
@@ -1277,6 +1271,16 @@ namespace Irbis
             }
 
             SummonBoss(bossName, bossSpawn);
+        }
+
+        public void LoadUI()
+        {
+            bars = new Bars(LoadTexture("bar health"), LoadTexture("bar shield"), LoadTexture("bar energy"), LoadTexture("bar potion fill 1"), LoadTexture("bar enemy fill"), LoadTexture("shieldBar"), LoadTexture("bars"), LoadTexture("bar enemy"), new[] { LoadTexture("bar potion 1"), LoadTexture("bar potion 2"), LoadTexture("bar potion 3")});
+            if (jamie != null)
+            { jamie.Respawn(initialPos); }
+            else
+            { LoadPlayer(); }
+            levelLoaded = scene = 11;
         }
 
         public static Texture2D LoadTexture(string TextureFile)
@@ -1345,7 +1349,7 @@ namespace Irbis
             if (!sceneIsMenu && !acceptTextInput)
             {
                 LevelUpdate(gameTime);
-                torch.Update();
+                //torch.Update();
             }
             else
             {
@@ -5339,7 +5343,7 @@ Thank you, Ze Frank, for the inspiration.";
 
             foreach (ParticleSystem p in particleSystems)
             { p.Draw(spriteBatch); }
-            torch.Draw(spriteBatch);
+            //torch.Draw(spriteBatch);
             if (jamie != null) { jamie.Draw(spriteBatch); }
             if (debug > 1)
             {
@@ -5372,7 +5376,7 @@ Thank you, Ze Frank, for the inspiration.";
                 spriteBatch.Begin(blendState: multiplicativeBlend, transformMatrix: foreground);
                 foreach (ParticleSystem p in particleSystems)
                 { p.Light(spriteBatch, false); }
-                torch.Light(spriteBatch, false);
+                //torch.Light(spriteBatch, false);
                 if (jamie != null) { jamie.Light(spriteBatch, false); }
                 spriteBatch.End();
 
@@ -5383,7 +5387,7 @@ Thank you, Ze Frank, for the inspiration.";
                 spriteBatch.Begin(blendState: BlendState.Additive, transformMatrix: foreground);
                 foreach (ParticleSystem p in particleSystems)
                 { p.Light(spriteBatch, true); }
-                torch.Light(spriteBatch, true);
+                //torch.Light(spriteBatch, true);
                 if (jamie != null) { jamie.Light(spriteBatch, true); }
                 spriteBatch.End();
 
@@ -5479,7 +5483,7 @@ Thank you, Ze Frank, for the inspiration.";
                     { // everything in this if is displayed ONLY on the main menu before a game has been started
                         if (logos != null)
                         {
-                            for (int i = 0; i < logos.Count -1 /*remove -1 to enable patreon logo*/; i++)
+                            for (int i = 0; i < logos.Count /*remove -1 to enable patreon logo*/; i++)
                             { // PATREON
                                 spriteBatch.Draw(logos[i], new Vector2((i * 72) + 5, zeroScreenspace.Height - 69), null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.9f);
                             }

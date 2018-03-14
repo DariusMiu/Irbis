@@ -22,7 +22,8 @@ public class Particle
     // 1 = life (loop)
     // 2 = death
     // 3 = light (loop?)
-    Texture2D tex;
+    ParticleSystem parentSystem;
+    int tex;
     int texSize;
 
     // vectors
@@ -40,7 +41,7 @@ public class Particle
     // animation system
     float timeSinceLastFrame;
     int currentFrame;
-    int[] animationFrames = new int[4];
+    //int[] animationFrames = new int[4];
     float[] animationSpeed = new float[4];
     Rectangle animationSourceRect;
     Rectangle lightSourceRect;
@@ -52,8 +53,6 @@ public class Particle
     float currentStateTime;
 
     // colors
-    Color[] stateColors = new Color[4];
-    Color[] stateLightColors = new Color[4];
 
     // current state. controls Draw()
     public State state = State.Birth;
@@ -71,11 +70,12 @@ public class Particle
     /// <param name="Times">total time each state will last: [0]=birthTime, [1]=lifeTime, [2]=deathTime</param>
     /// <param name="Scales">[0]=birthSize, [1]=lifeSize, [2]=deathSize</param>
     /// <param name="Colors">[0]=birthColor, [1]=lifeColor, [2]=deathColor</param>
-    public Particle(Texture2D Texture, int[] Frames, float AnimationDelay, Vector2 InitialPosition, Vector2 InitialVelocity, Vector2 Force,
-        float[] Times, float[] Scales, float[] LightScales, Color[] Colors, Color[] LightColors, float Depth)
+    public Particle(ParticleSystem ParentSystem, int Texture, Vector2 InitialPosition, Vector2 InitialVelocity, Vector2 Force,
+        float[] Times, float[] Scales, float[] LightScales, float Depth)
     {
+        parentSystem = ParentSystem;
         tex = Texture;
-        texSize = Texture.Height / 5;
+        texSize = ParentSystem.textures[tex].Height / 5;
         velocity = InitialVelocity;
         position = InitialPosition;
         force = Force;
@@ -84,11 +84,11 @@ public class Particle
         animationSourceRect = new Rectangle(0, 0, texSize, texSize);
         lightSourceRect = new Rectangle(0, texSize*3, texSize*2, texSize*2);
 
-        animationSpeed[0] = Times[0] / (Frames[0] + 1);
-        animationSpeed[1] = AnimationDelay;
-        animationSpeed[2] = Times[2] / (Frames[2] + 1);
-        animationSpeed[3] = AnimationDelay;
-        animationFrames = Frames;
+        animationSpeed[0] = Times[0] / (ParentSystem.animationFrames[0] + 1);
+        animationSpeed[1] = ParentSystem.animationDelay;
+        animationSpeed[2] = Times[2] / (ParentSystem.animationFrames[2] + 1);
+        animationSpeed[3] = ParentSystem.animationDelay;
+        //animationFrames = ParentSystem.animationFrames;
 
         for (int i = 0; i < 4; i++)
         {
@@ -98,18 +98,11 @@ public class Particle
             { stateLightScales[i] = stateScales[i] = Scales[i]; }
             if (LightScales.Length > i)
             { stateLightScales[i] = LightScales[i]; }
-            if (Colors.Length > i)
-            { stateColors[i] = Colors[i]; }
-            else
-            { stateColors[i] = Color.Transparent; }
-            if (LightColors.Length > i)
-            { stateLightColors[i] = LightColors[i]; }
-            else
-            { stateLightColors[i] = Color.Transparent; }
         }
 
-        renderColor = stateColors[0];
-    }
+        renderColor = parentSystem.stateColors[0];
+        lightColor = parentSystem.stateLightColors[0];
+    }/**/
 
     public void Update()
     {
@@ -147,7 +140,7 @@ public class Particle
                 timeSinceLastFrame -= animationSpeed[(int)state];
                 animationSourceRect.X = currentFrame * texSize;
             }
-            if (currentFrame > animationFrames[(int)state])
+            if (currentFrame > parentSystem.animationFrames[(int)state])
             {
                 currentFrame = 0;
                 animationSourceRect.X = 0;
@@ -158,8 +151,8 @@ public class Particle
         if (state != State.Dead)
         {
             float lerppercent = currentStateTime / stateTimes[(int)state];
-            renderColor = Color.Lerp(stateColors[(int)state], stateColors[(int)state + 1], lerppercent);
-            lightColor = Color.Lerp(stateLightColors[(int)state], stateLightColors[(int)state + 1], lerppercent);
+            renderColor = Color.Lerp(parentSystem.stateColors[(int)state], parentSystem.stateColors[(int)state + 1], lerppercent);
+            lightColor = Color.Lerp(parentSystem.stateLightColors[(int)state], parentSystem.stateLightColors[(int)state + 1], lerppercent);
             renderScale = Irbis.Irbis.Lerp(stateScales[(int)state], stateScales[(int)state + 1], lerppercent);
             lightScale = Irbis.Irbis.Lerp(stateLightScales[(int)state], stateLightScales[(int)state + 1], lerppercent);
         }
@@ -167,16 +160,16 @@ public class Particle
 
     public void Draw(SpriteBatch sb)
     {
-        sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, renderColor, 0f, new Vector2(texSize / 2f), Irbis.Irbis.screenScale * renderScale, SpriteEffects.None, depth);
+        sb.Draw(parentSystem.textures[tex], position * Irbis.Irbis.screenScale, animationSourceRect, renderColor, 0f, new Vector2(texSize / 2f), Irbis.Irbis.screenScale * renderScale, SpriteEffects.None, depth);
     }
 
     public void Light(SpriteBatch sb)
     {
-        sb.Draw(tex, (position) * Irbis.Irbis.screenScale, lightSourceRect, Color.Black /*new Color(Color.Black, lightColor.A)*/, 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
+        sb.Draw(parentSystem.textures[tex], (position) * Irbis.Irbis.screenScale, lightSourceRect, new Color(Color.Black, renderColor.A), 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
     }
 
     public void ColoredLight(SpriteBatch sb)
     {
-        sb.Draw(tex, (position) * Irbis.Irbis.screenScale, lightSourceRect, lightColor, 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
+        sb.Draw(parentSystem.textures[tex], (position) * Irbis.Irbis.screenScale, lightSourceRect, lightColor, 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
     }
 }

@@ -219,7 +219,7 @@ public struct Level
                 else { throw new ArraysNotSameLengthException(); }
             }
             catch (Exception e)
-            { Irbis.Irbis.WriteLine("Exception: " + e.Message); Console.WriteLine("Exception: " + e.Message); }
+            { Irbis.Irbis.WriteLine("caught: " + e.Message); Console.WriteLine("caught: " + e.Message); }
             return new ParticleSystem[0];
         }
         set

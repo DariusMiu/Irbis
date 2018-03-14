@@ -481,8 +481,9 @@ public class Menu
                             }
                             else
                             {
-                                Irbis.Irbis.WriteLine("    loading " + Irbis.Irbis.savefile.lastPlayedLevel);
-                                game.LoadLevel(Irbis.Irbis.savefile.lastPlayedLevel, true);
+                                game.LoadUI();
+                                //Irbis.Irbis.WriteLine("    loading " + Irbis.Irbis.savefile.lastPlayedLevel);
+                                //game.LoadLevel(Irbis.Irbis.savefile.lastPlayedLevel, true);
                             }
                             break;
                         case 2:                         //2 == Options
