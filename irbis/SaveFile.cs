@@ -22,7 +22,6 @@ public struct SaveFile
 
     public SaveFile(bool LastLevelEmpty)
 	{
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("SaveFile.SaveFile"); }
 
               winList = new List<string>();
              loseList = new List<string>();
@@ -43,7 +42,6 @@ public struct SaveFile
 
     public void Load(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("SaveFile.Load"); }
         SaveFile thisSave = new SaveFile(true);
         Irbis.Irbis.WriteLine("loading " + filename + "...");
         FileStream stream = new FileStream(filename, FileMode.Open);
@@ -69,7 +67,6 @@ public struct SaveFile
 
     public void Save(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("SaveFile.Save"); }
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         BinaryFormatter formatter = new BinaryFormatter();
         FileStream stream = new FileStream(filename, FileMode.Create);
@@ -93,7 +90,6 @@ public struct SaveFile
 
     private void AssignLocalVariables(SaveFile save)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("SaveFile.AssignLocalVariables"); }
         winList = save.winList;
         Irbis.Irbis.WriteLine("          unlocked bosses: " + winList.Count);
         loseList = save.loseList;
@@ -119,7 +115,6 @@ public struct SaveFile
 
     public void Print(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("SaveFile.Print"); }
         SaveFile thisSave = new SaveFile(true);
         Irbis.Irbis.WriteLine("loading " + filename + "...");
         FileStream stream = new FileStream(filename, FileMode.Open);

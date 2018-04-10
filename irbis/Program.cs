@@ -13,18 +13,20 @@ namespace Irbis
         //[STAThread]
         static void Main()
         {
-            try
+            using (var game = new Irbis())
             {
-                using (var game = new Irbis())
+                try
                 { game.Run(); }
+                catch (Exception e)
+                {
+                    Irbis.WriteLine("Exception: " + e.Message);
+                    Irbis.WriteLine("Data: " + e.Data);
+                    Irbis.WriteLine("StackTrace: " + e.StackTrace);
+                    Console.WriteLine("Exception: " + e.Message);
+                }
+                finally
+                { if (Irbis.Crash) { Irbis.ExportConsole(); } }
             }
-            catch (Exception e)
-            {
-                Irbis.WriteLine("Exception: " + e.Message);
-                Console.WriteLine("Exception: " + e.Message);
-            }
-            finally
-            { if (Irbis.Crash) { Irbis.ExportConsole(); } }
         }
     }
 }

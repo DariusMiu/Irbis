@@ -34,7 +34,6 @@ public class UIElementDiscreteSlider
     public UIElementDiscreteSlider(Direction Align, Point SliderLocation, Point OverflowLocation, Texture2D[] FillTex, Texture2D[] BorderTex, Texture2D OverlayTex, Color FillColor,
         Color? BorderColor, Color? OverlayColor, int TotalNumberOfElements, int NumberOfElementsAtPrimaryLocation, Point FillSize, Point BorderSize, int NegativeSpace, float DrawDepth)
 	{
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.UIElementDiscreteSlider"); }
         primaryLocation = SliderLocation.ToVector2();
         secondaryLocation = OverflowLocation.ToVector2();
 
@@ -107,13 +106,11 @@ public class UIElementDiscreteSlider
 
     public void Update(int updateValue)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.Update"); }
         value = updateValue - 1;
     }
 
     public void Draw(SpriteBatch sb)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementDiscreteSlider.Draw"); }
         for (int i = bounds.Length - 1; i >= 0; i--)
         {
             if (value >= i) { sb.Draw(fillTextures[i], fillLocations[i], null, fillColor, 0f, Vector2.Zero, 1, SpriteEffects.None, depth + 0.01f); }

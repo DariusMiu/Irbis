@@ -26,8 +26,8 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <AutorunEnabled>true</AutorunEnabled>
-    <ApplicationRevision>11</ApplicationRevision>
-    <ApplicationVersion>0.2.0.11</ApplicationVersion>
+    <ApplicationRevision>14</ApplicationRevision>
+    <ApplicationVersion>0.2.0.14</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -82,6 +82,8 @@
     <Compile Include="Button.cs" />
     <Compile Include="Collided.cs" />
     <Compile Include="Enchant.cs" />
+    <Compile Include="Grass.cs" />
+    <Compile Include="GrassBlade.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="LizardGuy.cs" />
     <Compile Include="Node.cs" />
@@ -176,9 +178,13 @@
     <None Include="levels\c0b0.lvl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="levels\c0b1.lvl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="levels\c0o0.lvl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="content\music\bensound-betterdays.mp3" />

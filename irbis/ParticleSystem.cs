@@ -16,6 +16,7 @@ public class ParticleSystem
     public float spawnDelay;
     public float depth;
     public float timeSinceLastSpawn;
+    public float timeToLive;
 
     float nextDelay;
 
@@ -51,8 +52,9 @@ public class ParticleSystem
     /// <param name="Textures">animations. 0=birth, 1=life (loop), 2=death, 3=light (loop) (light resolution is double!) passed directly to particles.</param>
     /// <param name="Colors">[0]=birthColor, [1]=lifeColor, [2]=deathColor. passed directly to particle.</param>
     /// <param name="Frames">number of frames in each animation. passed directly to particles.</param>
+    /// <param name="TimeToLive">particle system's time to live. pass zero for forever.</param>
     public ParticleSystem(Vector2 InitialVelocity, Vector2 Force, float[] Times, float[] Scales, float[] LightScales, float SpawnDelay, float Depth, float[] Randomness, 
-        Rectangle Spawn, Texture2D[] Textures, Color[] Colors, Color[] LightColors, int[] Frames, float AnimationDelay)
+        Rectangle Spawn, Texture2D[] Textures, Color[] Colors, Color[] LightColors, int[] Frames, float AnimationDelay, float TimeToLive)
     {
         initialVelocity = InitialVelocity;
         force = Force;
@@ -86,41 +88,54 @@ public class ParticleSystem
         textures = Textures;
         animationFrames = Frames;
         animationDelay = AnimationDelay;
-
+        timeToLive = TimeToLive;
     }
-
-    public void Update()
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns>true if particle system should be terminated</returns>
+    public bool Update()
     {
         timeSinceLastSpawn += Irbis.Irbis.DeltaTime;
-        if (timeSinceLastSpawn >= nextDelay)
+        if (timeSinceLastSpawn >= nextDelay && timeToLive >= 0)
         {
             particleList.Add(
                 new Particle(this, Irbis.Irbis.RandomInt(textures.Length),
                 new Vector2(spawnArea.X + (Irbis.Irbis.RandomFloat * spawnArea.Width), spawnArea.Y + (Irbis.Irbis.RandomFloat * spawnArea.Height)),
-                new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.Y),
-                new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.Y),
-                stateTimes, stateScales, stateLightScales,((Irbis.Irbis.RandomFloat - 0.5f) * randomness[6]) + depth)
-                /*ref textures[Irbis.Irbis.RandomInt(textures.Length)], animationFrames, animationDelay,
-                new Vector2(spawnArea.X + (Irbis.Irbis.RandomFloat * spawnArea.Width), spawnArea.Y + (Irbis.Irbis.RandomFloat * spawnArea.Height)),
-                new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[0]) + initialVelocity.Y),
-                new Vector2(((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.X, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[1]) + force.Y),
-                stateTimes, stateScales, stateLightScales, stateColors, stateLightColors, ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[6]) + depth)/**/
+                new Vector2((((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[0]) + initialVelocity.X, (((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[0]) + initialVelocity.Y),
+                new Vector2((((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.X, (((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.Y),
+                stateTimes, stateScales, stateLightScales,(((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[6]) + depth)
             ); particles++;
             timeSinceLastSpawn = 0;
             nextDelay = ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[5]) + spawnDelay;
         }
-        for (int i = 0; i < particles; i++)
+        if (timeToLive > 0)
         {
-            particleList[i].Update();
-            if (particleList[i].state == Particle.State.Dead)
-            { particleList.RemoveAt(i); i--; particles--; }
+            timeToLive -= Irbis.Irbis.DeltaTime;
+            if (timeToLive <= 0)
+            { timeToLive = -1; }
         }
+        if (particles > 0)
+        {
+            for (int i = 0; i < particles; i++)
+            {
+                particleList[i].Update();
+                if (particleList[i].state == Particle.State.Dead)
+                { particleList.RemoveAt(i); i--; particles--; }
+            }
+        }
+        else if (timeToLive < 0)
+        { return true; }
+        return false;
     }
 
     public void ThreadPoolCallback(Object threadContext)
     {
         try
-        { Update(); }
+        {
+            if (Update())
+            { Irbis.Irbis.particleSystems.Remove(this); }
+        }
         finally
         {
             if (Interlocked.Decrement(ref Irbis.Irbis.pendingThreads) <= 0)
@@ -133,9 +148,7 @@ public class ParticleSystem
         if (Irbis.Irbis.debug > 1)
         { RectangleBorder.Draw(sb, spawnArea, Color.Magenta, true); }
         foreach (Particle p in particleList)
-        {
-            p.Draw(sb);
-        }
+        { p.Draw(sb); }
     }
 
     public void Light(SpriteBatch sb, bool UseColor)

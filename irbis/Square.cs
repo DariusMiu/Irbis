@@ -57,7 +57,6 @@ public class Square : ICollisionObject
 
     public Square(Texture2D Texture, Point InitialPosition, float? DrawDepth)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         if (DrawDepth != null)
         { depth = (float)DrawDepth; }
         else
@@ -75,7 +74,6 @@ public class Square : ICollisionObject
 
     public Square(Texture2D Texture, Point InitialPosition, float Scale, bool CenterTextureOnPosition, bool CreateCollider, float? DrawDepth)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         if (DrawDepth != null)
         { depth = (float)DrawDepth; }
         else
@@ -101,7 +99,6 @@ public class Square : ICollisionObject
 
     public Square(Texture2D Texture, Color drawColor, Point initialPos, Point meh, float Scale, bool hascollider, bool UseExactPixels, float? DrawDepth)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Square.Square"); }
         scale = Scale;
         if (DrawDepth != null)
         { depth = (float)DrawDepth; }

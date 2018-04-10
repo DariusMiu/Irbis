@@ -58,9 +58,27 @@ public struct Level
     float[] PSAnimationDelay;
     float[][] PSLightScales;
     uint[][] PSLightColors;
-
+    float[] PSTimeToLive;
     // lighting
     public float darkness;
+    // Grass Systems
+    float[] GinitialRotation;
+    float[] GrotationTime;
+    float[] Gdensity;
+    float[] Gdepth;
+    float[][] Grandomness;
+    float[] GrotationMin;
+    float[] GrotationMax;
+    float[] GoriginOffsetX;
+    float[] GoriginOffsetY;
+    int[] GareaX;
+    int[] GareaY;
+    int[] GareaW;
+    int[] GareaH;
+    string[] GbladeTextures;
+    int[] GtextureDimentionsX;
+    int[] GtextureDimentionsY;
+
 
     public Point[] VendingMachineLocations
     {
@@ -212,7 +230,7 @@ public struct Level
                     for (int i = 0; i < length; i++)
                     {
                         particleSystems[i] = new ParticleSystem(new Vector2(PSInitialVelocityX[i],PSInitialVelocityY[i]), new Vector2(PSForceX[i],PSForceY[i]),PSTimes[i],PSScales[i],PSLightScales[i],PSSpawnDelay[i],PSDepth[i],
-                            PSRandomness[i], new Rectangle(PSSpawnX[i],PSSpawnY[i],PSSpawnW[i],PSSpawnH[i]),LoadTextureArray(PSTextures[i]),LoadColorArray(PSColors[i]),LoadColorArray(PSLightColors[i]),PSFrames[i],PSAnimationDelay[i]);
+                            PSRandomness[i], new Rectangle(PSSpawnX[i],PSSpawnY[i],PSSpawnW[i],PSSpawnH[i]),LoadTextureArray(PSTextures[i]),LoadColorArray(PSColors[i]),LoadColorArray(PSLightColors[i]),PSFrames[i],PSAnimationDelay[i],PSTimeToLive[i]);
                     }
                     return particleSystems;
                 }
@@ -256,6 +274,59 @@ public struct Level
 
                 PSFrames[i] = value[i].animationFrames;
                 PSAnimationDelay[i] = value[i].animationDelay;
+                PSTimeToLive[i] = value[i].timeToLive;
+            }
+        }
+    }
+    public Grass[] Grasses
+    {
+        get
+        {
+            try
+            {
+                int length = GinitialRotation.Length;
+                if (GinitialRotation.Length == length && GrotationTime.Length == length && Gdensity.Length == length && Gdepth.Length == length &&
+                    Grandomness.Length == length && GrotationMin.Length == length && GrotationMax.Length == length && GoriginOffsetX.Length == length &&
+                    GoriginOffsetY.Length == length && GareaX.Length == length && GareaY.Length == length && GareaW.Length == length && GareaH.Length == length &&
+                    GbladeTextures.Length == length && GtextureDimentionsX.Length == length && GtextureDimentionsY.Length == length)
+                {
+                    Grass[] grasses = new Grass[length];
+                    for (int i = 0; i < length; i++)
+                    {
+                        grasses[i] = new Grass(GinitialRotation[i], GrotationTime[i], Gdensity[i], Gdepth[i], Grandomness[i], GrotationMin[i], GrotationMax[i],
+                            new Vector2(GoriginOffsetX[i], GoriginOffsetY[i]), new Rectangle(GareaX[i], GareaY[i], GareaW[i], GareaH[i]),
+                            Irbis.Irbis.LoadTexture(GbladeTextures[i]), new Point(GtextureDimentionsX[i], GtextureDimentionsY[i]), 900, 2);
+                    }
+                    return grasses;
+                }
+                else { throw new ArraysNotSameLengthException(); }
+            }
+            catch (Exception e)
+            { Irbis.Irbis.WriteLine("caught: " + e.Message); Console.WriteLine("caught: " + e.Message); }
+            return new Grass[0];
+        }
+        set
+        {
+            int length = value.Length;
+            InitializeGrass(length);
+            for (int i = 0; i < length; i++)
+            {
+                GinitialRotation[i] = value[i].initialRotation;
+                GrotationTime[i] = value[i].rotationTime;
+                Gdensity[i] = value[i].density;
+                Gdepth[i] = value[i].depth;
+                Grandomness[i] = value[i].randomness;
+                GrotationMin[i] = value[i].rotationMin;
+                GrotationMax[i] = value[i].rotationMax;
+                GoriginOffsetX[i] = value[i].bladeOrigin.X;
+                GoriginOffsetY[i] = value[i].bladeOrigin.Y;
+                GareaX[i] = value[i].area.X;
+                GareaY[i] = value[i].area.Y;
+                GareaW[i] = value[i].area.Width;
+                GareaH[i] = value[i].area.Height;
+                GbladeTextures[i] = value[i].bladeTextures.Name;
+                GtextureDimentionsX[i] = value[i].textureDimentions.X;
+                GtextureDimentionsY[i] = value[i].textureDimentions.Y;
             }
         }
     }
@@ -263,7 +334,6 @@ public struct Level
 
     public Level(bool construct)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Level"); }
         squareSpawnPointsX = new List<int>();
         squareSpawnPointsY = new List<int>();
         squareTextures = new List<string>();
@@ -307,8 +377,27 @@ public struct Level
         PSLightColors = new uint[0][];
         PSFrames = new int[0][];
         PSAnimationDelay = new float[0];
+        PSTimeToLive = new float[0];
 
         darkness = 0.5f;
+
+        GinitialRotation = new float[0];
+        GrotationTime = new float[0];
+        Gdensity = new float[0];
+        Gdepth = new float[0];
+        Grandomness = new float[0][];
+        GrotationMin = new float[0];
+        GrotationMax = new float[0];
+        GoriginOffsetX = new float[0];
+        GoriginOffsetY = new float[0];
+        GareaX = new int[0];
+        GareaY = new int[0];
+        GareaW = new int[0];
+        GareaH = new int[0];
+        GbladeTextures = new string[0];
+        GtextureDimentionsX = new int[0];
+        GtextureDimentionsY = new int[0];
+
     }
 
     private uint ColorToUInt(Color color)
@@ -337,6 +426,26 @@ public struct Level
         return textureArray;
     }
 
+    public void InitializeGrass(int length)
+    {
+        GinitialRotation = new float[length];
+        GrotationTime = new float[length];
+        Gdensity = new float[length];
+        Gdepth = new float[length];
+        Grandomness = new float[length][];
+        GrotationMin = new float[length];
+        GrotationMax = new float[length];
+        GoriginOffsetX = new float[length];
+        GoriginOffsetY = new float[length];
+        GareaX = new int[length];
+        GareaY = new int[length];
+        GareaW = new int[length];
+        GareaH = new int[length];
+        GbladeTextures = new string[length];
+        GtextureDimentionsX = new int[length];
+        GtextureDimentionsY = new int[length];
+    }
+
     public void InitializeParticleSystem(int length)
     {
         PSInitialVelocityX = new float[length];
@@ -358,11 +467,11 @@ public struct Level
         PSLightColors = new uint[length][];
         PSFrames = new int[length][];
         PSAnimationDelay = new float[length];
+        PSTimeToLive = new float[length];
     }
 
     public void Load(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Load"); }
         Level thisLevel = new Level(true);
         Irbis.Irbis.WriteLine("loading " + filename + "...");
         FileStream stream = new FileStream(filename, FileMode.Open);
@@ -389,7 +498,6 @@ public struct Level
 
     public void Save(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.Save"); }
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         BinaryFormatter formatter = new BinaryFormatter();
         FileStream stream = new FileStream(filename, FileMode.Create);
@@ -413,7 +521,6 @@ public struct Level
 
     private void AssignLocalVariables(Level level)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Level.AssignLocalVariables"); }
         this = level;
         Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
         Irbis.Irbis.WriteLine("       background squares: " + backgroundSquareDepths.Count);

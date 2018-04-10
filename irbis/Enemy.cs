@@ -235,7 +235,6 @@ public class Enemy : IEnemy
 
     public Enemy(string enemyName, Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, float drawDepth)
 	{
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Enemy"); }
         tex = t;
         attackPlayerLock = new object();
         collidedLock = new object();
@@ -333,7 +332,6 @@ public class Enemy : IEnemy
 
     public bool Update()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Update"); }
         if (stunned <= 0)
         {
             if (jumpTime > 0)
@@ -455,7 +453,6 @@ public class Enemy : IEnemy
 
     public void Respawn(Vector2 initialPos)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Respawn"); }
         position = initialPos * 32;
         position.X -= XcolliderOffset;
         position.Y -= YcolliderOffset;
@@ -466,7 +463,6 @@ public class Enemy : IEnemy
 
     public bool Wander()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Wander"); }
         if (wanderTime > 0)
         {
             wanderTime -= Irbis.Irbis.DeltaTime;
@@ -542,7 +538,6 @@ public class Enemy : IEnemy
 
     public bool Persue(Player player)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Persue"); }
         input = Point.Zero;
         player.heading = (player.Collider.Center - collider.Center).ToVector2();
         //player.heading.Normalize();
@@ -589,7 +584,6 @@ public class Enemy : IEnemy
 
     public bool Combat(Player player)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Combat"); }
         velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpBuildup * Irbis.Irbis.DeltaTime);
         jumpTime = 0;
 
@@ -619,7 +613,6 @@ public class Enemy : IEnemy
 
     public void Hitbox()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Hitbox"); }
         //change attackCollider based on if (attacking) and current animation
         if (lastAttackID != attackID)
         {
@@ -651,7 +644,6 @@ public class Enemy : IEnemy
 
     public void Movement()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Movement"); }
 
         if (walled.Right > 0 && velocity.X > 0)
         {
@@ -683,7 +675,6 @@ public class Enemy : IEnemy
 
     public void CalculateMovement()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.CalculateMovement"); }
         displayRect.X = (int)Position.X;
         displayRect.Y = (int)Position.Y;
         collider.X = (int)Position.X + XcolliderOffset;
@@ -694,7 +685,6 @@ public class Enemy : IEnemy
 
     public void Animate()
     {                                                        //animator
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Animate"); }
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
         if (timeSinceLastFrame >= animationSpeed[currentAnimation])
         {
@@ -866,7 +856,6 @@ public class Enemy : IEnemy
 
     public void PlayerCollision(Player player, Enemy enemy)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.PlayerCollision"); }
         lock (attackPlayerLock)
         {
             if (player.invulnerable <= 0)
@@ -894,7 +883,6 @@ public class Enemy : IEnemy
 
     public void PlayerAttackCollision()
     {
-        lastHitByAttackID = Irbis.Irbis.jamie.attackID;
         Irbis.Irbis.jamie.attackHit = true;
         Hurt(Irbis.Irbis.jamie.attackDamage);
         Stun(0.75f);
@@ -1249,13 +1237,11 @@ public class Enemy : IEnemy
 
     public void AddEffect(Enchant effect)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.AddEffect"); }
         activeEffects.Add(effect);
     }
 
     public void UpgradeEffect(int index, float duration)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.UpgradeEffect"); }
         if (activeEffects.Count > index)
         {
             activeEffects[index].strength++;
@@ -1265,7 +1251,6 @@ public class Enemy : IEnemy
 
     public void Knockback(Direction knockbackDirection, float strength)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Knockback"); }
         if (knockbackDirection == Direction.Left)
         {
             velocity.Y +=  -25f * strength;
@@ -1280,14 +1265,12 @@ public class Enemy : IEnemy
 
     public void Hurt(float damage)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Hurt"); }
         health -= damage;
         //game.CameraShake(0.075f, 0.05f * damage);
     }
 
     public void Stun(float duration)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Enemy.Stun"); }
         stunned += duration;
         AIactivity = AI.Stunned;
         attackCooldownTimer += 0.5f;

@@ -18,7 +18,6 @@ public class RectangleBorder
 
     public static void Draw(SpriteBatch sb, Rectangle referenceRectangle, Color borderColor, float depth)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Draw"); }
         lBorder.X = referenceRectangle.Left;
         lBorder.Y = referenceRectangle.Top;
         rBorder.X = referenceRectangle.Right;
@@ -42,7 +41,6 @@ public class RectangleBorder
 
     public static void Draw(SpriteBatch sb, Rectangle referenceRectangle, Color borderColor, bool screenScale)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("RectangleBorder.Draw"); }
         lBorder.X = referenceRectangle.Left;
         lBorder.Y = referenceRectangle.Top;
         rBorder.Y = referenceRectangle.Top;

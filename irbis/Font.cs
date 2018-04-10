@@ -10,7 +10,6 @@ public struct Font
 
 	public Font(Texture2D fontTexture, int characterHeight, int[] characterWidth, bool monospace)
 	{
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Font.Font"); }
         if (monospace)
         {
             tex = fontTexture;
@@ -100,7 +99,6 @@ public struct Font
     /// </summary>
     public Font(Texture2D fontTexture, int characterHeight)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Font.Font"); }
         tex = fontTexture;
         charHeight = characterHeight;
         charWidth = new int[100];

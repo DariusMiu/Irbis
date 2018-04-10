@@ -40,7 +40,6 @@ public class OnslaughtSpawner
 
     public OnslaughtSpawner()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OnslaughtSpawner.OnslaughtSpawner"); }
         wave = 1;
 
         enemyHealth = 100f;
@@ -63,7 +62,6 @@ public class OnslaughtSpawner
 
     public void NextWave()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OnslaughtSpawner.NextWave"); }
         waveStarted = false;
         wave++;
         points += pointsPerWave;
@@ -83,7 +81,6 @@ public class OnslaughtSpawner
 
     public void SkipToWave(int waveNumber)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OnslaughtSpawner.SkipToWave"); }
         wave = waveNumber - 1;
         NextWave();
     }
@@ -113,7 +110,6 @@ public class OnslaughtSpawner
 
     public bool EnemySpawnTimer()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OnslaughtSpawner.EnemySpawnTimer"); }
         timeUntilNextSpawn -= Irbis.Irbis.DeltaTime;
         if (timeUntilNextSpawn <= 0)
         {

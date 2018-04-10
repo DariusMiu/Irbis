@@ -14,31 +14,29 @@ public class Menu
     public bool Exists
     {
         get
-        {
-            return exists;
-        }
+        { return exists; }
     }
     private bool exists;
     public Menu ()
-    {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Menu.Menu"); }
-        exists = true;
-    }
+    { exists = true; }
 
     public void Create(int scene)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Menu.Create"); }
         Point tempLP;
         Point tempDP;
         switch (scene)
         {
             case 0:     //main menu
                 // tempLP.Y == (int)((number of buttons + 1) * (buttonheight * 2 * Irbis.Irbis.textScale))
-                tempLP = new Point(000, (int)((4 + 1) * (25 * 2 * Irbis.Irbis.textScale)));       //distance from the bottom right corner of the screen
+                tempLP = new Point(000, (int)((5 + 1) * (25 * 2 * Irbis.Irbis.textScale)));       //distance from the bottom right corner of the screen
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f/8f)), Irbis.Irbis.resolution.Y - (tempLP.Y - 000000000000000000000000000000000000), (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "New game", ">NEW GAME", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f/8f)), Irbis.Irbis.buttonList[0].bounds.Y + Irbis.Irbis.buttonList[0].bounds.Height, (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "Continue", ">CONTINUE", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f/8f)), Irbis.Irbis.buttonList[1].bounds.Y + Irbis.Irbis.buttonList[1].bounds.Height, (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "Options", ">OPTIONS", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f/8f)), Irbis.Irbis.buttonList[2].bounds.Y + Irbis.Irbis.buttonList[2].bounds.Height, (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "Exit();", ">EXIT();", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
+                if (!Irbis.Irbis.creditsActive)
+                { Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f / 8f)), Irbis.Irbis.buttonList[2].bounds.Y + Irbis.Irbis.buttonList[2].bounds.Height, (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "Credits", ">CREDITS", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f)); }
+                else
+                { Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f / 8f)), Irbis.Irbis.buttonList[2].bounds.Y + Irbis.Irbis.buttonList[2].bounds.Height, (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "Exit credits", ">EXIT CREDITS", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f)); }
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.resolution.X * (5f/8f)), Irbis.Irbis.buttonList[3].bounds.Y + Irbis.Irbis.buttonList[3].bounds.Height, (int)(Irbis.Irbis.resolution.X / 4f), (int)(25 * 2 * Irbis.Irbis.textScale)), Direction.Left, "Exit();", ">EXIT();", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
                 break;
             case 1:     //options menu
                 // tempLP.Y == (int)((number of buttons + 1) * (buttonheight * 2 * Irbis.Irbis.textScale))
@@ -195,33 +193,36 @@ public class Menu
                 tempLP = new Point((int)(Irbis.Irbis.resolution.X * (6f / 8f)), (int)((4 + 1) * (25 * 2 * Irbis.Irbis.textScale)));       //distance from the bottom right corner of the screen
 
 
-                Print op41t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (000 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                Print op41t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) - (50 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
                 op41t.Update("Display");
                 Irbis.Irbis.printList.Add(op41t);
-                Print op42t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (50 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                Print op42t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (00 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
                 op42t.Update("Window Scale");
                 Irbis.Irbis.printList.Add(op42t);
-                Print op42at = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X - (25 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (72 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                Print op42at = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X - (25 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (22 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
                 op42at.Update("x");
                 Irbis.Irbis.printList.Add(op42at);
-                Print op43t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (100 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                Print op43t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (50 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
                 op43t.Update("Resolution");
                 Irbis.Irbis.printList.Add(op43t);
-                Print op43at = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X - (60 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (122 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                Print op43at = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X - (60 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (72 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
                 op43at.Update("X:");
                 Irbis.Irbis.printList.Add(op43at);
-                Print op43bt = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (122 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                Print op43bt = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (72 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
                 op43bt.Update("Y:");
                 Irbis.Irbis.printList.Add(op43bt);
-                Print op46t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (150 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                Print op46t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (100 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
                 op46t.Update("vSync");
                 Irbis.Irbis.printList.Add(op46t);
+                Print op47t = new Print(100 * Irbis.Irbis.textScale, Irbis.Irbis.font, Color.White, false, new Point(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (150 * Irbis.Irbis.textScale)), Direction.Forward, 0.5f);
+                op47t.Update("Lighting");
+                Irbis.Irbis.printList.Add(op47t);
 
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 83), Irbis.Irbis.resolution.Y - (tempLP.Y - 73)), new Point(65, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 82), Irbis.Irbis.resolution.Y - (tempLP.Y - 74)), new Point(65, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 83), Irbis.Irbis.resolution.Y - (tempLP.Y - 23)), new Point(65, 1), Irbis.Irbis.textScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 82), Irbis.Irbis.resolution.Y - (tempLP.Y - 24)), new Point(65, 1), Irbis.Irbis.textScale, false, true, 0.5f));
 
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 25), Irbis.Irbis.resolution.Y - (tempLP.Y - 73)), new Point(69, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 26), Irbis.Irbis.resolution.Y - (tempLP.Y - 74)), new Point(69, 1), Irbis.Irbis.screenScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 25), Irbis.Irbis.resolution.Y - (tempLP.Y - 23)), new Point(69, 1), Irbis.Irbis.textScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 26), Irbis.Irbis.resolution.Y - (tempLP.Y - 24)), new Point(69, 1), Irbis.Irbis.textScale, false, true, 0.5f));
 
                 if (Irbis.Irbis.graphics.IsFullScreen)
                 {
@@ -234,18 +235,19 @@ public class Menu
                     Irbis.Irbis.sList[2].drawTex = Irbis.Irbis.sList[3].drawTex = false;
                 }
 
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X - (60 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (15 * Irbis.Irbis.textScale), 80 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, "windowed", ">windowed<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X + (60 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (15 * Irbis.Irbis.textScale), 80 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, "fullscreen", ">fullscreen<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (065 * Irbis.Irbis.textScale), 40 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, "", ">  <", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, true, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X - (60 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) - (35 * Irbis.Irbis.textScale), 80 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, "windowed", ">WINDOWED<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X + (60 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) - (35 * Irbis.Irbis.textScale), 80 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, "fullscreen", ">FULLSCREEN<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (15 * Irbis.Irbis.textScale), 40 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, "", ">  <", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, true, 0.5f));
 
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X - (30 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (115 * Irbis.Irbis.textScale), 40 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.tempResolution.X.ToString(), ">" + Irbis.Irbis.tempResolution.X.ToString() + "<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, true, 0.5f));
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X + (30 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (115 * Irbis.Irbis.textScale), 40 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.tempResolution.Y.ToString(), ">" + Irbis.Irbis.tempResolution.Y.ToString() + "<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, true, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X - (30 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (65 * Irbis.Irbis.textScale), 40 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.tempResolution.X.ToString(), ">" + Irbis.Irbis.tempResolution.X.ToString() + "<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, true, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X + (30 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) + (65 * Irbis.Irbis.textScale), 40 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.tempResolution.Y.ToString(), ">" + Irbis.Irbis.tempResolution.Y.ToString() + "<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, true, 0.5f));
 
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (165 * Irbis.Irbis.textScale), 50 * Irbis.Irbis.textScale, 20 * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.graphics.SynchronizeWithVerticalRetrace.ToString(), ">" + Irbis.Irbis.graphics.SynchronizeWithVerticalRetrace.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
-                
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (115 * Irbis.Irbis.textScale), 50 * Irbis.Irbis.textScale, 20 * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.graphics.SynchronizeWithVerticalRetrace.ToString(), ">" + Irbis.Irbis.graphics.SynchronizeWithVerticalRetrace.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X, (Irbis.Irbis.resolution.Y - tempLP.Y) + (165 * Irbis.Irbis.textScale), 50 * Irbis.Irbis.textScale, 20 * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.lightingEnabled.ToString(), ">" + Irbis.Irbis.lightingEnabled.ToString() + "<", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
+
                 //Save and Cancel buttons
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle((int)(Irbis.Irbis.font.charHeight * Irbis.Irbis.textScale), (int)(Irbis.Irbis.resolution.Y - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale)), (int)(50 * Irbis.Irbis.textScale), (int)(Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale)), Direction.Left, Side.Left, "\u001bSave", "<\u001bSave", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
-                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.buttonList[6].bounds.X + Irbis.Irbis.buttonList[6].bounds.Width, (int)(Irbis.Irbis.resolution.Y - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale)), (int)(100 * Irbis.Irbis.textScale), (int)(Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale)), Direction.Left, Side.Left, "\u001bCancel", "<\u001bCancel", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
+                Irbis.Irbis.buttonList.Add(new Button(new Rectangle(Irbis.Irbis.buttonList[7].bounds.X + Irbis.Irbis.buttonList[7].bounds.Width, (int)(Irbis.Irbis.resolution.Y - (Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale)), (int)(100 * Irbis.Irbis.textScale), (int)(Irbis.Irbis.font.charHeight * 2 * Irbis.Irbis.textScale)), Direction.Left, Side.Left, "\u001bCancel", "<\u001bCancel", Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
 
                 break;
             case 5:     //options - audio
@@ -421,7 +423,6 @@ public class Menu
 
     public bool Update(Irbis.Irbis game)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Menu.Update"); }
         switch (Irbis.Irbis.scene)
         {
             case 0:     //main menu
@@ -471,19 +472,24 @@ public class Menu
                             game.LoadMenu(7, 1, false);
                             break;
                         case 1:                         //1 == Continue
-                            Irbis.Irbis.buttonList.Clear();
-                            Irbis.Irbis.WriteLine("    Continue");
-                            Irbis.Irbis.sceneIsMenu = false;
-                            if (Irbis.Irbis.jamie == null) { Irbis.Irbis.levelEditor = true; return true; }
-                            if (Irbis.Irbis.levelLoaded > 0)        ///game MEANS A /TRUE/ LEVEL (one not loaded exclusively for the titlescreen) HAS ALREADY BEEN LOADED
-                            {
-                                if (Irbis.Irbis.debug <= 0) { game.IsMouseVisible = false; }
-                            }
+                            if (Irbis.Irbis.creditsActive)
+                            { game.PauseCredits(); }
                             else
                             {
-                                game.LoadUI();
-                                //Irbis.Irbis.WriteLine("    loading " + Irbis.Irbis.savefile.lastPlayedLevel);
-                                //game.LoadLevel(Irbis.Irbis.savefile.lastPlayedLevel, true);
+                                Irbis.Irbis.buttonList.Clear();
+                                Irbis.Irbis.WriteLine("    Continue");
+                                Irbis.Irbis.sceneIsMenu = false;
+                                if (Irbis.Irbis.jamie == null) { Irbis.Irbis.levelEditor = true; return true; }
+                                if (Irbis.Irbis.levelLoaded > 0)        ///game MEANS A /TRUE/ LEVEL (one not loaded exclusively for the titlescreen) HAS ALREADY BEEN LOADED
+                                {
+                                    if (Irbis.Irbis.debug <= 0) { game.IsMouseVisible = false; }
+                                }
+                                else
+                                {
+                                    game.LoadUI();
+                                    //Irbis.Irbis.WriteLine("    loading " + Irbis.Irbis.savefile.lastPlayedLevel);
+                                    //game.LoadLevel(Irbis.Irbis.savefile.lastPlayedLevel, true);
+                                }
                             }
                             break;
                         case 2:                         //2 == Options
@@ -491,7 +497,21 @@ public class Menu
                             Irbis.Irbis.WriteLine("    Options");
                             game.LoadMenu(1, 0, false);
                             break;
-                        case 3:                         //3 == Quit
+                        case 3:                         //3 == Credits
+                            if (!Irbis.Irbis.creditsActive)
+                            {
+                                Irbis.Irbis.RollCredits();
+                                Irbis.Irbis.WriteLine("    Credits");
+                            }
+                            else
+                            {
+                                Irbis.Irbis.creditsActive = Irbis.Irbis.rollCredits = false;
+                                Irbis.Irbis.buttonList[3].originalStatement = "Credits";
+                                Irbis.Irbis.buttonList[3].highlightStatement = ">CREDITS";
+                                Irbis.Irbis.WriteLine("    Exit credits");
+                            }
+                            break;
+                        case 4:                         //4 == Quit
                             Irbis.Irbis.buttonList.Clear();
                             Irbis.Irbis.WriteLine("    Quit();");
                             game.Quit();
@@ -501,9 +521,11 @@ public class Menu
                             break;
                     }
                 }
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                 {
-                    if (Irbis.Irbis.levelLoaded > 0)
+                    if (Irbis.Irbis.creditsActive)
+                    { game.PauseCredits(); }
+                    else if (Irbis.Irbis.levelLoaded > 0)
                     {
                         Irbis.Irbis.buttonList.Clear();
                         Irbis.Irbis.WriteLine("    Continue");
@@ -511,9 +533,7 @@ public class Menu
                         if (Irbis.Irbis.debug <= 0) { game.IsMouseVisible = false; }
                     }
                     else
-                    {
-                        game.Quit();
-                    }
+                    { game.Quit(); }
                 }
                 break;
             case 1:     //options
@@ -592,7 +612,7 @@ public class Menu
                             break;
                     }
                 }
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                 {
                     game.LoadMenu(0, 2, false);
                 }
@@ -601,7 +621,7 @@ public class Menu
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
                     Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update("_");
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                     }
@@ -774,7 +794,7 @@ public class Menu
                         }
                     }
 
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                     {
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
                         game.LoadMenu(1, 0, false);
@@ -784,7 +804,7 @@ public class Menu
             case 3:     //options - camera
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                         Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
@@ -1015,7 +1035,7 @@ public class Menu
 
                     }
 
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                     {
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
                         game.LoadMenu(1, 1, false);
@@ -1025,7 +1045,7 @@ public class Menu
             case 4:     //options - video
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||*/ Irbis.Irbis.GetPauseKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                         Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
@@ -1122,7 +1142,7 @@ public class Menu
                 }
                 else
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                     {
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
                         game.LoadMenu(1, 2, false);
@@ -1246,11 +1266,16 @@ public class Menu
                                 Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = game.IsFixedTimeStep.ToString();
                                 Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + game.IsFixedTimeStep.ToString() + "<";
                                 break;
-                            case 6:                         //Save
+                            case 6:                         //6 == lighting
+                                Irbis.Irbis.lightingEnabled = !Irbis.Irbis.lightingEnabled;
+                                Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement = Irbis.Irbis.lightingEnabled.ToString();
+                                Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].highlightStatement = ">" + Irbis.Irbis.lightingEnabled.ToString() + "<";
+                                break;
+                            case 7:                         //Save
                                 PlayerSettings.Save(game, @".\content\playerSettings.ini");
                                 game.LoadMenu(1, 2, false);
                                 break;
-                            case 7:                         //Cancel
+                            case 8:                         //Cancel
                                 game.LoadMenu(1, 2, false);
                                 break;
 
@@ -1264,7 +1289,7 @@ public class Menu
             case 5:     //options - audio
                 if (Irbis.Irbis.listenForNewKeybind)
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                     {
                         Irbis.Irbis.listenForNewKeybind = false;
                         Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Update(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
@@ -1392,7 +1417,7 @@ public class Menu
                 }
                 else
                 {
-                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                    if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                     {
                         Irbis.Irbis.sliderList.Clear();
                         PlayerSettings.Save(game, @".\content\playerSettings.ini");
@@ -1631,7 +1656,7 @@ public class Menu
                 }
                 break;
             case 6:     //options - misc
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                 {
                     game.LoadMenu(1, 4, false);
                 }
@@ -1762,7 +1787,7 @@ public class Menu
                         game.LoadLevel(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
                     }
                 }
-                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetEscapeKeyDown)
+                if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)
                 {
                     game.LoadMenu(0, 0, false);
                 }

@@ -12,9 +12,7 @@ public class Print
     public string Konsole
     {
         get
-        {
-            return konsole.ToString();
-        }
+        { return konsole.ToString(); }
     }
     Texture2D tex;
     Vector2 displayPosition;
@@ -37,17 +35,17 @@ public class Print
     public float timer;
     public bool scrollDown;
     public int textScale;
+    public bool isConsole;
 
-    public Print(int mW, Font font, Color colorForFont, bool monospace, Point location, Direction alignSide, float drawDepth)
+    public Print(int MaxWidth, Font font, Color colorForFont, bool monospace, Point location, Direction alignSide, float drawDepth)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Print"); }
         bool debug = false;
         align = alignSide;
         depth = drawDepth;
         tex = font.tex;
         width = 0;
         height = 0;
-        maxWidth = mW;
+        maxWidth = MaxWidth;
         fontColor = colorForFont;
         characterHeight = font.charHeight;
         timer = 0f;
@@ -82,7 +80,7 @@ public class Print
 
     public Print(Font CONSOLE)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Print"); }
+        isConsole = true;
         konsole = new StringBuilder();
         align = Direction.Left;
         depth = 1f;
@@ -240,7 +238,6 @@ public class Print
 
     public void Clear()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Clear"); }
         statement = printStatement = string.Empty;
         if (konsole != null)
         {
@@ -251,7 +248,6 @@ public class Print
 
     public void Update(string input, bool clear)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         //fontSourceRect.Clear();
         if (clear)
         {
@@ -265,20 +261,17 @@ public class Print
 
     public void Update(string input)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         //fontSourceRect.Clear();
         statement += input;
     }
 
     public void Update(Point location)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         origin = location;
     }
 
     public void Update(int MaxWidth)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Update"); }
         maxWidth = MaxWidth;
     }
 
@@ -580,21 +573,19 @@ public class Print
             case '\u20af': //₯
                 return 96;
 
-            //case '\u007e': //~
-                //return 97;
+            case '\u1d75': //ᵵ twitter logo
+                return 97;
 
-            //case '\u007e': //~
-                //return 98;
+            case '\u2117': //℗ patreon logo
+                return 98;
 
             default:
                 return 95;
-
         }
     }
 
     public string GetLine(int index)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.GetLine"); }
         int occurrences = 0;
         int lastOccurrence = 0;
         string returnString = Konsole;
@@ -621,22 +612,25 @@ public class Print
 
     public void Write(string line)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Write"); }
         for (int i = 0; i < line.Length; i++)
         {
-            if (line[i].Equals('\n'))
+            if (line[i].Equals('\n') || line[i].Equals('\u000D'))
             {
                 lines++;
                 printLines++;
             }
         }
-        konsole.Append(line);
-        printStatement = string.Join(string.Empty, new string[] { printStatement, line });
+        if (isConsole)
+        {
+            konsole.Append(line);
+            printStatement = string.Join(string.Empty, new string[] { printStatement, line });
+        }
+        else
+        { statement += line; }
     }
 
     public void WriteLine(string line)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.WriteLine"); }
         foreach (char c in line)
         {
             if (c.Equals('\n'))
@@ -653,7 +647,6 @@ public class Print
 
     public void WriteLine()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.WriteLine"); }
         konsole.Append("\n");
         printStatement = string.Join(string.Empty, new string[] { printStatement, "\n" });
         lines++;
@@ -662,7 +655,6 @@ public class Print
 
     public void DeleteLine()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.DeleteLine"); }
         statement = statement.Substring(statement.IndexOf("\n") + 1);
         //timer = 0f;
         lines--;
@@ -670,7 +662,6 @@ public class Print
 
     public void Draw(SpriteBatch sb)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Draw"); }
         //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||MONOSPACE
         if (monoSpace)
         {
@@ -887,13 +878,9 @@ public class Print
             {
                 width = 0;
                 if (scrollDown)
-                {
-                    height = 0;
-                }
+                { height = 0; }
                 else
-                {
-                    height = -lines;
-                }
+                { height = -lines; }
 
                 int statementLength = statement.Length;
                 foreach (char c in statement)
@@ -924,34 +911,32 @@ public class Print
             }
             else if (align == Direction.Right)
             {
-                int MaxUsedWidth = width = PrintSizeNoScale(statement).X;
-                height = 0;
+                int MaxUsedWidth = width = 0;
+                if (scrollDown)
+                { height = 0; }
+                else
+                { height = -lines; }
                 displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                for (int i = statement.Length - 1; i >= 0; i--)
+                string templine = string.Empty;
+                for (int i = 0; i <= statement.Length; i++)
                 {
-                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
+                    if (i == statement.Length || statement[i].Equals('\n') || statement[i].Equals('\u000D') || width >= maxWidth)
                     {
-                        width = MaxUsedWidth;
-                        height++;
-                        displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                    }
-                    else
-                    {
-                        if (width >= maxWidth)
+                        width = 0;
+                        for (int j = templine.Length -1; j >= 0; j--)
                         {
-                            width = MaxUsedWidth;
-                            height++;
-                            displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                        }
-                        Char c = statement[i];
-                        int charIndex = ReturnCharacterIndex(c);
-                        width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
-                        displayPosition.X = origin.X - width;
-                        if (true)
-                        {
+                            char c = templine[j];
+                            int charIndex = ReturnCharacterIndex(c);
+                            width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
+                            displayPosition.X = origin.X - width;
                             sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
                         }
+                        height++;
+                        displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
+                        templine = string.Empty;
                     }
+                    else
+                    { templine += statement[i]; }
                 }
             }
             else
@@ -959,13 +944,9 @@ public class Print
                 int maxUsedWidth = 0;
                 width = 0;
                 if (scrollDown)
-                {
-                    height = 0;
-                }
+                { height = 0; }
                 else
-                {
-                    height = -lines;
-                }
+                { height = -lines; }
 
                 foreach (char c in statement)
                 {
@@ -1023,372 +1004,9 @@ public class Print
 
     public void Draw(SpriteBatch sb, Point location)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("Print.Draw"); }
-        //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||MONOSPACE
         origin.X = location.X;
         origin.Y = (int)(location.Y - ((characterHeight * textScale) / 2));
-
-        if (monoSpace)
-        {
-            if (align == Direction.Left)
-            {
-                width = 0;
-                if (scrollDown)
-                {
-                    height = 0;
-
-                    int statementLength = statement.Length;
-                    for (int i = 0; i < statementLength; i++)
-                    {
-                        if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
-                        {
-                            width = 0;
-                            height++;
-                        }
-                        else
-                        {
-                            if (width >= maxWidth)
-                            {
-                                width = 0;
-                                height++;
-                            }
-
-                            Char c = statement[i];
-                            int charIndex = ReturnCharacterIndex(c);
-
-                            //only this part changes in monospace
-                            //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                            displayPosition.X = (int)(width + origin.X);
-                            displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                            //displayRect.Width = fontSourceRect[charIndex].Width;
-                            if (true)
-                            {
-                                sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                            }
-                            //else { return; }
-                            width += (int)(characterHeight * textScale);
-                        }
-                    }
-                }
-                else
-                {
-                    height = 0;
-
-                    while (printLines > 50)
-                    {
-                        printStatement = printStatement.Substring(printStatement.IndexOf("\n") + 1);
-                        printLines--;
-                    }
-
-                    string tempstatement = printStatement;
-                    int lastindexofnewline = -1;
-
-                    while (!string.IsNullOrWhiteSpace(tempstatement))
-                    {
-                        lastindexofnewline = tempstatement.LastIndexOf('\n');
-
-                        for (int i = lastindexofnewline + 1; i < tempstatement.Length; i++)
-                        {
-                            if (width >= maxWidth)
-                            {
-                                width = 0;
-                                height--;
-                            }
-
-                            Char c = tempstatement[i];
-                            int charIndex = ReturnCharacterIndex(c);
-
-                            //only this part changes in monospace
-                            displayPosition.X = (int)(width + (int)origin.X);
-                            displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                            //displayRect.Width = fontSourceRect[charIndex].Width;
-                            if (Irbis.Irbis.zeroScreenspace.Contains(displayPosition))
-                            {
-                                sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                            }
-                            else { return; }
-                            width += (int)(characterHeight * textScale);
-                        }
-
-                        if (lastindexofnewline > 0)
-                        {
-                            tempstatement = tempstatement.Substring(0, lastindexofnewline);
-                            width = 0;
-                            height--;
-                        }
-                        else
-                        {
-                            tempstatement = string.Empty;
-                        }
-                    }
-                }
-
-            }
-            else if (align == Direction.Right)
-            {
-                width = -1;
-                if (scrollDown)
-                {
-                    height = 0;
-                }
-                else
-                {
-                    height = -lines;
-                }
-
-                int statementLengthMinOne = statement.Length - 1;
-                //for (int i = 0; i < statementLength; i++)
-                for (int i = statementLengthMinOne; i >= 0; i--)
-                {
-                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
-                    {
-                        width = -1;
-                        height++;
-                    }
-                    else
-                    {
-                        if (width >= maxWidth)
-                        {
-                            width = -1;
-                            height++;
-                        }
-
-
-                        Char c = statement[i];
-                        int charIndex = ReturnCharacterIndex(c);
-
-                        //only this part changes in monospace
-                        //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayPosition.X = (int)(width + (int)origin.X);
-                        displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                        if (true)
-                        {
-                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                        }
-                        //else { return; }
-                        width -= characterHeight;
-                    }
-                }
-            }
-            else
-            {
-                maxWidth += characterHeight;
-                int maxUsedWidth = 0;
-                width = 0;
-                if (scrollDown)
-                {
-                    height = 0;
-                }
-                else
-                {
-                    height = -lines;
-                }
-
-                for (int i = 0; i < statement.Length; i++)
-                {
-                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
-                    {
-                        width = 0;
-                        height++;
-                    }
-                    else
-                    {
-                        if (width >= maxWidth)
-                        {
-                            width = 0;
-                            height++;
-                        }
-                        width += fontSourceRect[ReturnCharacterIndex(statement[i])].Width;
-                        if (maxUsedWidth > width)
-                        {
-                            maxUsedWidth = width;
-                        }
-                    }
-                }
-
-                width = -maxUsedWidth / 2;
-                height = 0;
-
-                for (int i = 0; i < statement.Length; i++)
-                {
-                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
-                    {
-                        width = -maxUsedWidth / 2;
-                        height++;
-                    }
-                    else
-                    {
-                        if (width >= maxWidth)
-                        {
-                            width = -maxUsedWidth / 2;
-                            height++;
-                        }
-
-                        Char c = statement[i];
-                        int charIndex = ReturnCharacterIndex(c);
-
-                        //only this part changes in monospace
-
-                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayPosition.X = (int)(width + (int)origin.X);
-                        displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                        if (true)
-                        {
-                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                        }
-                        //else { return; }
-                        width -= (int)((fontSourceRect[charIndex].Width + 1) * textScale);
-                    }
-                }
-            }
-        }
-        //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||NON MONOSPACE
-        else
-        {
-            if (align == Direction.Left)
-            {
-                width = 0;
-                if (scrollDown)
-                {
-                    height = 0;
-                }
-                else
-                {
-                    height = -lines;
-                }
-
-                int statementLength = statement.Length;
-                foreach (char c in statement)
-                {
-                    if (c.Equals('\n'))
-                    {
-                        width = 0;
-                        height++;
-                    }
-                    else
-                    {
-                        if (width >= maxWidth)
-                        {
-                            width = 0;
-                            height++;
-                        }
-                        int charIndex = ReturnCharacterIndex(c);
-                        displayPosition.X = width + origin.X;
-                        displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                        if (true)
-                        {
-                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                        }
-                        //else { return; }
-                        width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
-                    }
-                }
-            }
-            else if (align == Direction.Right)
-            {
-                width = 0;
-                int maxUsedHeight = 0;
-                foreach (char c in statement)
-                {
-                    if (c.Equals('\n'))
-                    {
-                        maxUsedHeight++;
-                    }
-                }
-                height = maxUsedHeight;
-                for (int i = statement.Length - 1; i >= 0; i--)
-                {
-                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
-                    {
-                        width = 0;
-                        height--;
-                    }
-                    else
-                    {
-                        if (width >= maxWidth)
-                        {
-                            width = 0;
-                            height--;
-                        }
-                        Char c = statement[i];
-                        int charIndex = ReturnCharacterIndex(c);
-                        width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
-                        displayPosition.X = origin.X - width;
-                        displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                        //displayRect.Height = characterHeight;
-                        if (true)
-                        {
-                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                        }
-                        //else { return; }
-                    }
-                }
-            }
-            else
-            {
-                int maxUsedWidth = 0;
-                width = 0;
-                if (scrollDown)
-                {
-                    height = 0;
-                }
-                else
-                {
-                    height = -lines;
-                }
-
-                foreach (char c in statement)
-                {
-                    if (c.Equals('\n'))
-                    {
-                        width = 0;
-                        height++;
-                    }
-                    else
-                    {
-                        width += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1) * textScale);
-                        if (width >= maxWidth)
-                        {
-                            width = 0;
-                            height++;
-                            maxUsedWidth = maxWidth;
-                        }
-                        if (width > maxUsedWidth)
-                        {
-                            maxUsedWidth = width - 1;
-                        }
-                    }
-                }
-                width = -maxUsedWidth / 2;
-                height = 0;
-                foreach (char c in statement)
-                {
-                    if (c.Equals('\n'))
-                    {
-                        width = -maxUsedWidth / 2;
-                        height++;
-                    }
-                    else
-                    {
-                        if (width >= maxUsedWidth)
-                        {
-                            width = -maxUsedWidth / 2;
-                            height++;
-                        }
-                        int charIndex = ReturnCharacterIndex(c);
-                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
-                        displayPosition.X = width + origin.X;
-                        displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                        if (true)
-                        {
-                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
-                        }
-                        //else { return; }
-                        width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
-                    }
-                }
-            }
-        }
+        Draw(sb);
     }
 }
 

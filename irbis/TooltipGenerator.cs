@@ -20,16 +20,16 @@ public class TooltipGenerator
     public TooltipGenerator (Game game)
     {
         spriteBatch = new SpriteBatch(Irbis.Irbis.game.GraphicsDevice);
-        bg = Irbis.Irbis.LoadTexture("menu background");
-        top = Irbis.Irbis.LoadTexture("menu border top");
-        bottom = Irbis.Irbis.LoadTexture("menu border bottom");
-        left = Irbis.Irbis.LoadTexture("menu border left");
-        right = Irbis.Irbis.LoadTexture("menu border right");
-        topleft = Irbis.Irbis.LoadTexture("menu corner top left");
-        topright = Irbis.Irbis.LoadTexture("menu corner top right");
-        bottomleft = Irbis.Irbis.LoadTexture("menu corner bottom left");
-        bottomright = Irbis.Irbis.LoadTexture("menu corner bottom right");
-        downarrow = Irbis.Irbis.LoadTexture("popup arrow");
+        bg = Irbis.Irbis.LoadPNG("menu background");
+        top = Irbis.Irbis.LoadPNG("menu border top");
+        bottom = Irbis.Irbis.LoadPNG("menu border bottom");
+        left = Irbis.Irbis.LoadPNG("menu border left");
+        right = Irbis.Irbis.LoadPNG("menu border right");
+        topleft = Irbis.Irbis.LoadPNG("menu corner top left");
+        topright = Irbis.Irbis.LoadPNG("menu corner top right");
+        bottomleft = Irbis.Irbis.LoadPNG("menu corner bottom left");
+        bottomright = Irbis.Irbis.LoadPNG("menu corner bottom right");
+        downarrow = Irbis.Irbis.LoadPNG("popup arrow");
     }
 
     public Tooltip CreateTooltip(string Text, Point Location, float depth)

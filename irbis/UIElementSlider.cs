@@ -201,7 +201,6 @@ public class UIElementSlider
 
     public void Update(float v)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
         if (timeSinceLastFrame >= overlayAnimationSpeed)
         {
@@ -219,7 +218,6 @@ public class UIElementSlider
 
     public void Update(Color border_color, Color fill_color, float v)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Update"); }
         borderColor = border_color;
         fillColor = fill_color;
         Update(v);
@@ -281,13 +279,11 @@ public class UIElementSlider
 
     public bool Contains(MouseState mouseState)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Contains"); }
         return bounds.Contains(mouseState.Position.X, mouseState.Position.Y);
     }
 
     public bool Pressed(MouseState mouseState)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Pressed"); }
         if (bounds.Contains(mouseState.Position.X, mouseState.Position.Y) && mouseState.LeftButton == ButtonState.Pressed)
         {
             return true;
@@ -297,7 +293,6 @@ public class UIElementSlider
 
     public bool Pressed(MouseState mouseState, MouseState previousMouseState)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Pressed"); }
         if (bounds.Contains(mouseState.Position.X, mouseState.Position.Y) && mouseState.LeftButton == ButtonState.Pressed && previousMouseState.LeftButton != ButtonState.Pressed)
         {
             return true;
@@ -307,7 +302,6 @@ public class UIElementSlider
 
     public void Draw(SpriteBatch sb)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("UIElementSlider.Draw"); }
         if (screenScale)
         {
             if (drawOverlay) { sb.Draw(overlayTexture, origin, overlaySourceRect, overlayColor, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, overlayDepth); }

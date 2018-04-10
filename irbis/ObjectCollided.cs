@@ -15,7 +15,6 @@ public struct ObjectCollided
 
     public ObjectCollided(ICollisionObject objectCollided, Side sideCollided)
 	{
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("ObjectCollided.ObjectCollided"); }
         collisionObject = objectCollided;
         collisionSide = sideCollided;
     }

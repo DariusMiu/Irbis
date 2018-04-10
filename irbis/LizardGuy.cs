@@ -250,7 +250,7 @@ class LizardGuy : IEnemy
     public Vector2 rollKnockback = new Vector2(300, -300);
 
     //swipe variables
-    public float swipeChargeTime = 1f;
+    public float swipeChargeTime = 0.5f;
     public float swipeChargeTimer;
     public float swipeCooldownTime = 1.5f;
     public float swipePauseTime = 0.75f;
@@ -261,7 +261,7 @@ class LizardGuy : IEnemy
     public bool swipeHit;
 
     //tailwhip variables
-    public float tailwhipChargeTime = 1f;
+    public float tailwhipChargeTime = 0.5f;
     public float tailwhipChargeTimer;
     public float tailwhipCooldownTime = 2f;
     public float tailwhipPauseTime = 0.75f;
@@ -282,7 +282,7 @@ class LizardGuy : IEnemy
     public float buryStrikeWaitTimer;
     public   int buryStrikeRadius = 100;
     public  Side buryStrikeSide;
-    public float buryStrikeChargeTime = 1.5f;
+    public float buryStrikeChargeTime = 1f;
     public float buryInitialEmergeChance = 0.1f;
     public float buryEmergeChance = 0.1f;
     public float buryStrikeDamage = 35f;
@@ -1295,7 +1295,6 @@ class LizardGuy : IEnemy
 
     public void CalculateMovement()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("CalculateMovement"); }
         //displayRect = new Rectangle((int)position.X, (int)position.Y, 128, 128);
         //collider = new Rectangle((int)position.X + XcolliderOffset, (int)position.Y + YcolliderOffset, colliderSize.X, colliderSize.Y);
         trueCollider.X = (int)Math.Round((decimal)position.X) + colliderOffset.X;

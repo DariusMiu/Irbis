@@ -53,6 +53,7 @@ public struct PlayerSettings
     public float screenScale;
     public Point resolution;
     public bool vSync;
+    public bool easyWalljumpMode;
     public float masterAudioLevel;
     public float musicLevel;
     public float soundEffectsLevel;
@@ -91,14 +92,14 @@ public struct PlayerSettings
     public Buttons GPuseKey;
     public int characterHeight;
     public int debug;
+    public bool lighting;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
-    const int numberOfVariables = 83;
+    const int numberOfVariables = 85;
 
 
     public PlayerSettings(bool useDefaults)
 	{
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.PlayerSettings"); }
         if (useDefaults)
         {
             //lines beginning with ; are ignored
@@ -185,7 +186,10 @@ public struct PlayerSettings
             //with each in-game pixel using 2x2 pixels on your screen
 
             vSync = false;
-
+            
+            // determines if lighting is enabled or not. disabling this can greatly improve performance.
+            lighting = true;
+            easyWalljumpMode = true;
 
             //AUDIO SETTINGS
              masterAudioLevel = 100f;
@@ -272,20 +276,24 @@ public struct PlayerSettings
             animationSpeed = new float[40];
             for (int i = 0; i < animationSpeed.Length; i++)
             { animationSpeed[i] = 0.1f; }
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i <= 6; i++)
             { animationSpeed[i] = 0.125f; }
-            for (int i = 7; i < 9; i++)
+            for (int i = 7; i <= 8; i++)
             { animationSpeed[i] = 0.1f; }
-            for (int i = 9; i < 15; i++)
+            for (int i = 9; i <= 14; i++)
             { animationSpeed[i] = 0.125f; }
-            for (int i = 23; i < 27; i++)
+            for (int i = 17; i <= 22; i++)  //attacks
+            { animationSpeed[i] = 0.075f; }
+            for (int i = 29; i <= 34; i++)  //post-attacks
+            { animationSpeed[i] = 0.075f; }
+            for (int i = 23; i <= 26; i++)
             { animationSpeed[i] = 0.05f; }
-            //animationSpeed[19] = 0.3f;
-            //animationSpeed[20] = 0.3f;
 
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
             animationFrames = new int[40];
+            for (int i = 0; i < animationFrames.Length; i++)
+            { animationFrames[i] = 0; }
             animationFrames[00] = 3;
             animationFrames[01] = 15;
             animationFrames[02] = 3;
@@ -303,20 +311,24 @@ public struct PlayerSettings
             animationFrames[14] = 1;
             animationFrames[15] = 0;
             animationFrames[16] = 0;
-            animationFrames[17] = 2;
-            animationFrames[18] = 2;
-            animationFrames[19] = 2;
-            animationFrames[20] = 2;
-            animationFrames[21] = 2;
-            animationFrames[22] = 2;
+            animationFrames[17] = 3;
+            animationFrames[18] = 3;
+            animationFrames[19] = 3;
+            animationFrames[20] = 3;
+            animationFrames[21] = 3;
+            animationFrames[22] = 3;
             animationFrames[23] = 3;
             animationFrames[24] = 3;
             animationFrames[25] = 1;
             animationFrames[26] = 1;
             animationFrames[27] = 1;
             animationFrames[28] = 1;
-            for (int i = 29; i < animationFrames.Length; i++)
-            { animationFrames[i] = 0; }
+            animationFrames[29] = 1;
+            animationFrames[30] = 1;
+            animationFrames[31] = 1;
+            animationFrames[32] = 1;
+            animationFrames[33] = 1;
+            animationFrames[34] = 1;
 
             //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)
             //NOTE: there is no variable for the number of frames in the shield animation, as the shield animator
@@ -330,17 +342,17 @@ public struct PlayerSettings
             characterWidth = new int[100];
             int[] twosCol = { 18, 44, 62, 82, 83, 86 };
             int[] threesCol = { 47, 84, 85, 87, 90, 91, 93 };
-            int[] foursCol = { 1, 45, 70, 71, 80, 81, 94 };
+            int[] foursCol = { 1, 45, 55, 70, 71, 80, 81, 94 };
             int[] fivesCol = { 41, 88, 92 };
-            int[] sixesCol = { 5, 14, 15, 19, 21, 28, 54, 55, 57, 59, 60, 63, 65, 67, 72, 73, 75, 76, 77 };
-            int[] sevensCol = { 0, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 16, 17, 20, 23, 24, 25, 26, 27, 30, 35, 36, 37, 38, 39, 40, 42, 43, 46, 49, 50, 51, 52, 53, 56, 61, 74, 78 };
+            int[] sixesCol = { 5, 14, 15, 19, 21, 28, 53, 54, 57, 59, 63, 65, 67, 72, 73, 75, 76, 77 };
+            int[] sevensCol = { 0, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 16, 17, 20, 23, 24, 25, 26, 27, 30, 35, 36, 37, 38, 39, 40, 42, 43, 46, 49, 50, 51, 52, 56, 60, 61, 74, 78 };
             int[] eightsCol = { 10, 29, 31, 32, 33, 34, 48, 68, 69, 99 };
             int[] ninesCol = { 64, 79 };
-            int[] tensCol = { 22, 58, 89, 95 };
-            int[] elevenCol = { 66 };
-            int[] twelveCol = { 32 };
+            int[] tensCol = { 22, 58, 66, 89, 95 };
+            int[] elevenCol = { };
+            int[] twelveCol = { 32, 96, 97, 98 };
             foreach (int i in characterWidth)
-            { characterWidth[i] = -1; }
+            { characterWidth[i] = 12; }
             foreach (int i in twosCol)
             { characterWidth[i] = 2; }
             foreach (int i in threesCol)
@@ -452,10 +464,15 @@ public struct PlayerSettings
             //with each in-game pixel using 2x2 pixels on your screen
 
             vSync = false;
+            
+            // determines if lighting is enabled or not. disabling this can greatly improve performance.
+            lighting = false;
+
+            easyWalljumpMode = false;
 
 
             //AUDIO SETTINGS
-             masterAudioLevel = 0f;
+            masterAudioLevel = 0f;
                    musicLevel = 0f;
             soundEffectsLevel = 0f;
 
@@ -568,9 +585,7 @@ public struct PlayerSettings
     }
 
     public PlayerSettings(PlayerSettings settings)
-    {
-        this = settings;
-    }
+    { this = settings; }
 
     public PlayerSettings(string filename)
     {
@@ -580,7 +595,6 @@ public struct PlayerSettings
 
     public void Save(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSave"); }
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         StreamWriter writer = new StreamWriter(filename);
 
@@ -687,6 +701,9 @@ public struct PlayerSettings
         writer.WriteLine("");
         writer.WriteLine("vSync=" + vSync);
         writer.WriteLine("");
+        writer.WriteLine(";determines if lighting is enabled or not. disabling this can greatly improve performance");
+        writer.WriteLine("lighting=" + lighting);
+        writer.WriteLine("");
         writer.WriteLine("");
 
         writer.WriteLine(";AUDIO SETTINGS");
@@ -713,6 +730,10 @@ public struct PlayerSettings
         writer.WriteLine(";The amount of time the player can hold down the left or right movement key");
         writer.WriteLine(";during a wall jump before they drift away from the wall (seconds)");
         writer.WriteLine("walljumpHoldtime=" + walljumpHoldtime);
+        writer.WriteLine("");
+        writer.WriteLine("");
+        writer.WriteLine(";A mode that makes wall jumping easier");
+        writer.WriteLine("easyWalljumpMode=" + easyWalljumpMode);
         writer.WriteLine("");
         writer.WriteLine(";Minimum distance(squared) for an enemy health bar to appear(bosses override this)");
         writer.WriteLine("minSqrDetectDistance=" + minSqrDetectDistance);
@@ -878,6 +899,8 @@ public struct PlayerSettings
         { settings.screenScale = 0; }
         settings.resolution = Irbis.Irbis.tempResolution;
         settings.vSync = game.IsFixedTimeStep;
+        settings.lighting = Irbis.Irbis.lightingEnabled;
+        settings.easyWalljumpMode = Irbis.Irbis.easyWalljumpMode;
         settings.masterAudioLevel = Irbis.Irbis.masterAudioLevel;
         settings.musicLevel = Irbis.Irbis.musicLevel;
         settings.soundEffectsLevel = Irbis.Irbis.soundEffectsLevel;
@@ -930,7 +953,6 @@ public struct PlayerSettings
 
     public void Load(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Load"); }
         Irbis.Irbis.WriteLine("loading " + filename + "...");
 
         int checker = 0;
@@ -2003,6 +2025,26 @@ public struct PlayerSettings
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
                             checker++; break;
+                        case "easywalljumpmode":
+                            if (bool.TryParse(value, out boolResult))
+                            {
+                                this.easyWalljumpMode = boolResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "lighting":
+                            if (bool.TryParse(value, out boolResult))
+                            { this.lighting = boolResult; }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
 
 
 
@@ -2084,7 +2126,6 @@ public struct PlayerSettings
 
     private static Vector2 Vector2Parser(string value)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.Vector2Parser"); }
         string Xval = string.Empty;
         string Yval = string.Empty;
         //value = {X:000Y:000}
@@ -2136,7 +2177,6 @@ public struct PlayerSettings
 
     private static Point PointParser(string value)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.PointParser"); }
         string Xval = string.Empty;
         string Yval = string.Empty;
         //value = {X:000Y:000}
@@ -2190,7 +2230,6 @@ public struct PlayerSettings
 
     private static Rectangle RectangleParser(string value)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("PlayerSettings.RectangleParser"); }
         string Xval = string.Empty;
         string Yval = string.Empty;
         string widthVal = string.Empty;

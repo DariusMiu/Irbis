@@ -184,7 +184,6 @@ public struct OldLevel
 
     public OldLevel(bool construct)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.OldLevel"); }
         squareSpawnPointsX = new List<int>();
         squareSpawnPointsY = new List<int>();
         squareTextures = new List<string>();
@@ -212,7 +211,6 @@ public struct OldLevel
 
     public void Load(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.Load"); }
         OldLevel thisLevel = new OldLevel(true);
         Irbis.Irbis.WriteLine("loading " + filename + "...");
         FileStream stream = new FileStream(filename, FileMode.Open);
@@ -238,7 +236,6 @@ public struct OldLevel
 
     public void Save(string filename)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.Save"); }
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         BinaryFormatter formatter = new BinaryFormatter();
         FileStream stream = new FileStream(filename, FileMode.Create);
@@ -262,7 +259,6 @@ public struct OldLevel
 
     private void AssignLocalVariables(OldLevel level)
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("OldLevel.AssignLocalVariables"); }
         squareSpawnPointsX = level.squareSpawnPointsX;
         squareSpawnPointsY = level.squareSpawnPointsY;
         squareTextures = level.squareTextures;

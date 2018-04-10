@@ -1,5 +1,5 @@
 # IRBIS
-## Build Version: `0.2.0.11` | PARTICLES!  
+## Build Version: `0.2.0.14` | omg grass  
 
 
 ### Known Bug List  
@@ -16,7 +16,7 @@
 `02.` C0O0 is a test level. There is no content there, only an extremely early version of a 'survival mode'  
 `03.` There is no death screen (yet!)  
 `04.` Some animations are missing. The lizard boss has none, and only uses concept art. And the player is missing attack and roll animations.  
-`05.` Move the torch by clicking on the screen (change the darkness of the scene with console command "`darkness={float}`")
+`05.` Move the torch by clicking on the screen (change the darkness of the scene with console command `darkness={float}`)
 
 ### Controls  
 `     A:` Move left  
@@ -25,18 +25,18 @@
 `     Q:` Shield  
 `     E:` Shockwave (hold&release for stronger shockwave)  
 `S+Jump:` Slam  
-`     G:` End frame-by-frame mode  
-`     N:` Enter frame-by-frame mode (and next frame when in frame-by-frame mode)  
-`     R:` Use vending machine  
+`     N:` Enter frame-by-frame mode (and next frame)  
+`     G:` Exit frame-by-frame mode  
+`     R:` Use  
 `     K:` Spawn some dudes!  
 `LShift:` Roll  
 ` Enter:` Attack  
-` Tilde:` Open developer console  
+` Tilde~` Open developer console  
 `Escape:` Quits to previous menu (exits the game on main menu)  
 
 
 ### Playable Version  
-You can download a playable version of the latest build of the game here: https://Ln2.co/irbis  
+You can download a playable version of the latest build of the game here: [Ln2.co](https://Ln2.co/#download)  
 (windows only right now, I'm afraid)  
 
 
@@ -46,3 +46,7 @@ You can download a playable version of the latest build of the game here: https:
 `2.0` OpenGL 2.0 and support for framebuffers  
 `2.5` It is most likely that your system has OpenGL pre-installed. However, if you are unsure, visit: https://www.khronos.org/opengl/wiki/Getting_Started  
 `3.0` If you are still having touble running the game, please contact me! You can find me here: Darius@Ln2.co  
+
+
+### Support Irbis
+You can support the development of Irbis by visiting [patreon.com/Ln2](https://www.patreon.com/Ln2)  

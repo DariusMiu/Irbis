@@ -736,7 +736,6 @@ class WizardGuy : IEnemy
 
     public void CalculateMovement()
     {
-        //if (Irbis.Irbis.debug > 4) { Irbis.Irbis.methodLogger.AppendLine("CalculateMovement"); }
         //displayRect = new Rectangle((int)position.X, (int)position.Y, 128, 128);
         //collider = new Rectangle((int)position.X + XcolliderOffset, (int)position.Y + YcolliderOffset, colliderSize.X, colliderSize.Y);
         trueCollider.X = (int)Math.Round((decimal)position.X) + colliderOffset.X;
