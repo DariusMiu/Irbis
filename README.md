@@ -12,6 +12,7 @@
 `07.` Player sometimes get stuck in the falling animation despite having touched the ground
 `08.` Standing on the lizard after roll attack makes the player clip through the wall and fall through the floor
 `09.` The player is able to push generic enemies around instead of vice-a-versa
+`10.` Slam doesn't work on Wizard
 
 
 ### Important Notes  
@@ -19,17 +20,17 @@
 `02.` There is no death screen (yet!)  
 
 ### Controls  
-`>     A:` Move left  
-`>     D:` Move right  
-`> Space:` Jump  
-`>     Q:` Shield  
-`>     E:` Shockwave (hold&release for stronger shockwave)  
-`>S+Jump:` Slam  
-`>     R:` Use  
-`> Shift:` Roll  
-`> Enter:` Attack  
-`> Tilde~` Open developer console  
-`>Escape:` Pause / previous menu (exits the game on main menu)  
+`---- A:` Move left  
+`---- D:` Move right  
+`-Space:` Jump  
+`---- Q:` Shield  
+`---- E:` Shockwave (hold&release for stronger shockwave)  
+`S+Jump:` Slam  
+`---- R:` Use  
+`-Shift:` Roll  
+`-Enter:` Attack  
+`-Tilde~` Open developer console  
+`Escape:` Pause / previous menu (exits the game on main menu)  
 
 
 ### Playable Version  
