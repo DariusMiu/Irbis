@@ -1,4 +1,4 @@
-# IRBIS
+# IRBIS  
 ## Build Version: `0.2.1.0` | Wizard  
 
 
@@ -9,10 +9,10 @@
 `04.` Boss strike attack during bury phase sometimes hits twice  
 `05.` Tailwhip and strike seem to not trigger their knockbacks occasionally  
 `06.` Player death causes freeze with multithreading (multithreading will get completely reworked in the future)  
-`07.` Player sometimes get stuck in the falling animation despite having touched the ground
-`08.` Standing on the lizard after roll attack makes the player clip through the wall and fall through the floor
-`09.` The player is able to push generic enemies around instead of vice-a-versa
-`10.` Slam doesn't work on Wizard
+`07.` Player sometimes get stuck in the falling animation despite having touched the ground  
+`08.` Standing on the lizard after roll attack makes the player clip through the wall and fall through the floor  
+`09.` The player is able to push generic enemies around instead of vice-a-versa  
+`10.` Slam doesn't work on Wizard  
 
 
 ### Important Notes  
@@ -20,17 +20,17 @@
 `02.` There is no death screen (yet!)  
 
 ### Controls  
-`---- A:` Move left  
-`---- D:` Move right  
-`-Space:` Jump  
-`---- Q:` Shield  
-`---- E:` Shockwave (hold&release for stronger shockwave)  
+`     A:` Move left  
+`     D:` Move right  
+`     Q:` Shield  
+`     E:` Shockwave (hold&release for stronger shockwave)  
+`     R:` Use  
+` Space:` Jump  
+` Shift:` Roll  
+` Enter:` Attack  
 `S+Jump:` Slam  
-`---- R:` Use  
-`-Shift:` Roll  
-`-Enter:` Attack  
-`-Tilde~` Open developer console  
-`Escape:` Pause / previous menu (exits the game on main menu)  
+`Escape:` Pause / previous menu  
+`~Tilde:` Open developer console  
 
 
 ### Playable Version  
@@ -46,5 +46,5 @@ You can download a playable version of the latest build of the game here: [Ln2.c
 `3.0` If you are still having touble running the game, please contact me! You can find me here: Darius@Ln2.co  
 
 
-### Support Irbis
+### Support Irbis  
 You can support the development of Irbis by visiting [patreon.com/Ln2](https://www.patreon.com/Ln2)  
