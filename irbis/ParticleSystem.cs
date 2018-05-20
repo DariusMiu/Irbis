@@ -11,7 +11,6 @@ public class ParticleSystem
     public Vector2 initialVelocity;
     public Vector2 force;
     public Texture2D[] textures;
-    public int particles;
     public Rectangle spawnArea;
     public float spawnDelay;
     public float depth;
@@ -20,6 +19,7 @@ public class ParticleSystem
 
     float nextDelay;
 
+    public float[] stateDepths = new float[4];
     public float[] stateTimes = new float[4];
     public float[] stateScales = new float[4];
     public float[] stateLightScales = new float[4];
@@ -27,6 +27,8 @@ public class ParticleSystem
     public Color[] stateLightColors = new Color[4];
     public int[] animationFrames = new int[4];
     public float animationDelay;
+    int efficiency = 1;
+    int updateIndex;
 
     // random factors
     // 0 initialVelocityRandomness;
@@ -43,18 +45,18 @@ public class ParticleSystem
     /// </summary>
     /// <param name="InitialVelocity">initial velocity</param>
     /// <param name="Force">force</param>
-    /// <param name="Times">total time each state will last: [0]=birthTime, [1]=lifeTime, [2]=deathTime</param>
-    /// <param name="Scales">scale for each state: [0]=birthSize, [1]=lifeSize, [2]=deathSize</param>
+    /// <param name="Times">total time each state will last: [0]=birthTime, [1]=lifeTime, [2]=dyingTime</param>
+    /// <param name="Scales">scale for each state: [0]=birthSize, [1]=lifeSize, [2]=dyingSize, [3]=deathSize</param>
     /// <param name="Delay">time between spawns. seconds.</param>
     /// <param name="Depth">depth</param>
-    /// <param name="Randomness">[0]=InitialVelocity [1]=Force [2]=Times [3]=Scales [4]=LightScales [5]=Delay [6]=Depth (Times, Scales currently unused)</param>
+    /// <param name="Randomness">[0]=InitialVelocity [1]=Force [2]=Times [3]=Scales [4]=LightScales [5]=Delay(Times, Scales currently unused)</param>
     /// <param name="Spawn">area in which particles can spawn</param>
-    /// <param name="Textures">animations. 0=birth, 1=life (loop), 2=death, 3=light (loop) (light resolution is double!) passed directly to particles.</param>
-    /// <param name="Colors">[0]=birthColor, [1]=lifeColor, [2]=deathColor. passed directly to particle.</param>
+    /// <param name="Textures">animations. 0=birth, 1=life (loop), 2=dying, 3=light (loop) (light resolution is double!) passed directly to particles.</param>
+    /// <param name="Colors">[0]=birthColor, [1]=lifeColor, [2]=dyingColor, [3]=deathColor. passed directly to particle.</param>
     /// <param name="Frames">number of frames in each animation. passed directly to particles.</param>
-    /// <param name="TimeToLive">particle system's time to live. pass zero for forever.</param>
-    public ParticleSystem(Vector2 InitialVelocity, Vector2 Force, float[] Times, float[] Scales, float[] LightScales, float SpawnDelay, float Depth, float[] Randomness, 
-        Rectangle Spawn, Texture2D[] Textures, Color[] Colors, Color[] LightColors, int[] Frames, float AnimationDelay, float TimeToLive)
+    /// <param name="TimeToLive">particle system's time to live, in seconds. pass zero for forever.</param>
+    public ParticleSystem(Vector2 InitialVelocity, Vector2 Force, float[] Times, float[] Scales, float[] LightScales, float SpawnDelay, float[] Depths, float[] Randomness, 
+        Rectangle Spawn, Texture2D[] Textures, Color[] Colors, Color[] LightColors, int[] Frames, float AnimationDelay, float TimeToLive, int Efficiency)
     {
         initialVelocity = InitialVelocity;
         force = Force;
@@ -77,8 +79,11 @@ public class ParticleSystem
             { stateLightColors[i] = LightColors[i]; }
             else
             { stateLightColors[i] = Color.Transparent; }
+            if (Depths.Length > i)
+            { stateDepths[i] = Depths[i]; }
+            else if (i > 0)
+            { stateDepths[i] = stateDepths[i-1]; }
         }
-        depth = Depth;
         for (int i = 0; i < 7; i++)
         {
             if (Randomness.Length > i)
@@ -89,6 +94,9 @@ public class ParticleSystem
         animationFrames = Frames;
         animationDelay = AnimationDelay;
         timeToLive = TimeToLive;
+
+        if (Efficiency > 0)
+        { efficiency = Efficiency; }
     }
     /// <summary>
     /// 
@@ -104,10 +112,16 @@ public class ParticleSystem
                 new Vector2(spawnArea.X + (Irbis.Irbis.RandomFloat * spawnArea.Width), spawnArea.Y + (Irbis.Irbis.RandomFloat * spawnArea.Height)),
                 new Vector2((((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[0]) + initialVelocity.X, (((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[0]) + initialVelocity.Y),
                 new Vector2((((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.X, (((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.Y),
-                stateTimes, stateScales, stateLightScales,(((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[6]) + depth)
-            ); particles++;
+                stateTimes, stateScales, stateLightScales,stateDepths)
+            );
             timeSinceLastSpawn = 0;
             nextDelay = ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[5]) + spawnDelay;
+        }
+        for (int i = particleList.Count - 1 - updateIndex; i >= 0; i-=efficiency)
+        {
+            particleList[i].Update(efficiency);
+            if (particleList[i].state == Particle.State.Dead)
+            { particleList.RemoveAt(i); }
         }
         if (timeToLive > 0)
         {
@@ -115,17 +129,11 @@ public class ParticleSystem
             if (timeToLive <= 0)
             { timeToLive = -1; }
         }
-        if (particles > 0)
-        {
-            for (int i = 0; i < particles; i++)
-            {
-                particleList[i].Update();
-                if (particleList[i].state == Particle.State.Dead)
-                { particleList.RemoveAt(i); i--; particles--; }
-            }
-        }
-        else if (timeToLive < 0)
+        else if (timeToLive < 0 && particleList.Count <= 0)
         { return true; }
+        updateIndex++;
+        if (updateIndex >= efficiency)
+        { updateIndex = 0; }
         return false;
     }
 

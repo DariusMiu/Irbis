@@ -384,13 +384,10 @@ public class Enemy : IEnemy
             }
         }
 
-        for (int i = 0; i < activeEffects.Count; i ++)
+        for (int i = activeEffects.Count - 1; i >= 0; i--)
         {
             if (activeEffects[i].ApplyEffect(this))
-            {
-                activeEffects.RemoveAt(i);
-                i--;
-            }
+            { activeEffects.RemoveAt(i); }
         }
 
         Movement();
@@ -449,6 +446,12 @@ public class Enemy : IEnemy
         }
         Irbis.Irbis.WriteLine(name + " done.\n");
         return true;
+    }
+
+    public void Death()
+    {
+        Irbis.Irbis.jamie.OnPlayerAttack -= Enemy_OnPlayerAttack;
+        Irbis.Irbis.jamie.OnPlayerShockwave -= Enemy_OnPlayerShockwave;
     }
 
     public void Respawn(Vector2 initialPos)
@@ -599,7 +602,7 @@ public class Enemy : IEnemy
             Hitbox();
             if (attackCollider.Intersects(player.Collider))
             {
-                player.Hurt(attackDamage);
+                player.Hurt(attackDamage, true);
             }
         }
         else
@@ -874,7 +877,7 @@ public class Enemy : IEnemy
                             player.velocity = player.hurtVelocity;
                         }
                     }
-                    player.Hurt(20);
+                    player.Hurt(20, true);
                     player.invulnerable = player.invulnerableMaxTime;
                 }
             }

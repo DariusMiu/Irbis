@@ -7,9 +7,13 @@
     public double Framerate
     {
         get
-        {
-            return (numerator / currentFrametimes);
-        }
+        { return (numerator / currentFrametimes); }
+    }
+
+    public double DeltaTime
+    {
+        get
+        { return (currentFrametimes / numerator); }
     }
 
     public SmartFramerate(int oldFrameWeight)

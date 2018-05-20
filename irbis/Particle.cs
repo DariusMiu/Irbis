@@ -37,6 +37,7 @@ public class Particle
     // size in each state (beginning of birth is birthsize, end of death is death size)
     float[] stateScales = new float[4];
     float[] stateLightScales = new float[4];
+    float[] stateDepths = new float[4];
 
     // animation system
     float timeSinceLastFrame;
@@ -71,7 +72,7 @@ public class Particle
     /// <param name="Scales">[0]=birthSize, [1]=lifeSize, [2]=deathSize</param>
     /// <param name="Colors">[0]=birthColor, [1]=lifeColor, [2]=deathColor</param>
     public Particle(ParticleSystem ParentSystem, int Texture, Vector2 InitialPosition, Vector2 InitialVelocity, Vector2 Force,
-        float[] Times, float[] Scales, float[] LightScales, float Depth)
+        float[] Times, float[] Scales, float[] LightScales, float[] Depths)
     {
         parentSystem = ParentSystem;
         tex = Texture;
@@ -79,7 +80,8 @@ public class Particle
         velocity = InitialVelocity;
         position = InitialPosition;
         force = Force;
-        depth = Depth;
+        stateDepths = Depths;
+        depth = Depths[0];
 
         animationSourceRect = new Rectangle(0, 0, texSize, texSize);
         lightSourceRect = new Rectangle(0, texSize*3, texSize*2, texSize*2);
@@ -104,14 +106,14 @@ public class Particle
         lightColor = parentSystem.stateLightColors[0];
     }/**/
 
-    public void Update()
+    public void Update(int factor)
     {
-        velocity -= force * Irbis.Irbis.DeltaTime;
-        position += velocity * Irbis.Irbis.DeltaTime;
+        velocity -= force * Irbis.Irbis.DeltaTime * factor;
+        position += velocity * Irbis.Irbis.DeltaTime * factor;
         prevState = state;
         if (currentStateTime <= stateTimes[(int)state])
         {
-            currentStateTime += Irbis.Irbis.DeltaTime;
+            currentStateTime += Irbis.Irbis.DeltaTime * factor;
             if (currentStateTime >= stateTimes[(int)state])
             {
                 currentStateTime -= stateTimes[(int)state];
@@ -120,12 +122,12 @@ public class Particle
             }
         }
 
-        Animate();
+        Animate(factor);
     }
 
-    private void Animate()
+    private void Animate(int factor)
     {
-        timeSinceLastFrame += Irbis.Irbis.DeltaTime;
+        timeSinceLastFrame += Irbis.Irbis.DeltaTime * factor;
         if (prevState != state)
         {
             timeSinceLastFrame -= animationSpeed[(int)state];
@@ -155,6 +157,7 @@ public class Particle
             lightColor = Color.Lerp(parentSystem.stateLightColors[(int)state], parentSystem.stateLightColors[(int)state + 1], lerppercent);
             renderScale = Irbis.Irbis.Lerp(stateScales[(int)state], stateScales[(int)state + 1], lerppercent);
             lightScale = Irbis.Irbis.Lerp(stateLightScales[(int)state], stateLightScales[(int)state + 1], lerppercent);
+            depth = Irbis.Irbis.Lerp(stateDepths[(int)state], stateDepths[(int)state + 1], lerppercent);
         }
     }
 

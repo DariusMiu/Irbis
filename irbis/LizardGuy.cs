@@ -348,9 +348,6 @@ class LizardGuy : IEnemy
     public float attackCooldown;
     public float attackCooldownTimer;
 
-    private object attackPlayerLock;
-    private object collidedLock;
-
     public Rectangle bossArena;
 
     public Collided collided;
@@ -359,12 +356,12 @@ class LizardGuy : IEnemy
     public float[] cooldown = new float[5];
     
 
-    public LizardGuy(Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, Rectangle? BossArena, float drawDepth)
+    public LizardGuy(Texture2D t, Vector2? iPos, float enemyHealth, float enemyDamage, float enemySpeed, Rectangle? BossArena, float drawDepth)
     {
         cooldown[0] = 00f; // wander
         cooldown[1] = 05f; // roll
         cooldown[2] = 03f; // swipe
-      //cooldown[3] = 00f; // none
+        //cooldown[3] = 00f; // none
         cooldown[4] = 15f; // bury
 
         collided = new Collided();
@@ -372,7 +369,6 @@ class LizardGuy : IEnemy
         rollTimeMax = 0.25f;
         rollSpeed = 1500f;
         rollTime = 0f;
-        jumpTime = 0;
         idleTime = 0f;
         airSpeed = 0.6f * enemySpeed;
         attackMovementSpeed = 0.3f * enemySpeed;
@@ -383,15 +379,12 @@ class LizardGuy : IEnemy
         animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.Left, drawDepth + 0.001f);
 
         tex = t;
-        attackPlayerLock = new object();
-        collidedLock = new object();
         AIenabled = true;
 
         depth = drawDepth;
 
         climbablePixels = 3;
 
-        position = iPos;
         direction = Direction.Forward;
         location = Location.Air;
         wanderSpeed = (1f / 5f) * enemySpeed;
@@ -399,7 +392,6 @@ class LizardGuy : IEnemy
         initialWanderTime = 0f;
 
         speed = defaultSpeed = enemySpeed;
-        jumpTime = 0;
         animationNoLoop = false;
         colliderOffset = new Point(44, 26);
         collider.Size = trueCollider.Size = colliderSize = new Point(60, 100);
@@ -439,9 +431,7 @@ class LizardGuy : IEnemy
         currentAnimation = 0;
         animationSpeed[0] = 0.1f;
         for (int i = 1; i < 40; i++)
-        {
-            animationSpeed[i] = animationSpeed[0];
-        }
+        { animationSpeed[i] = animationSpeed[0]; }
 
         animationFrames[0] = 0;
         animationFrames[1] = 0;
@@ -510,6 +500,11 @@ class LizardGuy : IEnemy
 
             bossArena = new Rectangle(leftmostRight, topmostBottom, (rightmostLeft - leftmostRight), (bottommosttop - topmostBottom));
         }
+
+        if (iPos == null)
+        { position = bossArena.Center.ToVector2(); }
+        else
+        { position = (Vector2)iPos; }
 
         if ((bossArena.Height - colliderSize.Y) > 300)
         {
@@ -768,6 +763,12 @@ class LizardGuy : IEnemy
         return true;
     }
 
+    public void Death()
+    {
+        Irbis.Irbis.jamie.OnPlayerAttack -= Enemy_OnPlayerAttack;
+        Irbis.Irbis.jamie.OnPlayerShockwave -= Enemy_OnPlayerShockwave;
+    }
+
     public bool OnTouch(Rectangle TouchedCollider, Vector2 Knockback)
     {
         Direction playerDirection = Irbis.Irbis.Directions(TouchedCollider, Irbis.Irbis.jamie.Collider);
@@ -1007,7 +1008,7 @@ class LizardGuy : IEnemy
                 if (Irbis.Irbis.jamie.Collider.Intersects(new Rectangle(collider.Center.X - attackColliderWidth, collider.Center.Y - attackColliderHeight / 2, attackColliderWidth, attackColliderHeight)))
                 {
                     Irbis.Irbis.jamie.velocity = new Vector2(-swipeKnockback.X, swipeKnockback.Y);
-                    Irbis.Irbis.jamie.Hurt(swipeDamage);
+                    Irbis.Irbis.jamie.Hurt(swipeDamage, false);
                     Irbis.Irbis.CameraShake(0.1f, 5f);
                     swipeHit = true;
                     Irbis.Irbis.WriteLine("pausing for " + swipePauseTime + " seconds");
@@ -1023,7 +1024,7 @@ class LizardGuy : IEnemy
                 if (Irbis.Irbis.jamie.Collider.Intersects(new Rectangle(collider.Center.X, collider.Center.Y - attackColliderHeight / 2, attackColliderWidth, attackColliderHeight)))
                 {
                     Irbis.Irbis.jamie.velocity = swipeKnockback;
-                    Irbis.Irbis.jamie.Hurt(swipeDamage);
+                    Irbis.Irbis.jamie.Hurt(swipeDamage, false);
                     Irbis.Irbis.CameraShake(0.1f, 5f);
                     swipeHit = true;
                     Irbis.Irbis.WriteLine("pausing for " + swipePauseTime + " seconds");
@@ -1086,7 +1087,7 @@ class LizardGuy : IEnemy
                 if (Irbis.Irbis.jamie.Collider.Intersects(new Rectangle(collider.Center.X - attackColliderWidth, collider.Center.Y - attackColliderHeight / 2, attackColliderWidth, attackColliderHeight)))
                 {
                     Irbis.Irbis.jamie.velocity = new Vector2(-swipeKnockback.X, swipeKnockback.Y);
-                    Irbis.Irbis.jamie.Hurt(swipeDamage);
+                    Irbis.Irbis.jamie.Hurt(swipeDamage, false);
                     Irbis.Irbis.CameraShake(0.1f, 5f);
                 }
                 state[2] = 11;
@@ -1097,7 +1098,7 @@ class LizardGuy : IEnemy
                 if (Irbis.Irbis.jamie.Collider.Intersects(new Rectangle(collider.Center.X, collider.Center.Y - attackColliderHeight / 2, attackColliderWidth, attackColliderHeight)))
                 {
                     Irbis.Irbis.jamie.velocity = swipeKnockback;
-                    Irbis.Irbis.jamie.Hurt(swipeDamage);
+                    Irbis.Irbis.jamie.Hurt(swipeDamage, false);
                     Irbis.Irbis.CameraShake(0.1f, 5f);
                 }
                 state[2] = 11;
@@ -1145,7 +1146,7 @@ class LizardGuy : IEnemy
                 if (Irbis.Irbis.jamie.Collider.Intersects(new Rectangle(collider.Center.X - attackColliderWidth, collider.Center.Y - attackColliderHeight / 2, attackColliderWidth, attackColliderHeight)))
                 {
                     Irbis.Irbis.jamie.velocity = new Vector2(-tailwhipKnockback.X, tailwhipKnockback.Y);
-                    Irbis.Irbis.jamie.Hurt(tailwhipDamage);
+                    Irbis.Irbis.jamie.Hurt(tailwhipDamage, true);
                     Irbis.Irbis.CameraShake(0.1f, 10f);
                 }
                 state[3] = 5;
@@ -1156,7 +1157,7 @@ class LizardGuy : IEnemy
                 if (Irbis.Irbis.jamie.Collider.Intersects(new Rectangle(collider.Center.X, collider.Center.Y - attackColliderHeight / 2, attackColliderWidth, attackColliderHeight)))
                 {
                     Irbis.Irbis.jamie.velocity = tailwhipKnockback;
-                    Irbis.Irbis.jamie.Hurt(tailwhipDamage);
+                    Irbis.Irbis.jamie.Hurt(tailwhipDamage, true);
                     Irbis.Irbis.CameraShake(0.1f, 10f);
                 }
                 state[3] = 5;
@@ -1250,7 +1251,7 @@ class LizardGuy : IEnemy
                 if (attackCollider.Intersects(Irbis.Irbis.jamie.Collider))
                 {
                     OnTouch(attackCollider, buryKnockback);
-                    Irbis.Irbis.jamie.Hurt(buryStrikeDamage);
+                    Irbis.Irbis.jamie.Hurt(buryStrikeDamage, true);
                     Irbis.Irbis.CameraShake(0.1f, 5f);
                 }
                 if (buryStrikeFrame > animationFrames[38])
@@ -1483,7 +1484,7 @@ class LizardGuy : IEnemy
 
         foreach (ICollisionObject s in colliderList)
         {
-            if (s.Collider != Rectangle.Empty && s.Collider != trueCollider && Irbis.Irbis.DistanceSquared(trueCollider, s.Collider) <= 0)
+            if (s.Collider != Rectangle.Empty && s.Collider != trueCollider && Irbis.Irbis.DistanceSquared(trueCollider, s.Collider) <= 0 && s.GetType() != typeof(Player))
             {
                 collidedContains = collided.Contains(s);
                 if (Irbis.Irbis.IsTouching(trueCollider, s.Collider, Side.Bottom))                              //DOWN
@@ -1667,51 +1668,36 @@ class LizardGuy : IEnemy
         position += amountToMove;
         CalculateMovement();
 
-        //if (amountToMove != Vector2.Zero)
-        //{
-        //    Irbis.Irbis.WriteLine("        pass: " + pass);
-        //    Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-        //    Irbis.Irbis.WriteLine("    velocity: " + velocity);
-        //    Irbis.Irbis.WriteLine("    position: " + position);
-        //    Irbis.Irbis.WriteLine("     testPos: " + testPos);
-        //    Irbis.Irbis.WriteLine("   pcollider: T:" + collider.Top + " B:" + collider.Bottom + " L:" + collider.Left + " R:" + collider.Right);
-        //    Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-        //}
-
-        for (int i = 0; i < collided.bottomCollided.Count; i++)
+        for (int i = collided.bottomCollided.Count - 1; i >= 0; i--)
         {
             if (!Irbis.Irbis.IsTouching(trueCollider, collided.bottomCollided[i].Collider, Side.Bottom))
             {
                 collided.bottomCollided.RemoveAt(i);
                 walled.Bottom--;
-                i--;
             }
         }
-        for (int i = 0; i < collided.rightCollided.Count; i++)
+        for (int i = collided.rightCollided.Count - 1; i >= 0; i--)
         {
             if (!Irbis.Irbis.IsTouching(trueCollider, collided.rightCollided[i].Collider, Side.Right))
             {
                 collided.rightCollided.RemoveAt(i);
                 walled.Right--;
-                i--;
             }
         }
-        for (int i = 0; i < collided.leftCollided.Count; i++)
+        for (int i = collided.leftCollided.Count - 1; i >= 0; i--)
         {
             if (!Irbis.Irbis.IsTouching(trueCollider, collided.leftCollided[i].Collider, Side.Left))
             {
                 collided.leftCollided.RemoveAt(i);
                 walled.Left--;
-                i--;
             }
         }
-        for (int i = 0; i < collided.topCollided.Count; i++)
+        for (int i = collided.topCollided.Count - 1; i >= 0; i--)
         {
             if (!Irbis.Irbis.IsTouching(trueCollider, collided.topCollided[i].Collider, Side.Top))
             {
                 collided.topCollided.RemoveAt(i);
                 walled.Top--;
-                i--;
             }
         }
 

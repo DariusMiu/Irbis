@@ -1,5 +1,11 @@
 ﻿class SmoothFramerate
 {
+    public int Samples
+    {
+        get
+        { return samples; }
+    }
+
     int samples;
     int currentFrame;
     double[] frametimes;
@@ -8,9 +14,7 @@
     public double Framerate
     {
         get
-        {
-            return (samples / currentFrametimes);
-        }
+        { return (samples / currentFrametimes); }
     }
 
     public SmoothFramerate(int Samples)

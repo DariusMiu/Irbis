@@ -22,9 +22,7 @@ public class Square : ICollisionObject
     public Vector2 Position
     {
         get
-        {
-            return position;
-        }
+        { return position; }
         set
         {
             position.X = value.X - 16;
@@ -36,13 +34,9 @@ public class Square : ICollisionObject
     public Vector2 Velocity
     {
         get
-        {
-            return velocity;
-        }
+        { return velocity; }
         set
-        {
-            velocity = value;
-        }
+        { velocity = value; }
     }
     private Vector2 velocity;
 
@@ -50,7 +44,7 @@ public class Square : ICollisionObject
     public bool drawTex;
     public float depth;
     public Color color;
-    private float scale;
+    public float scale;
     public bool useExactPixels;
     public Point initialPosition;
     public bool draw = true;

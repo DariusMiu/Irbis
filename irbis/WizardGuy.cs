@@ -17,12 +17,19 @@ class WizardGuy : IEnemy
         Nova = 2,
         Bolt = 3,
         Lazers = 4,
+        Shockwave = 5,
 
         Dying = 19,
         Misc = 20,
     }
 
-
+    public Vector2 TrueCenter
+    {
+        get
+        { return new Vector2(position.X + standardCollider.X + (standardCollider.Width / 2f), position.Y + standardCollider.Y + (standardCollider.Height / 2f)); }
+        set
+        { position = new Vector2(value.X - standardCollider.X - (standardCollider.Width / 2f), value.Y - standardCollider.Y - (standardCollider.Height / 2f)); }
+    }
     public Rectangle Collider
     {
         get
@@ -70,15 +77,6 @@ class WizardGuy : IEnemy
     }
     private Vector2 velocity;
 
-    public Wall Walled
-    {
-        get
-        {
-            return walled;
-        }
-    }
-    private Wall walled;
-
     public float Health
     {
         get
@@ -95,66 +93,48 @@ class WizardGuy : IEnemy
     public float MaxHealth
     {
         get
-        {
-            return maxHealth;
-        }
+        { return maxHealth; }
         set
-        {
-            maxHealth = value;
-        }
+        { maxHealth = value; }
     }
     private float maxHealth;
 
     public float SpeedModifier
     {
         get
-        {
-            return speedModifier;
-        }
+        { return speedModifier; }
         set
-        {
-            speedModifier = value;
-        }
+        { speedModifier = value; }
     }
     private float speedModifier;
 
     public List<Enchant> ActiveEffects
     {
         get
-        {
-            return activeEffects;
-        }
+        { return activeEffects; }
     }
     private List<Enchant> activeEffects;
 
     public string Name
     {
         get
-        {
-            return name;
-        }
+        { return name; }
     }
     private string name = "Wizard Guy (bweam)";
 
     public bool AIenabled
     {
         get
-        {
-            return aiEnabled;
-        }
+        { return aiEnabled; }
         set
-        {
-            aiEnabled = value;
-        }
+        { aiEnabled = value; }
     }
     public bool aiEnabled = true;
 
     public float Mass
     {
         get
-        {
-            return mass;
-        }
+        { return mass; }
     }
     private float mass = 0.5f;
 
@@ -203,66 +183,42 @@ class WizardGuy : IEnemy
         }
     }
 
-    private bool collidedContains;
     public float speed;
     public float defaultSpeed;
-    int climbablePixels;
     public WizardActivity previousActivity;
     public Point prevInput;
     public int nextAnimation;
-    public bool interruptAttack;
     public float idleTime;
-    public float attackMovementSpeed;
-    public bool attackImmediately;
     public Print animationFrame;
-    public float airSpeed;
 
     Texture2D tex;
     public Rectangle displayRect;
     public Rectangle animationSourceRect;
-    Rectangle testCollider;
-    public Point colliderOffset;
-    public Point colliderSize;
+    public Rectangle standardCollider;
+
     public float terminalVelocity = 5000f;
 
     float depth;
 
-    //attack variables
-
-    //wander variables
-    float wanderSpeed;
-    float wanderLerp = 100f;
-    float stunLerp = 5f;
-
     public float stunned;
     public float wanderTime;
     public float initialWanderTime;
-    public float jumpTime;
     public float timeSinceLastFrame;
     int currentFrame;
     public int currentAnimation;
     int previousAnimation;
-    public float[] animationSpeed = new float[40];
-    public int[] animationFrames = new int[40];
+    public float[] animationSpeed = new float[10];
+    public int[] animationFrames = new int[10];
     bool animationNoLoop;
     public Point input;
     public bool frameInput;
 
-    public float shockwaveMaxEffectDistance;
-    public float shockwaveEffectiveDistance;
     public float shockwaveStunTime;
-
     public Vector2 shockwaveKnockback;
 
     public Direction direction;
     public Location location;
     public WizardActivity activity;
-
-    Vector2 amountToMove;
-    Vector2 negAmountToMove;
-    Vector2 testPos;
-
-    public int lastHitByAttackID;
 
     public int combatCheckDistanceSqr;
     public int persueCheckDistanceSqr;
@@ -270,10 +226,8 @@ class WizardGuy : IEnemy
 
     public static float movementLerpBuildup = 10f;
     public static float movementLerpSlowdown = 50f;
-    public static float movementLerpAir = 5f;
 
     public Rectangle attackCollider;
-
     public int attackColliderWidth = 100;
     public int attackColliderHeight = 70;
 
@@ -283,64 +237,80 @@ class WizardGuy : IEnemy
     public float attackCooldown;
     public float attackCooldownTimer;
 
-    private object attackPlayerLock;
-    private object collidedLock;
+    Vector2[] teleportPoints;
+    int previousTeleport;
 
-    public Rectangle bossArena;
+    public BossState bossState = 0;
+    public int combatPhase = 0;
+    Vector2 spawnPoint;
+    Vector2 initialPoint;
+    float stepTime;
+    float stepTimeMax = 5f;
 
-    public Collided collided;
+    int lazerindex = 0;
+    List<Lazor> lazers = new List<Lazor>();
+    Texture2D[] lazertextures = new Texture2D[5];
+
+    float lazersFastTick;
+    float novaFastTick = 62500;
+    float boltsFastTick = 10000;
+    float teleportFastTick = 2500;
+
+    Rectangle bossArena;
+    List<Nova> firenovas = new List<Nova>();
+    List<float> firenovaTTL = new List<float>();
+    ChargedBolts bolts = new ChargedBolts(new Vector2(100), 0, 0, 0, 0, 0, 0);
+
+    Vector2 explosionLocation;
+    float explosionDamage = 50;
+    float explosionRadius = 64;
+    float explosionRadiusSQR = 64 * 64;
+    bool exploding;
+    float timeSinceLastExplosionFrame;
+    float explosionAnimationSpeed = 0.05f;
+    int currentExplosionFrame;
+    float explosionVelocity = 300;
+    Rectangle explosionSourceRect = new Rectangle(Point.Zero, new Point(Irbis.Irbis.explosiontex.Height));
+
+    float playerDistanceSQR;
 
     public int[] state = new int[5];
-    public float[] cooldown = new float[5];
+    float[] cooldown = new float[6];
+    public float[] timer = new float[6];
 
 
-    public WizardGuy(Texture2D t, Vector2 iPos, float enemyHealth, float enemyDamage, float enemySpeed, Rectangle? BossArena, float drawDepth)
+    public WizardGuy(Texture2D t, int? iPos, float enemyHealth, float enemyDamage, Vector2[] TeleportPoints, Rectangle? BossArena, float drawDepth)
     {
-        cooldown[0] = 00f; // wander
-        cooldown[1] = 05f; // roll
-        cooldown[2] = 03f; // swipe
-                           //cooldown[3] = 00f; // none
-        cooldown[4] = 15f; // bury
+        timer[0] = cooldown[0] = .5f; // idle
+        timer[1] = cooldown[1] = 17f; // teleport
+        timer[2] = cooldown[2] = 08f; // nova
+        timer[3] = cooldown[3] = 09f; // bolt
+        timer[4] = cooldown[4] = 15f; // lazers
+      /*timer[5]*/ cooldown[5] = .3f; // lazer delay 
 
-        collided = new Collided();
 
-        jumpTime = 0;
+
+
+
         idleTime = 0f;
-        airSpeed = 0.6f * enemySpeed;
-        attackMovementSpeed = 0.3f * enemySpeed;
-        attackImmediately = false;
-        interruptAttack = false;
-        climbablePixels = 3;
 
         animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.Left, drawDepth + 0.001f);
 
         tex = t;
-        attackPlayerLock = new object();
-        collidedLock = new object();
         AIenabled = true;
 
         depth = drawDepth;
 
-        climbablePixels = 3;
-
-        position = iPos;
         direction = Direction.Forward;
         location = Location.Air;
-        wanderSpeed = (1f / 5f) * enemySpeed;
         wanderTime = 1f;
         initialWanderTime = 0f;
 
-        speed = defaultSpeed = enemySpeed;
-        jumpTime = 0;
         animationNoLoop = false;
-        colliderOffset = new Point(44, 26);
-        collider.Size = trueCollider.Size = colliderSize = new Point(60, 100);
-
-        position.X -= colliderOffset.X;
-        position.Y -= colliderOffset.Y;
+        standardCollider.Location = new Point(47, 37);
+        collider.Size = trueCollider.Size = standardCollider.Size = new Point(32, 56);
 
         maxHealth = health = enemyHealth;
-        lastHitByAttackID = -1;
 
         stunned = 0;
         speedModifier = 1f;
@@ -359,9 +329,12 @@ class WizardGuy : IEnemy
 
         activeEffects = new List<Enchant>();
 
-        shockwaveMaxEffectDistance = Irbis.Irbis.jamie.shockwaveEffectiveDistance;
-        shockwaveMaxEffectDistanceSquared = shockwaveMaxEffectDistance * shockwaveMaxEffectDistance;
-        shockwaveEffectiveDistance = 200;
+        lazertextures[0] = Irbis.Irbis.LoadTexture("lazor0");
+        lazertextures[1] = Irbis.Irbis.LoadTexture("lazor45");
+        lazertextures[2] = Irbis.Irbis.LoadTexture("lazor90");
+        lazertextures[3] = Irbis.Irbis.LoadTexture("lazor135");
+        lazertextures[4] = Irbis.Irbis.LoadTexture("lazor180");
+
         shockwaveStunTime = Irbis.Irbis.jamie.shockwaveStunTime;
         shockwaveKnockback = Irbis.Irbis.jamie.shockwaveKnockback;
 
@@ -370,54 +343,17 @@ class WizardGuy : IEnemy
         currentFrame = 0;
         currentAnimation = 0;
         animationSpeed[0] = 0.1f;
-        for (int i = 1; i < 40; i++)
-        {
-            animationSpeed[i] = animationSpeed[0];
-        }
+        for (int i = 1; i < animationSpeed.Length; i++)
+        { animationSpeed[i] = animationSpeed[0]; }
+         animationSpeed[4] = 0.0375f;
+        animationFrames[0] = 0; // idle
+        animationFrames[1] = 0; // charging
+        animationFrames[2] = 0; // casting
+        animationFrames[3] = 0; // hurt
+        animationFrames[4] = 4; // teleport
 
-        animationFrames[0] = 0;
-        animationFrames[1] = 0;
-        animationFrames[2] = 0;
-        animationFrames[3] = 0;
-        animationFrames[4] = 0;
-        animationFrames[5] = 0;
-        animationFrames[6] = 2;
-        animationFrames[7] = 2;
-        animationFrames[8] = 2;
-        animationFrames[9] = 2;
-        animationFrames[10] = 0;
-        animationFrames[11] = 0;
-        animationFrames[12] = 0;
-        animationFrames[13] = 0;
-        animationFrames[14] = 0;
-        animationFrames[15] = 0;
-        animationFrames[16] = 0;
-        animationFrames[17] = 0;
-        animationFrames[18] = 0;
-        animationFrames[19] = 0;
-        animationFrames[20] = 0;
-        animationFrames[21] = 0;
-        animationFrames[22] = 0;
-        animationFrames[23] = 0;
-        animationFrames[24] = 0;
-        animationFrames[25] = 0;
-        animationFrames[26] = 1;
-        animationFrames[27] = 1;
-        animationFrames[28] = 5;
-        animationFrames[29] = 5;
-        animationFrames[30] = 4;
-        animationFrames[31] = 4;
-        animationFrames[32] = 0;
-        animationFrames[33] = 0;
-        animationFrames[34] = 0;
-        animationFrames[35] = 0;
-        animationFrames[36] = 0;
-        animationFrames[37] = 0;
-        animationFrames[38] = 3; // bury swipe
-        animationFrames[39] = 2; // rumblies
 
         animationSourceRect = new Rectangle(128 * currentFrame, 128 * currentAnimation, 128, 128);
-
 
         if (BossArena != null)
         { bossArena = (Rectangle)BossArena; }
@@ -439,8 +375,41 @@ class WizardGuy : IEnemy
                 if (s.Collider.Top > bottommosttop)
                 { bottommosttop = s.Collider.Top; }
             }
-
             bossArena = new Rectangle(leftmostRight, topmostBottom, (rightmostLeft - leftmostRight), (bottommosttop - topmostBottom));
+        }
+
+        if (TeleportPoints == null || TeleportPoints.Length <= 1)
+        {
+            teleportPoints = new Vector2[5];
+            teleportPoints[0] = new Vector2(bossArena.X + bossArena.Width * 0.1f, bossArena.Center.Y);
+            teleportPoints[1] = new Vector2(bossArena.X + bossArena.Width * 0.3f, bossArena.Center.Y);
+            teleportPoints[2] = new Vector2(bossArena.X + bossArena.Width * 0.5f, bossArena.Center.Y);
+            teleportPoints[3] = new Vector2(bossArena.X + bossArena.Width * 0.7f, bossArena.Center.Y);
+            teleportPoints[4] = new Vector2(bossArena.X + bossArena.Width * 0.9f, bossArena.Center.Y);
+        }
+        else
+        { teleportPoints = TeleportPoints; }
+
+        if (iPos == null)
+        {
+            if (TeleportPoints != null && TeleportPoints.Length == 1)
+            {
+                previousTeleport = -1;
+                initialPoint = TeleportPoints[0];
+                TrueCenter = spawnPoint = new Vector2(initialPoint.X, initialPoint.Y - bossArena.Height);
+            }
+            else
+            {
+                previousTeleport = Irbis.Irbis.RandomInt(teleportPoints.Length);
+                initialPoint = teleportPoints[previousTeleport];
+                TrueCenter = spawnPoint = new Vector2(initialPoint.X, initialPoint.Y - bossArena.Height);
+            }
+        }
+        else
+        {
+            previousTeleport = (int)iPos;
+            initialPoint = teleportPoints[previousTeleport];
+            TrueCenter = spawnPoint = new Vector2(initialPoint.X, initialPoint.Y - bossArena.Height);
         }
 
         Irbis.Irbis.jamie.OnPlayerAttack += Enemy_OnPlayerAttack;
@@ -452,59 +421,147 @@ class WizardGuy : IEnemy
         prevInput = input;
         input = Point.Zero;
         frameInput = false;
-        /*
-        if (Irbis.Irbis.jamie != null)
+        playerDistanceSQR = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.Collider, TrueCenter);
+
+        if (Irbis.Irbis.GetMouseState.LeftButton == ButtonState.Pressed && collider.Contains(Irbis.Irbis.WorldSpaceMouseLocation))
+        { position = new Vector2(Irbis.Irbis.WorldSpaceMouseLocation.X - standardCollider.X - (collider.Width/2), Irbis.Irbis.WorldSpaceMouseLocation.Y - standardCollider.Y - (collider.Height/2)); }
+
+
+        switch (bossState)
         {
-            if (aiEnabled && !ActivelyAttacking && cooldown[0] <= 0 && stunned <= 0 && walled.Bottom > 0)
-            {
-                Direction playerDirection = Irbis.Irbis.Directions(trueCollider, Irbis.Irbis.jamie.Collider);
-                /* attack logic
-                if (meleeActivitiesInARow >= meleeActivityLimit)
+            case BossState.Spawn:       // 0
+                stepTime += Irbis.Irbis.DeltaTime;
+                TrueCenter = Irbis.Irbis.SmootherStep(spawnPoint, initialPoint, (stepTime / stepTimeMax));
+                if (stepTime >= stepTimeMax)
+                { bossState++; SetAnimation(4, true); }
+                break;
+            case BossState.Entrance:    // 1
+                bossState++;
+                break;
+            case BossState.Engage:      // 2
+                bossState++;
+                break;
+            case BossState.Combat:      // 3
+                if (Irbis.Irbis.jamie != null)
                 {
+                    if (aiEnabled && timer[0] <= 0 && stunned <= 0)
+                    {
+                        if (timer[4] <= 0)
+                        {
+                            if (timer[5] <= 0)
+                            {
+                                switch (lazerindex)
+                                {
+                                    case 0:
+                                        lazers.Clear();
+                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y - 15), new Point(30)), new Vector2(2000, 0), new Texture2D[] { lazertextures[0], Irbis.Irbis.dottex }, 20));
+                                        timer[5] = cooldown[5];
+                                        lazerindex++;
+                                        break;
+                                    case 1:
+                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(1, 1)) * 2000f, new Texture2D[] { lazertextures[1], Irbis.Irbis.dottex }, 20));
+                                        timer[5] = cooldown[5];
+                                        lazerindex++;
+                                        break;
+                                    case 2:
+                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Center.X - 15, collider.Center.Y + 15), new Point(30)), new Vector2(0, 2000), new Texture2D[] { lazertextures[2], Irbis.Irbis.dottex }, 20));
+                                        timer[5] = cooldown[5];
+                                        lazerindex++;
+                                        break;
+                                    case 3:
+                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(-1, 1)) * 2000f, new Texture2D[] { lazertextures[3], Irbis.Irbis.dottex }, 20));
+                                        timer[5] = cooldown[5];
+                                        lazerindex++;
+                                        break;
+                                    case 4:
+                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y - 15), new Point(30)), new Vector2(-2000, 0), new Texture2D[] { lazertextures[4], Irbis.Irbis.dottex }, 20));
+                                        timer[4] = cooldown[4];
+                                        timer[0] = cooldown[0];
+                                        lazerindex = 0;
+                                        break;
+                                }
+                            }
+                        }
+                        else if (timer[1] <= 0)
+                        {
+                            SetAnimation(4, true);
+                            // play teleport animation
+                            // trigger "explosion"
+                            // set position on noloop
+
+                            timer[1] = cooldown[1];
+                            timer[0] = cooldown[0];
+                        }
+                        else if (timer[3] <= 0)
+                        {
+                            bolts = new ChargedBolts(TrueCenter, 4, (MathHelper.Pi / 8), 1, 100, 1, 30);
+                            timer[3] = cooldown[3];
+                            timer[0] = cooldown[0];
+                        }
+                        else if (timer[2] <= 0)
+                        {
+                            firenovas.Add(new Nova(new Rectangle(new Point(collider.Center.X - 5, collider.Center.Y - 5), new Point(10)), 12, 0, 100, 20));
+                            firenovaTTL.Add(30f);
+                            timer[2] = cooldown[2];
+                            timer[0] = cooldown[0];
+                        }
+
+                        if (timer[1] > 0) // teleport
+                        { timer[1] -= Irbis.Irbis.DeltaTime; }
+                        if (timer[2] > 0) // nova
+                        { timer[2] -= Irbis.Irbis.DeltaTime; }
+                        if (timer[3] > 0) // bolts
+                        { timer[3] -= Irbis.Irbis.DeltaTime; }
+                        if (timer[4] > 0) // lazers
+                        { timer[4] -= Irbis.Irbis.DeltaTime; }
+                        if (timer[5] > 0) // lazer delay
+                        { timer[5] -= Irbis.Irbis.DeltaTime; }
+
+                        if (teleportFastTick > playerDistanceSQR)
+                        { timer[1] -= Irbis.Irbis.DeltaTime * 3; }
+                        else if (boltsFastTick > playerDistanceSQR)
+                        { timer[3] -= Irbis.Irbis.DeltaTime * 3; }
+                        else if (novaFastTick > playerDistanceSQR)
+                        { timer[2] -= Irbis.Irbis.DeltaTime * 3; }
+                        else if (lazersFastTick > playerDistanceSQR)
+                        { timer[4] -= Irbis.Irbis.DeltaTime * 3; }
+                    }
+
+                    if (timer[0] > 0)
+                    { timer[0] -= Irbis.Irbis.DeltaTime; }
                 }
-                else if ()
-                {
-                }
-                else
-                { // wander around, maybe yell a bit, just don't look like a doofus
-                    Wander((Irbis.Irbis.RandomInt(3) + 1));
-                }/
-            }
+                break;
+            case BossState.Disengage:   // 4
+
+                break;
+            case BossState.Death:       // 5
+
+                break;
         }
 
-        if (Irbis.Irbis.IsTouching(trueCollider, Irbis.Irbis.jamie.Collider))
+        for (int i = firenovas.Count - 1; i >= 0; i--)
         {
-            /*if (stunned <= 0)
+            firenovaTTL[i] -= Irbis.Irbis.DeltaTime;
+            if (firenovaTTL[i] > 0)
+            { firenovas[i].Update(); }
+            else
             {
-                collider = Rectangle.Empty;
-                if (state[1] >= 9 && Irbis.Irbis.jamie.HurtOnTouch(rollDamage / 2))
-                {
-                    OnTouch(trueCollider, rollKnockback);
-                }
-                else if (state[1] > 0 && Irbis.Irbis.jamie.HurtOnTouch(rollDamage))
-                {
-                    OnTouch(trueCollider, rollKnockback);
-                }
-                else if (Irbis.Irbis.jamie.HurtOnTouch(10f))
-                {
-                    OnTouch(trueCollider, swipeKnockback);
-                }
+                firenovas[i].Death();
+                firenovas.RemoveAt(i);
+                firenovaTTL.RemoveAt(i);
             }
-            else if (Irbis.Irbis.jamie.collided.Horizontal || Irbis.Irbis.jamie.collided.Vertical)
-            {
-                collider = Rectangle.Empty;
-                OnTouch(trueCollider, swipeKnockback);
-            }/
         }
-        else if (collider == Rectangle.Empty && Irbis.Irbis.jamie.invulnerableOnTouch <= 0)
-        { collider = trueCollider; }
+        bolts.Update();
+        for (int i = lazers.Count - 1; i >= 0; i--)
+        {
+            if (lazers[i].Update())
+            { lazers.RemoveAt(i); }
+        }
 
-        */
 
-        Movement();
+        //Movement();
         CalculateMovement();
         Animate();
-        Collision(Irbis.Irbis.collisionObjects);
         return true;
     }
 
@@ -615,6 +672,15 @@ class WizardGuy : IEnemy
         return true;
     }
 
+    public void Death()
+    {
+        Irbis.Irbis.jamie.OnPlayerAttack -= Enemy_OnPlayerAttack;
+        Irbis.Irbis.jamie.OnPlayerShockwave -= Enemy_OnPlayerShockwave;
+        for (int i = firenovas.Count - 1; i >= 0; i--)
+        { firenovas[i].Death(); }
+        //Irbis.Irbis.jamie.OnPlayerShockwave -= firenova.Enemy_OnPlayerShockwave;
+    }
+
     public void PlayerAttackCollision(Attacking Attack)
     {
         Hurt(Irbis.Irbis.jamie.attackDamage);
@@ -641,105 +707,12 @@ class WizardGuy : IEnemy
         return true;
     }
 
-    public void Movement()
-    {
-        if (stunned > 0)
-        {
-            velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, stunLerp * Irbis.Irbis.DeltaTime);
-            stunned -= Irbis.Irbis.DeltaTime;
-            if (stunned <= 0)
-            {
-                stunned = 0;
-                if (!ActivelyAttacking)
-                { /*GetUp();*/ }
-            }
-        }
-        else if (ActivelyAttacking)
-        {
-            /*
-            if (state[1] > 0)
-            { RollAttack(); }
-            if (state[2] > 0)
-            { SwipeAttack(); }
-            if (state[3] > 0)
-            { TailwhipAttack(); }
-            if (state[4] > 0)
-            { BuryAttack(); }
-            */
-        }
-        else if (cooldown[0] > 0 && walled.Bottom > 0 /*&& activity != WizardActivity.TurningAround && activity != WizardActivity.GettingUp*/)
-        {
-            Direction playerDirection = Irbis.Irbis.Directions(trueCollider, Irbis.Irbis.jamie.Collider);
-            /*if (playerDirection != direction && playerDirection != Direction.Forward && activity != WizardActivity.WalkLeft && activity != WizardActivity.WalkRight)
-            { // turn around
-                Irbis.Irbis.WriteLine(name + " not facing player. turning around...");
-                direction = playerDirection;
-                activity = WizardActivity.TurningAround;
-                //meleeActivitiesInARow++;
-            }
-            else if (activity != WizardActivity.TurningAround)
-            {
-                Wander();
-                cooldown[0] -= Irbis.Irbis.DeltaTime;
-
-                if (velocity.X > 0.1f)
-                { activity = WizardActivity.WalkRight; }
-                else if (velocity.X < -0.1f)
-                { activity = WizardActivity.WalkLeft; }
-                else
-                { activity = WizardActivity.Idle; }
-            }*/
-        }
-
-        if (cooldown[1] > 0)
-        { cooldown[1] -= Irbis.Irbis.DeltaTime; }
-        if (cooldown[2] > 0)
-        { cooldown[2] -= Irbis.Irbis.DeltaTime; }
-        if (cooldown[3] > 0)
-        { cooldown[3] -= Irbis.Irbis.DeltaTime; }
-        if (cooldown[4] > 0)
-        { cooldown[4] -= Irbis.Irbis.DeltaTime; }
-
-        if (walled.Top > 0 && velocity.Y < 0)
-        {
-            velocity.Y = 0;
-            jumpTime = 0;
-        }
-
-        position += velocity * Irbis.Irbis.DeltaTime;
-    }
-
-    public void Wander()
-    {
-        if (cooldown[0] > (initialWanderTime / 1.5f))
-        { velocity.X = Irbis.Irbis.Lerp(velocity.X, speed, wanderLerp * Irbis.Irbis.DeltaTime); }
-        else
-        { velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, wanderLerp * Irbis.Irbis.DeltaTime); }
-    }
-
-    public bool Wander(float WanderTime)
-    {
-        if (walled.Left > 0)
-        { speed = wanderSpeed; }
-        else if (walled.Right > 0)
-        { speed = -wanderSpeed; }
-        else
-        {
-            if (Irbis.Irbis.RandomBool)
-            { speed = wanderSpeed; }
-            else
-            { speed = -wanderSpeed; }
-        }
-        initialWanderTime = cooldown[0] = WanderTime;
-        return true;
-    }
-
     public void CalculateMovement()
     {
         //displayRect = new Rectangle((int)position.X, (int)position.Y, 128, 128);
         //collider = new Rectangle((int)position.X + XcolliderOffset, (int)position.Y + YcolliderOffset, colliderSize.X, colliderSize.Y);
-        trueCollider.X = (int)Math.Round((decimal)position.X) + colliderOffset.X;
-        trueCollider.Y = (int)Math.Round((decimal)position.Y) + colliderOffset.Y;
+        trueCollider.X = (int)Math.Round((decimal)position.X) + standardCollider.X;
+        trueCollider.Y = (int)Math.Round((decimal)position.Y) + standardCollider.Y;
         //trueCollider.Size = colliderSize;
         if (collider != Rectangle.Empty)
         { collider = trueCollider; }
@@ -762,55 +735,14 @@ class WizardGuy : IEnemy
             {
                 switch (currentAnimation)
                 {
-                    case 6:
-                        goto case 7;
-                    case 7:
-                        SetAnimation(8, false);
-                        break;
-                    case 12:
-                        goto case 13;
-                    case 13:
-                        SetAnimation(6, true);
-                        break;
-                    case 14:
-                        goto case 15;
-                    case 15:
-                        SetAnimation(10, false);
-                        break;
-                    case 16:
-                        goto case 17;
-                    case 17:
+                    case 4:
+                        int nextTeleport = Irbis.Irbis.RandomInt(teleportPoints.Length);
+                        while (previousTeleport == nextTeleport)
+                        { nextTeleport = Irbis.Irbis.RandomInt(teleportPoints.Length); }
+                        previousTeleport = nextTeleport;
+                        Explode();
+                        TrueCenter = teleportPoints[previousTeleport];
                         SetAnimation(0, false);
-                        activity = WizardActivity.Misc;
-                        break;
-                    case 20:
-                        goto case 21;
-                    case 21:
-                        SetAnimation(0, false);
-                        break;
-                    case 24:
-                        goto case 25;
-                    case 25:
-                        SetAnimation(0, false);
-                        break;
-                    case 26:
-                        goto case 27;
-                    case 27:
-                        SetAnimation(0, false);
-                        activity = WizardActivity.Misc;
-                        break;
-                    case 28:
-                        goto case 29;
-                    case 29:
-                        SetAnimation(30, false);
-                        break;
-                    case 30:
-                        goto case 31;
-                    case 31:
-                        SetAnimation(0, false);
-                        break;
-                    default:
-                        SetAnimation();
                         break;
                 }
             }
@@ -824,10 +756,27 @@ class WizardGuy : IEnemy
             currentFrame = 0;
         }
 
-
-
         animationSourceRect.X = 128 * currentFrame;
         animationSourceRect.Y = 128 * currentAnimation;
+
+
+        if (exploding)
+        {
+            timeSinceLastExplosionFrame += Irbis.Irbis.DeltaTime;
+            if (timeSinceLastExplosionFrame >= explosionAnimationSpeed)
+            {
+                timeSinceLastExplosionFrame -= explosionAnimationSpeed;
+                currentExplosionFrame++;
+            }
+            if (currentExplosionFrame * Irbis.Irbis.explosiontex.Height >= Irbis.Irbis.explosiontex.Width)
+            {
+                currentExplosionFrame = 0;
+                timeSinceLastExplosionFrame = 0;
+                exploding = false;
+            }
+            explosionSourceRect.X = currentExplosionFrame * Irbis.Irbis.explosiontex.Height;
+        }
+
 
         previousAnimation = currentAnimation;
         previousActivity = activity;
@@ -863,270 +812,26 @@ class WizardGuy : IEnemy
         { currentAnimation++; }
     }
 
+    protected void Explode()
+    {
+        exploding = true;
+        explosionLocation = TrueCenter;
+        if (playerDistanceSQR <= explosionRadiusSQR)
+        {
+            float Distance = (float)Math.Sqrt(playerDistanceSQR);
+            Irbis.Irbis.jamie.Hurt(((explosionRadius - Distance) / explosionRadius) * explosionDamage, true);
+            Irbis.Irbis.jamie.velocity += Vector2.Normalize(Irbis.Irbis.jamie.TrueCenter - explosionLocation) * explosionVelocity;
+        }
+    }
+
     public void Dying()
     {
         activity = WizardActivity.Dying;
         previousActivity = activity;
         trueCollider.Size = collider.Size = new Point(60, 32);
-        colliderOffset = new Point(44, 93);
+        standardCollider.Location = new Point(44, 93);
         SetAnimation(14, true);
     }
-
-    public void Collision(List<ICollisionObject> colliderList)
-    {
-        amountToMove = negAmountToMove = Vector2.Zero;
-        testCollider.Width = colliderSize.X;
-        testCollider.Height = colliderSize.Y;
-
-        foreach (ICollisionObject s in colliderList)
-        {
-            if (s.Collider != Rectangle.Empty && s.Collider != trueCollider && Irbis.Irbis.DistanceSquared(trueCollider, s.Collider) <= 0)
-            {
-                collidedContains = collided.Contains(s);
-                if (Irbis.Irbis.IsTouching(trueCollider, s.Collider, Side.Bottom))                              //DOWN
-                {
-                    if (!collidedContains)
-                    {
-                        collided.Add(s, Side.Bottom);
-                        walled.Bottom++;
-                        if (negAmountToMove.Y > s.Collider.Top - trueCollider.Bottom && (velocity.Y * Irbis.Irbis.DeltaTime) >= -(s.Collider.Top - trueCollider.Bottom))
-                        {
-                            negAmountToMove.Y = s.Collider.Top - trueCollider.Bottom;
-                        }
-                    }
-                    else if (negAmountToMove.Y > s.Collider.Top - trueCollider.Bottom)
-                    {
-                        negAmountToMove.Y = s.Collider.Top - trueCollider.Bottom;
-                    }
-                }
-                if (Irbis.Irbis.IsTouching(trueCollider, s.Collider, Side.Right))                               //RIGHT
-                {
-                    if (!collidedContains)
-                    {
-                        collided.Add(s, Side.Right);
-                        walled.Right++;
-                        if (negAmountToMove.X > s.Collider.Left - trueCollider.Right && (velocity.X * Irbis.Irbis.DeltaTime) >= -(s.Collider.Left - trueCollider.Right))
-                        {
-                            negAmountToMove.X = s.Collider.Left - trueCollider.Right;
-                        }
-                    }
-                    else if (negAmountToMove.X > s.Collider.Left - trueCollider.Right)
-                    {
-                        negAmountToMove.X = s.Collider.Left - trueCollider.Right;
-                    }
-                }
-                if (Irbis.Irbis.IsTouching(trueCollider, s.Collider, Side.Left))                                //LEFT
-                {
-                    if (!collidedContains)
-                    {
-                        collided.Add(s, Side.Left);
-                        walled.Left++;
-                        if (amountToMove.X < s.Collider.Right - trueCollider.Left && (velocity.X * Irbis.Irbis.DeltaTime) <= -(s.Collider.Right - trueCollider.Left))
-                        {
-                            amountToMove.X = s.Collider.Right - trueCollider.Left;
-                        }
-                    }
-                    else if (amountToMove.X < s.Collider.Right - trueCollider.Left)
-                    {
-                        amountToMove.X = s.Collider.Right - trueCollider.Left;
-                    }
-                }
-                if (Irbis.Irbis.IsTouching(trueCollider, s.Collider, Side.Top))                                 //UP
-                {
-                    if (!collidedContains)
-                    {
-                        collided.Add(s, Side.Top);
-                        walled.Top++;
-                        if (amountToMove.Y < s.Collider.Bottom - trueCollider.Top && (velocity.Y * Irbis.Irbis.DeltaTime) <= -(s.Collider.Bottom - trueCollider.Top))
-                        {
-                            amountToMove.Y = s.Collider.Bottom - trueCollider.Top;
-                        }
-                    }
-                    else if (amountToMove.Y < s.Collider.Bottom - trueCollider.Top)
-                    {
-                        amountToMove.Y = s.Collider.Bottom - trueCollider.Top;
-                    }
-                }
-            }
-        }
-
-        if (walled.Left == 1 && input.X < 0)
-        {
-            int climbamount = (trueCollider.Bottom - collided.leftCollided[0].Collider.Top);
-            if ((climbamount) <= climbablePixels)
-            {
-                position.Y -= climbamount;
-                //position.X -= 1;
-                amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels. Timer:" + Irbis.Irbis.Timer);
-            }
-        }
-        if (walled.Right == 1 && input.X > 0)
-        {
-            int climbamount = (trueCollider.Bottom - collided.rightCollided[0].Collider.Top);
-            if ((climbamount) <= climbablePixels)
-            {
-                position.Y -= climbamount;
-                //position.X += 1;
-                amountToMove = negAmountToMove = Vector2.Zero;
-                Irbis.Irbis.WriteLine(this + " on ramp, moved " + climbamount + " pixels. Timer:" + Irbis.Irbis.Timer);
-            }
-        }
-
-
-        if (amountToMove.X == 0)
-        {
-            amountToMove.X = negAmountToMove.X;
-        }
-        else if (negAmountToMove.X != 0 && -negAmountToMove.X < amountToMove.X)
-        {
-            amountToMove.X = negAmountToMove.X;
-        }
-
-        if (amountToMove.Y == 0)
-        {
-            amountToMove.Y = negAmountToMove.Y;
-        }
-        else if (negAmountToMove.Y != 0 && -negAmountToMove.Y < amountToMove.Y)
-        {
-            amountToMove.Y = negAmountToMove.Y;
-        }
-
-        bool Y = false;
-        bool X = false;
-        if (Math.Abs(amountToMove.Y) <= Math.Abs(amountToMove.X) && amountToMove.Y != 0)
-        {
-            testPos.Y = (int)Math.Round((double)position.Y);
-            testPos.X = position.X;
-            testPos.Y += amountToMove.Y;
-            Y = true;
-        }
-        else if (amountToMove.X != 0)
-        {
-            testPos.X = (int)Math.Round((double)position.X);
-            testPos.Y = position.Y;
-            testPos.X += amountToMove.X;
-            X = true;
-        }
-
-        bool pass = true;
-        testCollider.X = (int)testPos.X + colliderOffset.X;
-        testCollider.Y = (int)testPos.Y + colliderOffset.Y;
-
-        pass = !(collided.Intersects(testCollider));
-
-        if (pass)
-        {
-            if (Y)
-            {
-                amountToMove.X = 0;
-            }
-            else if (X)
-            {
-                amountToMove.Y = 0;
-            }
-        }
-        else
-        {
-            pass = true;
-            if (Y)
-            {
-                testPos.X = (int)Math.Round((double)position.X);
-                testPos.Y = position.Y;
-                testPos.X += amountToMove.X;
-                testCollider.X = (int)testPos.X + colliderOffset.X;
-                testCollider.Y = (int)testPos.Y + colliderOffset.Y;
-
-                pass = !(collided.Intersects(testCollider));
-
-                if (pass)
-                {
-                    amountToMove.Y = 0;
-                }
-            }
-            else if (X)
-            {
-                testPos.Y = (int)Math.Round((double)position.Y);
-                testPos.X = position.X;
-                testPos.Y += amountToMove.Y;
-                testCollider.X = (int)testPos.X + colliderOffset.X;
-                testCollider.Y = (int)testPos.Y + colliderOffset.Y;
-
-                pass = !(collided.Intersects(testCollider));
-
-                if (pass)
-                {
-                    amountToMove.X = 0;
-                }
-            }
-        }
-
-        position += amountToMove;
-        CalculateMovement();
-
-        //if (amountToMove != Vector2.Zero)
-        //{
-        //    Irbis.Irbis.WriteLine("        pass: " + pass);
-        //    Irbis.Irbis.WriteLine("amountToMove: " + amountToMove);
-        //    Irbis.Irbis.WriteLine("    velocity: " + velocity);
-        //    Irbis.Irbis.WriteLine("    position: " + position);
-        //    Irbis.Irbis.WriteLine("     testPos: " + testPos);
-        //    Irbis.Irbis.WriteLine("   pcollider: T:" + collider.Top + " B:" + collider.Bottom + " L:" + collider.Left + " R:" + collider.Right);
-        //    Irbis.Irbis.WriteLine("   tcollider: T:" + testCollider.Top + " B:" + testCollider.Bottom + " L:" + testCollider.Left + " R:" + testCollider.Right);
-        //}
-
-        for (int i = 0; i < collided.bottomCollided.Count; i++)
-        {
-            if (!Irbis.Irbis.IsTouching(trueCollider, collided.bottomCollided[i].Collider, Side.Bottom))
-            {
-                collided.bottomCollided.RemoveAt(i);
-                walled.Bottom--;
-                i--;
-            }
-        }
-        for (int i = 0; i < collided.rightCollided.Count; i++)
-        {
-            if (!Irbis.Irbis.IsTouching(trueCollider, collided.rightCollided[i].Collider, Side.Right))
-            {
-                collided.rightCollided.RemoveAt(i);
-                walled.Right--;
-                i--;
-            }
-        }
-        for (int i = 0; i < collided.leftCollided.Count; i++)
-        {
-            if (!Irbis.Irbis.IsTouching(trueCollider, collided.leftCollided[i].Collider, Side.Left))
-            {
-                collided.leftCollided.RemoveAt(i);
-                walled.Left--;
-                i--;
-            }
-        }
-        for (int i = 0; i < collided.topCollided.Count; i++)
-        {
-            if (!Irbis.Irbis.IsTouching(trueCollider, collided.topCollided[i].Collider, Side.Top))
-            {
-                collided.topCollided.RemoveAt(i);
-                walled.Top--;
-                i--;
-            }
-        }
-
-        if ((walled.Top > 0 && velocity.Y < 0) || (walled.Bottom > 0 && velocity.Y > 0))
-        {
-            velocity.Y = 0;
-            position.Y = (int)Math.Round((double)position.Y);
-        }
-        if ((walled.Left > 0 && velocity.X < 0) || (walled.Right > 0 && velocity.X > 0))
-        {
-            velocity.X = 0;
-            position.X = (int)Math.Round((double)position.X);
-        }
-
-        if (walled.Bottom <= 0 && jumpTime <= 0)
-        { velocity.Y += Irbis.Irbis.gravity * mass * Irbis.Irbis.DeltaTime; }
-    }
-
 
     public void AddEffect(Enchant effect)
     {
@@ -1174,18 +879,29 @@ class WizardGuy : IEnemy
                 goto case 2;
             case 2:
                 animationFrame.Update(currentFrame.ToString(), true);
-                animationFrame.Draw(sb, ((position + (colliderOffset - new Point(24)).ToVector2()) * Irbis.Irbis.screenScale).ToPoint());
+                animationFrame.Draw(sb, ((position + (standardCollider.Location - new Point(24)).ToVector2()) * Irbis.Irbis.screenScale).ToPoint());
                 RectangleBorder.Draw(sb, collider, Color.Magenta, true);
                 goto case 1;
             case 1:
                 goto default;
             default:
-
+                for (int i = firenovas.Count - 1; i >= 0; i--)
+                { firenovas[i].Draw(sb); }
+                bolts.Draw(sb);
+                foreach (Lazor l in lazers)
+                { l.Draw(sb); }
+                if (exploding)
+                { sb.Draw(Irbis.Irbis.explosiontex, explosionLocation * Irbis.Irbis.screenScale, explosionSourceRect, Color.SteelBlue, 0f, new Vector2(64f), Irbis.Irbis.screenScale, SpriteEffects.None, depth); }
                 sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                 break;
         }
     }
 
     public void Light(SpriteBatch sb, bool UseColor)
-    { }
+    {
+        for (int i = firenovas.Count - 1; i >= 0; i--)
+        { firenovas[i].Light(sb, UseColor); }
+        foreach (Lazor l in lazers)
+        { l.Light(sb, UseColor); }
+    }
 }

@@ -117,7 +117,7 @@ public struct PlayerSettings
             shieldKey = Keys.Q;
             altShieldKey = Keys.Q;
             jumpKey = Keys.Space;
-            altJumpKey = Keys.Space;
+            altJumpKey = Keys.W;
             upKey = Keys.W;
             altUpKey = Keys.Up;
             downKey = Keys.S;
@@ -189,7 +189,7 @@ public struct PlayerSettings
             
             // determines if lighting is enabled or not. disabling this can greatly improve performance.
             lighting = true;
-            easyWalljumpMode = true;
+            easyWalljumpMode = false;
 
             //AUDIO SETTINGS
              masterAudioLevel = 100f;
@@ -249,7 +249,7 @@ public struct PlayerSettings
             //distance at which shockwave has no power
             shockwaveEffectiveDistance = 100f;
             //shockwave multipliers
-            shockwaveStunTime = 2f;
+            shockwaveStunTime = 0.5f;
             shockwaveKnockback = new Vector2(2f, -1f);
 
             //this how the player won't take damage after previously taking damage (seconds)
@@ -273,7 +273,7 @@ public struct PlayerSettings
             //ANIMATION SETTINGS
             //the amount of time that is allowed to pass before the animator displays the next frame (seconds)
             //(for each animation listed below)
-            animationSpeed = new float[40];
+            animationSpeed = new float[45];
             for (int i = 0; i < animationSpeed.Length; i++)
             { animationSpeed[i] = 0.1f; }
             for (int i = 0; i <= 6; i++)
@@ -288,10 +288,12 @@ public struct PlayerSettings
             { animationSpeed[i] = 0.075f; }
             for (int i = 23; i <= 26; i++)
             { animationSpeed[i] = 0.05f; }
+            for (int i = 39; i <= 40; i++)
+            { animationSpeed[i] = 0.05f; }
 
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
-            animationFrames = new int[40];
+            animationFrames = new int[45];
             for (int i = 0; i < animationFrames.Length; i++)
             { animationFrames[i] = 0; }
             animationFrames[00] = 3;
@@ -329,6 +331,12 @@ public struct PlayerSettings
             animationFrames[32] = 1;
             animationFrames[33] = 1;
             animationFrames[34] = 1;
+            animationFrames[35] = 6;
+            animationFrames[36] = 6;
+            animationFrames[37] = 7;
+            animationFrames[38] = 7;
+            animationFrames[39] = 4;
+            animationFrames[40] = 4;
 
             //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)
             //NOTE: there is no variable for the number of frames in the shield animation, as the shield animator
@@ -915,8 +923,8 @@ public struct PlayerSettings
         settings.terminalVelocity = Irbis.Irbis.jamie.terminalVelocity;
         settings.jumpTimeMax = Irbis.Irbis.jamie.jumpTimeMax;
 
-        settings.colliderOffset = Irbis.Irbis.jamie.colliderOffset;
-        settings.colliderSize = Irbis.Irbis.jamie.colliderSize;
+        settings.colliderOffset = Irbis.Irbis.jamie.standardCollider.Location;
+        settings.colliderSize = Irbis.Irbis.jamie.standardCollider.Size;
 
         settings.attackColliderWidth = Irbis.Irbis.jamie.attackColliderWidth;
         settings.attackColliderHeight = Irbis.Irbis.jamie.attackColliderHeight;

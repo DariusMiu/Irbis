@@ -22,9 +22,9 @@ public class UIElementDiscreteSlider
 
     Color fillColor;
     Color overlayColor;
-    bool overlay;
+    //bool overlay;
     Color borderColor;
-    bool border;
+    //bool border;
 
     float depth;
 
@@ -45,20 +45,20 @@ public class UIElementDiscreteSlider
         if (OverlayColor != null)
         {
             overlayColor = (Color)OverlayColor;
-            overlay = true;
+            //overlay = true;
         }
         else
         {
-            overlay = false;
+            //overlay = false;
         }
         if (BorderColor != null)
         {
             borderColor = (Color)BorderColor;
-            border = true;
+            //border = true;
         }
         else
         {
-            border = false;
+            //border = false;
         }
 
         value = maxValue = (TotalNumberOfElements - 1);

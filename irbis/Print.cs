@@ -159,7 +159,11 @@ public class Print
                     }
                     if (tempWidth > maxUsedWidth)
                     { maxUsedWidth = tempWidth; }
-                    tempWidth += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1) * textScale);
+                    int charIndex = ReturnCharacterIndex(c);
+                    if (charIndex < 100)
+                    { tempWidth += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1) * textScale); }
+                    else
+                    { tempWidth += (int)(13 * textScale); }
                 }
             }
         }
@@ -223,7 +227,11 @@ public class Print
                         tempWidth = 0;
                         maxUsedHeight++;
                     }
-                    tempWidth += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1));
+                    int charIndex = ReturnCharacterIndex(c);
+                    if (charIndex < 100)
+                    { tempWidth += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1)); }
+                    else
+                    { tempWidth += 13; }
                 }
             }
         }
@@ -570,14 +578,14 @@ public class Print
             case '\u007e': //~
                 return 78;
 
-            case '\u20af': //₯
-                return 96;
+            case '\u1d6e': //ᵮ furaffinity logo
+                return 102;
 
             case '\u1d75': //ᵵ twitter logo
-                return 97;
+                return 101;
 
             case '\u2117': //℗ patreon logo
-                return 98;
+                return 100;
 
             default:
                 return 95;
@@ -690,18 +698,19 @@ public class Print
 
                             Char c = statement[i];
                             int charIndex = ReturnCharacterIndex(c);
-
                             //only this part changes in monospace
-                            //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
                             displayPosition.X = (int)(width + origin.X);
                             displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                            //displayRect.Width = fontSourceRect[charIndex].Width;
-                            if (true)
+                            if (charIndex < 100)
                             {
                                 sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                                width += (int)(characterHeight * textScale);
                             }
-                            //else { return; }
-                            width += (int)(characterHeight * textScale);
+                            else
+                            {
+                                sb.Draw(Irbis.Irbis.fontLogos[charIndex - 100], displayPosition, null, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, depth);
+                                width += (int)(characterHeight * textScale);
+                            }
                         }
                     }
                 }
@@ -732,17 +741,19 @@ public class Print
 
                             Char c = tempstatement[i];
                             int charIndex = ReturnCharacterIndex(c);
-
                             //only this part changes in monospace
                             displayPosition.X = (int)(width + (int)origin.X);
                             displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                            //displayRect.Width = fontSourceRect[charIndex].Width;
-                            if (true)
+                            if (charIndex < 100)
                             {
                                 sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                                width += (int)(characterHeight * textScale);
                             }
-                            //else { return; }
-                            width += (int)(characterHeight * textScale);
+                            else
+                            {
+                                sb.Draw(Irbis.Irbis.fontLogos[charIndex - 100], displayPosition, null, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, depth);
+                                width += (int)(characterHeight * textScale);
+                            }
                         }
 
                         if (lastindexofnewline > 0)
@@ -787,17 +798,19 @@ public class Print
 
                         Char c = statement[i];
                         int charIndex = ReturnCharacterIndex(c);
-
                         //only this part changes in monospace
-                        //displayRect = new Rectangle((int)(width * characterHeight + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
                         displayPosition.X = (int)(width + (int)origin.X);
                         displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                        if (true)
+                        if (charIndex < 100)
                         {
                             sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                            width -= characterHeight * textScale;
                         }
-                        //else { return; }
-                        width -= characterHeight * textScale;
+                        else
+                        {
+                            sb.Draw(Irbis.Irbis.fontLogos[charIndex - 100], displayPosition, null, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, depth);
+                            width -= (int)(characterHeight * textScale);
+                        }
                     }
                 }
             }
@@ -857,16 +870,19 @@ public class Print
 
                         Char c = statement[i];
                         int charIndex = ReturnCharacterIndex(c);
-
                         //only this part changes in monospace
-
-                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
                         displayPosition.X = (int)(width + (int)origin.X);
                         displayPosition.Y = height * (int)(characterHeight * textScale) + (int)origin.Y;
-                        if (true)
-                        { sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth); }
-                        //else { return; }
-                        width -= ((characterHeight + 1) * textScale);
+                        if (charIndex < 100)
+                        {
+                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                            width -= ((characterHeight + 1) * textScale);
+                        }
+                        else
+                        {
+                            sb.Draw(Irbis.Irbis.fontLogos[charIndex - 100], displayPosition, null, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, depth);
+                            width -= (int)((characterHeight + 3) * textScale);
+                        }
                     }
                 }
             }
@@ -900,12 +916,16 @@ public class Print
                         int charIndex = ReturnCharacterIndex(c);
                         displayPosition.X = width + origin.X;
                         displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                        if (true)
+                        if (charIndex < 100)
                         {
                             sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                            width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
                         }
-                        //else { return; }
-                        width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
+                        else
+                        {
+                            sb.Draw(Irbis.Irbis.fontLogos[charIndex - 100], displayPosition, null, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, depth);
+                            width += (int)((characterHeight + 3) * textScale);
+                        }
                     }
                 }
             }
@@ -927,9 +947,18 @@ public class Print
                         {
                             char c = templine[j];
                             int charIndex = ReturnCharacterIndex(c);
-                            width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
-                            displayPosition.X = origin.X - width;
-                            sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                            if (charIndex < 100)
+                            {
+                                width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
+                                displayPosition.X = origin.X - width;
+                                sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                            }
+                            else
+                            {
+                                width += (int)((characterHeight + 3) * textScale);
+                                displayPosition.X = origin.X - width;
+                                sb.Draw(Irbis.Irbis.fontLogos[charIndex - 100], displayPosition, null, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, depth);
+                            }
                         }
                         height++;
                         displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
@@ -957,7 +986,11 @@ public class Print
                     }
                     else
                     {
-                        width += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1) * textScale);
+                        int charIndex = ReturnCharacterIndex(c);
+                        if (charIndex < 100)
+                        { width += (int)((fontSourceRect[ReturnCharacterIndex(c)].Width + 1) * textScale); }
+                        else
+                        { width += (int)(13 * textScale); }
                         if (width >= maxWidth)
                         {
                             width = 0;
@@ -987,15 +1020,18 @@ public class Print
                             height++;
                         }
                         int charIndex = ReturnCharacterIndex(c);
-                        //displayRect = new Rectangle((int)(width + (int)origin.X), height * characterHeight + (int)origin.Y, fontSourceRect[charIndex].Width, characterHeight);
                         displayPosition.X = width + origin.X;
                         displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
-                        if (true)
+                        if (charIndex < 100)
                         {
                             sb.Draw(tex, displayPosition, fontSourceRect[charIndex], fontColor, 0f, Vector2.Zero, textScale, SpriteEffects.None, depth);
+                            width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
                         }
-                        //else { return; }
-                        width += (int)((fontSourceRect[charIndex].Width + 1) * textScale);
+                        else
+                        {
+                            sb.Draw(Irbis.Irbis.fontLogos[charIndex - 100], displayPosition, null, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, depth);
+                            width += (int)((characterHeight + 3) * textScale);
+                        }
                     }
                 }
             }

@@ -68,7 +68,6 @@ public class Button
 
     public Button(Rectangle buttonBounds, Direction align, string buttonText, string highlightText, Color borderColor, Texture2D borderTexture, Font font, Color fillColor, bool AlignRectangle, bool dBorder, float drawDepth)
     {
-
         if (AlignRectangle)
         {
             if (align == Direction.Left)

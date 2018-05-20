@@ -7,7 +7,7 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{4A8DA6FD-4523-41E4-880B-75B2E8A0B0F9}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>irbis</RootNamespace>
     <AssemblyName>Irbis</AssemblyName>
@@ -26,8 +26,8 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <AutorunEnabled>true</AutorunEnabled>
-    <ApplicationRevision>14</ApplicationRevision>
-    <ApplicationVersion>0.2.0.14</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>0.2.1.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -80,13 +80,18 @@
     <Compile Include="BinaryTree.cs" />
     <Compile Include="Boss.cs" />
     <Compile Include="Button.cs" />
+    <Compile Include="ChargedBolt.cs" />
+    <Compile Include="ChargedBolts.cs" />
     <Compile Include="Collided.cs" />
+    <Compile Include="DotTail.cs" />
     <Compile Include="Enchant.cs" />
     <Compile Include="Grass.cs" />
     <Compile Include="GrassBlade.cs" />
+    <Compile Include="Lazor.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="LizardGuy.cs" />
     <Compile Include="Node.cs" />
+    <Compile Include="Nova.cs" />
     <Compile Include="OldLevel.cs" />
     <Compile Include="OnslaughtSpawner.cs" />
     <Compile Include="Enemy.cs" />
@@ -126,6 +131,7 @@
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\DesktopGL\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -175,16 +181,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />
-    <None Include="levels\c0b0.lvl">
+    <None Include="levels\c1b1.lvl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="levels\c0b1.lvl">
+    <None Include="levels\c1b2.lvl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="levels\c0o0.lvl">
+    <None Include="levels\d0o0.lvl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="content\music\bensound-betterdays.mp3" />

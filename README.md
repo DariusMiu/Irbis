@@ -1,5 +1,5 @@
 # IRBIS
-## Build Version: `0.2.0.14` | omg grass  
+## Build Version: `0.2.1.0` | Wizard  
 
 
 ### Known Bug List  
@@ -9,14 +9,14 @@
 `04.` Boss strike attack during bury phase sometimes hits twice  
 `05.` Tailwhip and strike seem to not trigger their knockbacks occasionally  
 `06.` Player death causes freeze with multithreading (multithreading will get completely reworked in the future)  
+`07.` Player sometimes get stuck in the falling animation despite having touched the ground
+`08.` Standing on the lizard after roll attack makes the player clip through the wall and fall through the floor
+`09.` The player is able to push generic enemies around instead of vice-a-versa
 
 
 ### Important Notes  
-`01.` Try out C0B0! Our first boss!  
-`02.` C0O0 is a test level. There is no content there, only an extremely early version of a 'survival mode'  
-`03.` There is no death screen (yet!)  
-`04.` Some animations are missing. The lizard boss has none, and only uses concept art. And the player is missing attack and roll animations.  
-`05.` Move the torch by clicking on the screen (change the darkness of the scene with console command `darkness={float}`)
+`01.` C0O0 is a test level. There is no content there, only an extremely early version of a 'survival mode'  
+`02.` There is no death screen (yet!)  
 
 ### Controls  
 `     A:` Move left  
@@ -25,14 +25,11 @@
 `     Q:` Shield  
 `     E:` Shockwave (hold&release for stronger shockwave)  
 `S+Jump:` Slam  
-`     N:` Enter frame-by-frame mode (and next frame)  
-`     G:` Exit frame-by-frame mode  
 `     R:` Use  
-`     K:` Spawn some dudes!  
-`LShift:` Roll  
+` Shift:` Roll  
 ` Enter:` Attack  
 ` Tilde~` Open developer console  
-`Escape:` Quits to previous menu (exits the game on main menu)  
+`Escape:` Pause / previous menu (exits the game on main menu)  
 
 
 ### Playable Version  

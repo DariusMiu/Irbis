@@ -52,12 +52,13 @@ public class GrassBlade
         float distanceSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.BottomCenter, position);
         if (distanceSqr <= parentGrass.brushDistanceSqr)
         {
-            brushRotation = (distanceSqr / parentGrass.brushDistanceSqr) - 1f;
             if (Irbis.Irbis.Directions(Irbis.Irbis.jamie.BottomCenter, position) == Direction.Right)
-            { brushRotation = -brushRotation; }
+            { brushRotation = Irbis.Irbis.LerpNoClamp(brushRotation, -((distanceSqr / parentGrass.brushDistanceSqr) - 1f), Irbis.Irbis.DeltaTime * 15); }
+            else
+            { brushRotation = Irbis.Irbis.LerpNoClamp(brushRotation, (distanceSqr / parentGrass.brushDistanceSqr) - 1f, Irbis.Irbis.DeltaTime * 15); }
         }
-        else
-        { brushRotation = 0f; }
+        else if (brushRotation != 0f)
+        { brushRotation = Irbis.Irbis.LerpNoClamp(brushRotation, 0f, Irbis.Irbis.DeltaTime * 15); }
     }
 
     public void Draw(SpriteBatch sb)

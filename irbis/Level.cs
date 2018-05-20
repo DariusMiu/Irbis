@@ -46,7 +46,7 @@ public struct Level
     float[][] PSTimes;
     float[][] PSScales;
     float[] PSSpawnDelay;
-    float[] PSDepth;
+    float[][] PSDepths;
     float[][] PSRandomness;
     int[] PSSpawnX;
     int[] PSSpawnY;
@@ -223,14 +223,14 @@ public struct Level
                 int length = PSInitialVelocityX.Length;
                 if (PSAnimationDelay.Length == length && PSFrames.Length == length && PSColors.Length == length && PSTextures.Length == length &&
                     PSSpawnX.Length == length && PSSpawnY.Length == length && PSSpawnW.Length == length && PSSpawnH.Length == length && PSRandomness.Length == length &&
-                    PSDepth.Length == length && PSSpawnDelay.Length == length && PSScales.Length == length && PSTimes.Length == length && PSForceX.Length == length &&
+                    PSDepths.Length == length && PSSpawnDelay.Length == length && PSScales.Length == length && PSTimes.Length == length && PSForceX.Length == length &&
                     PSForceY.Length == length && PSInitialVelocityY.Length == length && PSLightScales.Length == length)
                 {
                     ParticleSystem[] particleSystems = new ParticleSystem[length];
                     for (int i = 0; i < length; i++)
                     {
-                        particleSystems[i] = new ParticleSystem(new Vector2(PSInitialVelocityX[i],PSInitialVelocityY[i]), new Vector2(PSForceX[i],PSForceY[i]),PSTimes[i],PSScales[i],PSLightScales[i],PSSpawnDelay[i],PSDepth[i],
-                            PSRandomness[i], new Rectangle(PSSpawnX[i],PSSpawnY[i],PSSpawnW[i],PSSpawnH[i]),LoadTextureArray(PSTextures[i]),LoadColorArray(PSColors[i]),LoadColorArray(PSLightColors[i]),PSFrames[i],PSAnimationDelay[i],PSTimeToLive[i]);
+                        particleSystems[i] = new ParticleSystem(new Vector2(PSInitialVelocityX[i],PSInitialVelocityY[i]), new Vector2(PSForceX[i],PSForceY[i]),PSTimes[i],PSScales[i],PSLightScales[i],PSSpawnDelay[i],PSDepths[i],
+                            PSRandomness[i], new Rectangle(PSSpawnX[i],PSSpawnY[i],PSSpawnW[i],PSSpawnH[i]),LoadTextureArray(PSTextures[i]),LoadColorArray(PSColors[i]),LoadColorArray(PSLightColors[i]),PSFrames[i],PSAnimationDelay[i],PSTimeToLive[i],2);
                     }
                     return particleSystems;
                 }
@@ -254,7 +254,7 @@ public struct Level
                 PSScales[i] = value[i].stateScales;
                 PSLightScales[i] = value[i].stateLightScales;
                 PSSpawnDelay[i] = value[i].spawnDelay;
-                PSDepth[i] = value[i].depth;
+                PSDepths[i] = value[i].stateDepths;
                 PSRandomness[i] = value[i].randomness;
                 PSSpawnX[i] = value[i].spawnArea.X;
                 PSSpawnY[i] = value[i].spawnArea.Y;
@@ -366,7 +366,7 @@ public struct Level
         PSScales = new float[0][];
         PSLightScales = new float[0][];
         PSSpawnDelay = new float[0];
-        PSDepth = new float[0];
+        PSDepths = new float[0][];
         PSRandomness = new float[0][];
         PSSpawnX = new int[0];
         PSSpawnY = new int[0];
@@ -397,14 +397,10 @@ public struct Level
         GbladeTextures = new string[0];
         GtextureDimentionsX = new int[0];
         GtextureDimentionsY = new int[0];
-
     }
 
     private uint ColorToUInt(Color color)
-    {
-        return (uint)((color.A << 24) | (color.R << 16) |
-                      (color.G << 8) | (color.B << 0));
-    }
+    { return (uint)((color.A << 24) | (color.R << 16) | (color.G << 8) | (color.B << 0)); }
 
     private Color[] LoadColorArray(uint[] colors)
     {
@@ -456,7 +452,7 @@ public struct Level
         PSScales = new float[length][];
         PSLightScales = new float[length][];
         PSSpawnDelay = new float[length];
-        PSDepth = new float[length];
+        PSDepths = new float[length][];
         PSRandomness = new float[length][];
         PSSpawnX = new int[length];
         PSSpawnY = new int[length];

@@ -24,6 +24,7 @@ public class Menu
     {
         Point tempLP;
         Point tempDP;
+        Irbis.Irbis.justLeftMenu = true;
         switch (scene)
         {
             case 0:     //main menu
@@ -300,11 +301,9 @@ public class Menu
                     List<string> tempLevelList = new List<string>();
 
                     foreach (string s in Irbis.Irbis.levelList)
-                    {
-                        tempLevelList.Add(s);
-                    }
+                    { tempLevelList.Add(s); }
 
-                    for (int i = 0; i < tempLevelList.Count; i++)
+                    for (int i = tempLevelList.Count - 1; i >= 0; i--)
                     {
                         if (tempLevelList[i].StartsWith(".\\levels\\") && tempLevelList[i].EndsWith(".lvl"))
                         {
@@ -312,9 +311,7 @@ public class Menu
                             tempLevelList[i] = tempLevelList[i].Remove(tempLevelList[i].Length - 4);
                         }
                         else
-                        {
-                            tempLevelList.RemoveAt(i);
-                        }
+                        { tempLevelList.RemoveAt(i); }
                     }
 
                     Irbis.Irbis.levelList = tempLevelList.ToArray();
@@ -401,14 +398,22 @@ public class Menu
                     //scroll
                     for (int i = 0; i < Irbis.Irbis.maxButtonsOnScreen; i++)
                     {
-                        Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X, Irbis.Irbis.resolution.Y - (tempLP.Y - (buttonHeight * i * Irbis.Irbis.textScale)), (int)(Irbis.Irbis.resolution.X / 4f), buttonHeight * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.levelList[i], ">" + Irbis.Irbis.levelList[i], Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
+                        Button tempButton = new Button(new Rectangle(tempLP.X, Irbis.Irbis.resolution.Y - (tempLP.Y - (buttonHeight * i * Irbis.Irbis.textScale)),
+                        (int)(Irbis.Irbis.resolution.X / 4f), buttonHeight * Irbis.Irbis.textScale), Direction.Left, Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[i]),
+                        ">" + Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[i]), Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f);
+                        tempButton.data = Irbis.Irbis.levelList[i];
+                        Irbis.Irbis.buttonList.Add(tempButton);
                     }
                 }
                 else
                 {
                     for (int i = 0; i < Irbis.Irbis.levelList.Length; i++)
                     {
-                        Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X, Irbis.Irbis.resolution.Y - (tempLP.Y - (buttonHeight * i * Irbis.Irbis.textScale)), (int)(Irbis.Irbis.resolution.X / 4f), buttonHeight * Irbis.Irbis.textScale), Direction.Forward, Irbis.Irbis.levelList[i], ">" + Irbis.Irbis.levelList[i], Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f));
+                        Button tempButton = new Button(new Rectangle(tempLP.X, Irbis.Irbis.resolution.Y - (tempLP.Y - (buttonHeight * i * Irbis.Irbis.textScale)),
+                        (int)(Irbis.Irbis.resolution.X / 4f), buttonHeight * Irbis.Irbis.textScale), Direction.Left, Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[i]),
+                        ">" + Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[i]), Color.Magenta, Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, false, false, 0.5f);
+                        tempButton.data = Irbis.Irbis.levelList[i];
+                        Irbis.Irbis.buttonList.Add(tempButton);
                     }
                 }
 
@@ -1715,56 +1720,66 @@ public class Menu
                 }
                 if (Irbis.Irbis.isMenuScrollable)
                 {
-                    if (Irbis.Irbis.menuSelection == 1 && Irbis.Irbis.buttonList[1].originalStatement != Irbis.Irbis.levelList[0])
+                    if (Irbis.Irbis.menuSelection == 1 && Irbis.Irbis.buttonList[1].data != Irbis.Irbis.levelList[0])
                     {
                         Irbis.Irbis.levelListCounter--;
                         //button 0 is back
                         for (int i = Irbis.Irbis.buttonList.Count - 1; i > 0; i--)
                         {
+                            Irbis.Irbis.buttonList[i].data = Irbis.Irbis.buttonList[i - 1].data;
                             Irbis.Irbis.buttonList[i].originalStatement = Irbis.Irbis.buttonList[i - 1].originalStatement;
                             Irbis.Irbis.buttonList[i].highlightStatement = Irbis.Irbis.buttonList[i - 1].highlightStatement;
                         }
 
-                        Irbis.Irbis.buttonList[1].originalStatement = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
-                        Irbis.Irbis.buttonList[1].highlightStatement = ">" + Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
+                        Irbis.Irbis.buttonList[1].data = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
+                        Irbis.Irbis.buttonList[1].originalStatement = Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter]);
+                        Irbis.Irbis.buttonList[1].highlightStatement = ">" + Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter]);
                         Irbis.Irbis.menuSelection = 2;
                     }
-                    else if (Irbis.Irbis.menuSelection >= Irbis.Irbis.maxButtonsOnScreen && Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement != Irbis.Irbis.levelList[Irbis.Irbis.levelList.Length - 1])
+                    else if (Irbis.Irbis.menuSelection >= Irbis.Irbis.maxButtonsOnScreen && Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].data != Irbis.Irbis.levelList[Irbis.Irbis.levelList.Length - 1])
                     {
                         Irbis.Irbis.levelListCounter++;
                         //button 0 is back
                         for (int i = 1; i < Irbis.Irbis.buttonList.Count - 1; i++)
                         {
+                            Irbis.Irbis.buttonList[i].data = Irbis.Irbis.buttonList[i + 1].data;
                             Irbis.Irbis.buttonList[i].originalStatement = Irbis.Irbis.buttonList[i + 1].originalStatement;
                             Irbis.Irbis.buttonList[i].highlightStatement = Irbis.Irbis.buttonList[i + 1].highlightStatement;
                         }
 
-                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1];
-                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].highlightStatement = ">" + Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1];
+                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].data = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1];
+                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement = Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1]);
+                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].highlightStatement = ">" + Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1]);
                         Irbis.Irbis.menuSelection = Irbis.Irbis.maxButtonsOnScreen - 1;
                     }
 
-                    if (Irbis.Irbis.GetMouseState.ScrollWheelValue > Irbis.Irbis.GetPreviousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[1].originalStatement != Irbis.Irbis.levelList[0])      //scroll up
+                    if (Irbis.Irbis.GetMouseState.ScrollWheelValue > Irbis.Irbis.GetPreviousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[1].data != Irbis.Irbis.levelList[0])      //scroll up
                     {
                         Irbis.Irbis.levelListCounter--;
+                        //button 0 is back
                         for (int i = Irbis.Irbis.buttonList.Count - 1; i > 0; i--)
                         {
+                            Irbis.Irbis.buttonList[i].data = Irbis.Irbis.buttonList[i - 1].data;
                             Irbis.Irbis.buttonList[i].originalStatement = Irbis.Irbis.buttonList[i - 1].originalStatement;
                             Irbis.Irbis.buttonList[i].highlightStatement = Irbis.Irbis.buttonList[i - 1].highlightStatement;
                         }
-                        Irbis.Irbis.buttonList[1].originalStatement = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
-                        Irbis.Irbis.buttonList[1].highlightStatement = ">" + Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
+                        Irbis.Irbis.buttonList[1].data = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter];
+                        Irbis.Irbis.buttonList[1].originalStatement = Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter]);
+                        Irbis.Irbis.buttonList[1].highlightStatement = ">" + Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter]);
                     }
-                    if (Irbis.Irbis.GetMouseState.ScrollWheelValue < Irbis.Irbis.GetPreviousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement != Irbis.Irbis.levelList[Irbis.Irbis.levelList.Length - 1])      //scroll down
+                    if (Irbis.Irbis.GetMouseState.ScrollWheelValue < Irbis.Irbis.GetPreviousMouseState.ScrollWheelValue && Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].data != Irbis.Irbis.levelList[Irbis.Irbis.levelList.Length - 1])      //scroll down
                     {
                         Irbis.Irbis.levelListCounter++;
+                        //button 0 is back
                         for (int i = 1; i < Irbis.Irbis.buttonList.Count - 1; i++)
                         {
+                            Irbis.Irbis.buttonList[i].data = Irbis.Irbis.buttonList[i + 1].data;
                             Irbis.Irbis.buttonList[i].originalStatement = Irbis.Irbis.buttonList[i + 1].originalStatement;
                             Irbis.Irbis.buttonList[i].highlightStatement = Irbis.Irbis.buttonList[i + 1].highlightStatement;
                         }
-                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1];
-                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].highlightStatement = ">" + Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1];
+                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].data = Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1];
+                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].originalStatement = Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1]);
+                        Irbis.Irbis.buttonList[Irbis.Irbis.buttonList.Count - 1].highlightStatement = ">" + Irbis.Irbis.GetLevelName(Irbis.Irbis.levelList[Irbis.Irbis.levelListCounter + Irbis.Irbis.maxButtonsOnScreen - 1]);
                     }
                 }
                 if (Irbis.Irbis.menuSelection >= Irbis.Irbis.buttonList.Count)
@@ -1784,7 +1799,7 @@ public class Menu
                     }
                     else
                     {
-                        game.LoadLevel(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].originalStatement, true);
+                        game.LoadLevel(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].data, true);
                     }
                 }
                 if (/*GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || */Irbis.Irbis.GetPauseKeyDown)

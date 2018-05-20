@@ -24,7 +24,7 @@ public class Bars
         Texture2D ShieldBarOverlay,Texture2D BackgroundTexture, Texture2D EnemyBackgroundTexture, Texture2D[] PotionBackgroundTextures)
     {
         int scale = (int)Irbis.Irbis.screenScale;
-        float resizefactor = 16f / scale;
+        float resizefactor = scale / 16f;
 
         backgroundTexture = Irbis.Irbis.ResizeTexture(BackgroundTexture, resizefactor, false);
         enemyBackgroundTexture = Irbis.Irbis.ResizeTexture(EnemyBackgroundTexture, resizefactor, false);
@@ -55,9 +55,9 @@ public class Bars
             maxpots = Irbis.Irbis.jamie.maxNumberOfPotions / 2;
         }
 
-        potionBar = new UIElementDiscreteSlider(Direction.Left, (backgroundTextureLocation + (new Vector2(1040, 176) / resizefactor)).ToPoint(),
-            (backgroundTextureLocation + (new Vector2(800, 336) / resizefactor)).ToPoint(), new[] { PotionTexture }, PotionBackgroundTextures, null, Color.White, Color.White,
-            null, Irbis.Irbis.jamie.maxNumberOfPotions, maxpots, (new Vector2(222, 96) / resizefactor).ToPoint(), (new Vector2(272,128) / resizefactor).ToPoint(), scale,  0.5f);
+        potionBar = new UIElementDiscreteSlider(Direction.Left, (backgroundTextureLocation + (new Vector2(1040, 176) * resizefactor)).ToPoint(),
+            (backgroundTextureLocation + (new Vector2(800, 336) * resizefactor)).ToPoint(), new[] { PotionTexture }, PotionBackgroundTextures, null, Color.White, Color.White,
+            null, Irbis.Irbis.jamie.maxNumberOfPotions, maxpots, (new Vector2(222, 96) * resizefactor).ToPoint(), (new Vector2(272,128) * resizefactor).ToPoint(), scale,  0.5f);
 
         enemyHealthBar = new UIElementSlider(Direction.Right, new Rectangle((int)((Irbis.Irbis.resolution.X) - (32 + scale)), (int)(32 + scale), EnemyHealthTexture.Width, EnemyHealthTexture.Height),
             new Point((scale / 2) * -1, 0), 100, new Color(108, 003, 003), null, null, null, EnemyHealthTexture, null, null, false, Irbis.Irbis.font, false, 0.5f, 0.499f, 0.501f, 0.502f);

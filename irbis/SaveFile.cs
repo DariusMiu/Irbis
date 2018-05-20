@@ -31,13 +31,9 @@ public struct SaveFile
         bestOnslaughtWave = 0;
         bestOnslaughtWaveLevel = string.Empty;
         if (LastLevelEmpty)
-        {
-            lastPlayedLevel = string.Empty;
-        }
+        { lastPlayedLevel = string.Empty; }
         else
-        {
-            lastPlayedLevel = "c0b0";
-        }
+        { lastPlayedLevel = "c1b1"; }
     }
 
     public void Load(string filename)
