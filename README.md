@@ -19,17 +19,17 @@
 `02.` There is no death screen (yet!)  
 
 ### Controls  
-`     A:` Move left  
-`     D:` Move right  
-` Space:` Jump  
-`     Q:` Shield  
-`     E:` Shockwave (hold&release for stronger shockwave)  
-`S+Jump:` Slam  
-`     R:` Use  
-` Shift:` Roll  
-` Enter:` Attack  
-` Tilde~` Open developer console  
-`Escape:` Pause / previous menu (exits the game on main menu)  
+`>     A:` Move left  
+`>     D:` Move right  
+`> Space:` Jump  
+`>     Q:` Shield  
+`>     E:` Shockwave (hold&release for stronger shockwave)  
+`>S+Jump:` Slam  
+`>     R:` Use  
+`> Shift:` Roll  
+`> Enter:` Attack  
+`> Tilde~` Open developer console  
+`>Escape:` Pause / previous menu (exits the game on main menu)  
 
 
 ### Playable Version  
