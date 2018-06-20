@@ -27,8 +27,6 @@ public class Grass
     public Point textureDimentions;
     public float brushDistanceSqr = 900;
 
-    public static SpriteBatch spriteBatch;
-
     /// <summary>
     /// plant some grass in an area
     /// </summary>
@@ -91,7 +89,7 @@ public class Grass
         bladeCount = bladeList.Count;
     }
 
-    public void Update()
+    public void Update ()
     {
         for (int i = 0; i < bladeCount; i += efficiency)
         {
@@ -117,9 +115,6 @@ public class Grass
             { Irbis.Irbis.doneEvent.Set(); }
         }
     }
-
-    public void PreDraw()
-    { }
 
     public void Draw(SpriteBatch sb)
     {

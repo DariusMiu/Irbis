@@ -19,7 +19,9 @@ public struct PlayerSettings
     public float minSqrDetectDistance;
     public Rectangle boundingBox;
     public bool cameraLerpSetting;
-    public float cameraLerpSpeed;
+    public float cameraLerpXSpeed;
+    public float cameraLerpYSpeed;
+    public bool smartCamera;
     public float shieldRechargeRate;
     public float energyRechargeRate;
     public float healthRechargeRate;
@@ -40,15 +42,16 @@ public struct PlayerSettings
     public float shieldAnimationSpeed;
     public float superShockwaveHoldtime;
     public float walljumpHoldtime;
-    public float attack1Damage;
-    public float attack2Damage;
+    public Vector2 attackDamage;
+    public float critChance;
+    public Vector2 critMultiplier;
     public string timerAccuracy;
     public bool cameraShakeSetting;
     public bool cameraSwingSetting;
     public float swingDuration;
     public float swingMagnitude;
-    public int attackColliderWidth;
-    public int attackColliderHeight;
+    public Point attackColliderSize;
+    public int attackFrame;
     public bool fullscreen;
     public float screenScale;
     public Point resolution;
@@ -93,9 +96,11 @@ public struct PlayerSettings
     public int characterHeight;
     public int debug;
     public bool lighting;
+    public Rectangle playerLight;
+    public Rectangle shieldLight;
 
     //start at line 11 to make it easier to count, just subtract 10 from final line
-    const int numberOfVariables = 85;
+    const int numberOfVariables = 90;
 
 
     public PlayerSettings(bool useDefaults)
@@ -117,7 +122,7 @@ public struct PlayerSettings
             shieldKey = Keys.Q;
             altShieldKey = Keys.Q;
             jumpKey = Keys.Space;
-            altJumpKey = Keys.W;
+            altJumpKey = Keys.Space;
             upKey = Keys.W;
             altUpKey = Keys.Up;
             downKey = Keys.S;
@@ -155,8 +160,12 @@ public struct PlayerSettings
             //Do you want the camera to smoothly trail the player?
             cameraLerpSetting = true;
 
+            //Do you want to use the smart camera (as opposed to just a plain bounding box)?
+            smartCamera = true;
+
             //How fast should the camera lerp?
-            cameraLerpSpeed = 15f;
+            cameraLerpXSpeed = 2f;
+            cameraLerpYSpeed = 5f;
 
             //Turn off camera "swing" (the motion the camera makes when you attack and miss)
             cameraSwingSetting = false;
@@ -176,14 +185,11 @@ public struct PlayerSettings
             //toggles windowed/fullscreen mode
             fullscreen = false;
 
-            //the screenScale of the window
+            //the scale of each individual pixel in-game
             screenScale = 0;
 
-            //how much will be drawn
+            //how big is the game window (0,0 will result in a fullscreen borderless window)
             resolution = Point.Zero;
-            //the actual size of the window is a combination of resolution and scale
-            //for example, a 960x540 resolution at 2x scale gives you a 1920x1080window
-            //with each in-game pixel using 2x2 pixels on your screen
 
             vSync = false;
             
@@ -221,8 +227,9 @@ public struct PlayerSettings
 
             //CHEATS
             //self-explanatory
-            attack1Damage = 45f;
-            attack2Damage = 45f;
+            attackDamage = new Vector2(20, 30);
+            critChance = 0.075f;
+            critMultiplier = new Vector2(2.5f, 3f);
 
             //run&jump speed
             speed = 275f;
@@ -236,10 +243,15 @@ public struct PlayerSettings
             //collider size and placement relative to the 128x128 player sprite
             colliderOffset = new Point(54, 63);
             colliderSize = new Point(20, 48);
+            //location of the lights inside the player texture
+            playerLight = new Rectangle(2176, 3584, 256, 256);
+            shieldLight = new Rectangle(1920, 3584, 256, 256);
 
             //this is the size of the rectangle used as the main attack hitbox
-            attackColliderWidth = 40;
-            attackColliderHeight = 30;
+            attackColliderSize = new Point(40, 30);
+
+            //on the start of which frame of animation will the attack be triggered
+            attackFrame = 1;
 
             //self-explanatory
             maxHealth = 100f;
@@ -273,7 +285,7 @@ public struct PlayerSettings
             //ANIMATION SETTINGS
             //the amount of time that is allowed to pass before the animator displays the next frame (seconds)
             //(for each animation listed below)
-            animationSpeed = new float[45];
+            animationSpeed = new float[47];
             for (int i = 0; i < animationSpeed.Length; i++)
             { animationSpeed[i] = 0.1f; }
             for (int i = 0; i <= 6; i++)
@@ -290,10 +302,12 @@ public struct PlayerSettings
             { animationSpeed[i] = 0.05f; }
             for (int i = 39; i <= 40; i++)
             { animationSpeed[i] = 0.05f; }
+            for (int i = 41; i <= 46; i++)
+            { animationSpeed[i] = 0.075f; }
 
             // 0 is 1 frame, 1 is 2 frames, etc
             //the number of frames in each animation, only edit this if you are remaking the default spritesheet
-            animationFrames = new int[45];
+            animationFrames = new int[47];
             for (int i = 0; i < animationFrames.Length; i++)
             { animationFrames[i] = 0; }
             animationFrames[00] = 3;
@@ -337,6 +351,12 @@ public struct PlayerSettings
             animationFrames[38] = 7;
             animationFrames[39] = 4;
             animationFrames[40] = 4;
+            animationFrames[41] = 0;
+            animationFrames[42] = 0;
+            animationFrames[43] = 0;
+            animationFrames[44] = 0;
+            animationFrames[45] = 5;
+            animationFrames[46] = 5;
 
             //the amount of time that is allowed to pass before the shield animator displays the next frame (seconds)
             //NOTE: there is no variable for the number of frames in the shield animation, as the shield animator
@@ -441,8 +461,12 @@ public struct PlayerSettings
             //Do you want the camera to smoothly trail the player?
             cameraLerpSetting = false;
 
+            //Do you want to use the smart camera (as opposed to just a plain bounding box)?
+            smartCamera = false;
+
             //How fast should the camera lerp?
-            cameraLerpSpeed = 0f;
+            cameraLerpXSpeed = 0f;
+            cameraLerpYSpeed = 0f;
 
             //Turn off camera "swing" (the motion the camera makes when you attack and miss)
             cameraSwingSetting = false;
@@ -462,14 +486,11 @@ public struct PlayerSettings
             //toggles windowed/fullscreen mode
             fullscreen = false;
 
-            //the scale of the window
+            //the scale of each individual pixel in-game
             screenScale = 0;
 
-            //how much will be drawn
+            //how big is the game window (0,0 will result in a fullscreen borderless window)
             resolution = Point.Zero;
-            //the actual size of the window is a combination of resolution and scale
-            //for example, a 960x540 resolution at 2x scale gives you a 1920x1080window
-            //with each in-game pixel using 2x2 pixels on your screen
 
             vSync = false;
             
@@ -509,8 +530,9 @@ public struct PlayerSettings
 
             //CHEATS
             //self-explanatory
-            attack1Damage = 0f;
-            attack2Damage = 0f;
+            attackDamage = new Vector2(20, 30);
+            critChance = 0f;
+            critMultiplier = Vector2.Zero;
 
             //run&jump speed
             speed = 0f;
@@ -523,10 +545,14 @@ public struct PlayerSettings
             //highly unrecommended to not mess with these unless you really know what you're doing
             //collider size and placement relative to the 128x128 player sprite
             colliderSize = colliderOffset = Point.Zero;
+            //location of the lights inside the player texture
+            playerLight = shieldLight = Rectangle.Empty;
 
             //this is the size of the rectangle used as the main attack hitbox
-            attackColliderWidth = 0;
-            attackColliderHeight = 0;
+            attackColliderSize = Point.Zero;
+
+            //on the start of which frame of animation will the attack be triggered
+            attackFrame = 0;
 
             //self-explanatory
             maxHealth = 0f;
@@ -676,8 +702,12 @@ public struct PlayerSettings
         writer.WriteLine(";Do you want the camera to smoothly trail the player?");
         writer.WriteLine("cameraLerp=" + cameraLerpSetting);
         writer.WriteLine("");
+        writer.WriteLine(";Do you want to use the smart camera (as opposed to just a plain bounding box)?");
+        writer.WriteLine("smartCamera=" + smartCamera);
+        writer.WriteLine("");
         writer.WriteLine(";How fast should the camera lerp?");
-        writer.WriteLine("cameraLerpSpeed=" + cameraLerpSpeed);
+        writer.WriteLine("cameraLerpXSpeed=" + cameraLerpXSpeed);
+        writer.WriteLine("cameraLerpYSpeed=" + cameraLerpYSpeed);
         writer.WriteLine("");
         writer.WriteLine(";Turn off camera \"swing\" (the motion the camera makes when you attack and miss)");
         writer.WriteLine("cameraSwingSetting=" + cameraSwingSetting);
@@ -698,14 +728,11 @@ public struct PlayerSettings
         writer.WriteLine(";toggles windowed/fullscreen mode");
         writer.WriteLine("fullscreen=" + fullscreen);
         writer.WriteLine("");
-        writer.WriteLine(";the scale of the window");
+        writer.WriteLine(";the scale of each individual pixel in-game");
         writer.WriteLine("screenScale=" + screenScale);
         writer.WriteLine("");
-        writer.WriteLine(";how much of the world will be drawn");
+        writer.WriteLine(";how big is the game window (0,0 will result in a fullscreen borderless window)");
         writer.WriteLine("resolution=" + resolution);
-        writer.WriteLine(";the actual size of the window is a combination of resolution and scale");
-        writer.WriteLine(";for example, a 960x540 resolution at 2x scale gives you a 1920x1080 window");
-        writer.WriteLine(";with each in-game pixel using 2x2 pixels on your screen");
         writer.WriteLine("");
         writer.WriteLine("vSync=" + vSync);
         writer.WriteLine("");
@@ -750,8 +777,9 @@ public struct PlayerSettings
 
         writer.WriteLine(";CHEATS");
         writer.WriteLine(";self-explanatory");
-        writer.WriteLine("attack1Damage=" + attack1Damage);
-        writer.WriteLine("attack2Damage=" + attack2Damage);
+        writer.WriteLine("attackDamage=" + attackDamage);
+        writer.WriteLine("critChance=" + critChance);
+        writer.WriteLine("critMultiplier=" + critMultiplier);
         writer.WriteLine("");
 
         writer.WriteLine(";run&jump speed");
@@ -766,11 +794,17 @@ public struct PlayerSettings
         writer.WriteLine(";collider size and placement relative to the 128x128 player sprite");
         writer.WriteLine("colliderOffset=" + colliderOffset);
         writer.WriteLine("colliderSize=" + colliderSize);
+        writer.WriteLine(";location of the lights inside the player texture");
+        writer.WriteLine("playerLight=" + playerLight);
+        writer.WriteLine("shieldLight=" + shieldLight);
         writer.WriteLine("");
 
         writer.WriteLine(";this is the size of the rectangle used as the main attack hitbox");
-        writer.WriteLine("attackColliderWidth=" + attackColliderWidth);
-        writer.WriteLine("attackColliderHeight=" + attackColliderHeight);
+        writer.WriteLine("attackColliderSize=" + attackColliderSize);
+        writer.WriteLine("");
+
+        writer.WriteLine(";on the start of which frame of animation will the attack be triggered");
+        writer.WriteLine("attackFrame=" + attackFrame);
         writer.WriteLine("");
 
         writer.WriteLine(";self-explanatory");
@@ -892,19 +926,23 @@ public struct PlayerSettings
         settings.GProllKey = Irbis.Irbis.GProllKey;
         settings.GPpotionKey = Irbis.Irbis.GPpotionKey;
         settings.GPuseKey = Irbis.Irbis.GPuseKey;
-
-        settings.boundingBox = Irbis.Irbis.boundingBox;
+        if (Irbis.Irbis.boundingBox == Irbis.Irbis.DefaultBoundingBox)
+        { settings.boundingBox = Rectangle.Empty; }
+        else
+        { settings.boundingBox = Irbis.Irbis.boundingBox; }
         settings.cameraLerpSetting = Irbis.Irbis.cameraLerpSetting;
-        settings.cameraLerpSpeed = Irbis.Irbis.cameraLerpSpeed;
+        settings.smartCamera = Irbis.Irbis.smartCamera;
+        settings.cameraLerpXSpeed = Irbis.Irbis.cameraLerpXSpeed;
+        settings.cameraLerpYSpeed = Irbis.Irbis.cameraLerpYSpeed;
         settings.cameraSwingSetting = Irbis.Irbis.cameraSwingSetting;
         settings.swingMagnitude = Irbis.Irbis.swingMagnitude;
         settings.swingDuration = Irbis.Irbis.swingDuration;
         settings.cameraShakeSetting = Irbis.Irbis.cameraShakeSetting;
         settings.fullscreen = Irbis.Irbis.graphics.IsFullScreen;
-        if (Irbis.Irbis.screenScale != Irbis.Irbis.resolution.X / 480f)
-        { settings.screenScale = Irbis.Irbis.screenScale; }
-        else
+        if (Irbis.Irbis.screenScale == Irbis.Irbis.DefaultScreenScale)
         { settings.screenScale = 0; }
+        else
+        { settings.screenScale = Irbis.Irbis.screenScale; }
         settings.resolution = Irbis.Irbis.tempResolution;
         settings.vSync = game.IsFixedTimeStep;
         settings.lighting = Irbis.Irbis.lightingEnabled;
@@ -917,17 +955,21 @@ public struct PlayerSettings
         settings.superShockwaveHoldtime = Irbis.Irbis.jamie.superShockwaveHoldtime;
         settings.walljumpHoldtime = Irbis.Irbis.jamie.walljumpHoldtime;
         settings.minSqrDetectDistance = Irbis.Irbis.minSqrDetectDistance;
-        settings.attack1Damage = Irbis.Irbis.jamie.attack1Damage;
-        settings.attack2Damage = Irbis.Irbis.jamie.attack2Damage;
+        settings.attackDamage = Irbis.Irbis.jamie.attackDamage;
+        settings.critChance = Irbis.Irbis.jamie.critChance;
+        settings.critMultiplier = Irbis.Irbis.jamie.critMultiplier;
         settings.speed = Irbis.Irbis.jamie.speed;
         settings.terminalVelocity = Irbis.Irbis.jamie.terminalVelocity;
         settings.jumpTimeMax = Irbis.Irbis.jamie.jumpTimeMax;
 
-        settings.colliderOffset = Irbis.Irbis.jamie.standardCollider.Location;
+        settings.colliderOffset = (Irbis.Irbis.jamie.origin + Irbis.Irbis.jamie.standardCollider.Location.ToVector2()).ToPoint();
         settings.colliderSize = Irbis.Irbis.jamie.standardCollider.Size;
+        settings.shieldLight = Irbis.Irbis.jamie.shieldLight;
+        settings.playerLight = Irbis.Irbis.jamie.playerLight;
 
-        settings.attackColliderWidth = Irbis.Irbis.jamie.attackColliderWidth;
-        settings.attackColliderHeight = Irbis.Irbis.jamie.attackColliderHeight;
+        settings.attackColliderSize = Irbis.Irbis.jamie.attackColliderSize;
+
+        settings.attackFrame = Irbis.Irbis.jamie.attackFrame;
 
         settings.maxHealth = Irbis.Irbis.jamie.maxHealth;
         settings.maxShield = Irbis.Irbis.jamie.maxShield;
@@ -1049,21 +1091,10 @@ public struct PlayerSettings
                 {
                     switch (variable.ToLower())
                     {
-                        case "attack1damage":
+                        case "critchance":
                             if (float.TryParse(value, out floatResult))
                             {
-                                this.attack1Damage = floatResult;
-                            }
-                            else
-                            {
-                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
-                            }
-                            checker++; break;
-                        case "attack2damage":
-                            if (float.TryParse(value, out floatResult))
-                            {
-                                this.attack2Damage = floatResult;
+                                this.critChance = floatResult;
                             }
                             else
                             {
@@ -1288,10 +1319,21 @@ public struct PlayerSettings
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
                             checker++; break;
-                        case "cameralerpspeed":
+                        case "cameralerpxspeed":
                             if (float.TryParse(value, out floatResult))
                             {
-                                this.cameraLerpSpeed = floatResult;
+                                this.cameraLerpXSpeed = floatResult;
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "cameralerpyspeed":
+                            if (float.TryParse(value, out floatResult))
+                            {
+                                this.cameraLerpYSpeed = floatResult;
                             }
                             else
                             {
@@ -1431,21 +1473,10 @@ public struct PlayerSettings
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
                             }
                             checker++; break;
-                        case "attackcolliderwidth":
+                        case "attackframe":
                             if (int.TryParse(value, out intResult))
                             {
-                                this.attackColliderWidth = intResult;
-                            }
-                            else
-                            {
-                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
-                            }
-                            checker++; break;
-                        case "attackcolliderheight":
-                            if (int.TryParse(value, out intResult))
-                            {
-                                this.attackColliderHeight = intResult;
+                                this.attackFrame = intResult;
                             }
                             else
                             {
@@ -1459,15 +1490,11 @@ public struct PlayerSettings
                                 if (int.TryParse(extra, out extraResult))
                                 {
                                     if (extraResult < animationFrames.Count)
-                                    {
-                                        animationFrames[extraResult] = intResult;
-                                    }
+                                    { animationFrames[extraResult] = intResult; }
                                     else
                                     {
                                         while (extraResult > animationFrames.Count)
-                                        {
-                                            animationFrames.Add(-1);
-                                        }
+                                        { animationFrames.Add(-1); }
                                         animationFrames.Add(intResult);
                                     }
                                 }
@@ -1932,7 +1959,7 @@ public struct PlayerSettings
                             }
                             checker++; break;
                         case "boundingbox":
-                            this.boundingBox = RectangleParser(value);
+                            this.boundingBox = RectangleCenterParser(value);
                             if (this.boundingBox == new Rectangle(-0, -1, -1, -2))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
@@ -1946,16 +1973,12 @@ public struct PlayerSettings
                                 if (intResult > 8)
                                 {
                                     for (int i = 8; i > 0; i--)
-                                    {
-                                        this.timerAccuracy += "0";
-                                    }
+                                    { this.timerAccuracy += "0"; }
                                 }
                                 else
                                 {
                                     for (int i = intResult; i > 0; i--)
-                                    {
-                                        this.timerAccuracy += "0";
-                                    }
+                                    { this.timerAccuracy += "0"; }
                                 }
                             }
                             else
@@ -1968,6 +1991,46 @@ public struct PlayerSettings
                         case "resolution":
                             this.resolution = PointParser(value);
                             if (this.resolution == new Point(-0112, -0112))
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "attackcollidersize":
+                            this.attackColliderSize = PointParser(value);
+                            if (this.attackColliderSize == new Point(-0112, -0112))
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "attackdamage":
+                            this.attackDamage = Vector2Parser(value);
+                            if (this.attackDamage == new Vector2(-0.112f, -0.112f))
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "critmultiplier":
+                            this.critMultiplier = Vector2Parser(value);
+                            if (this.critMultiplier == new Vector2(-0.112f, -0.112f))
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "playerlight":
+                            this.playerLight = RectangleParser(value);
+                            if (this.playerLight == new Rectangle(-0, -1, -1, -2))
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "shieldlight":
+                            this.shieldLight = RectangleParser(value);
+                            if (this.shieldLight == new Rectangle(-0, -1, -1, -2))
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
                                 errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
@@ -2035,9 +2098,7 @@ public struct PlayerSettings
                             checker++; break;
                         case "easywalljumpmode":
                             if (bool.TryParse(value, out boolResult))
-                            {
-                                this.easyWalljumpMode = boolResult;
-                            }
+                            { this.easyWalljumpMode = boolResult; }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
@@ -2047,6 +2108,15 @@ public struct PlayerSettings
                         case "lighting":
                             if (bool.TryParse(value, out boolResult))
                             { this.lighting = boolResult; }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
+                                errorVars = errorVars + "\n  name:" + variable + "\n    value:" + value;
+                            }
+                            checker++; break;
+                        case "smartcamera":
+                            if (bool.TryParse(value, out boolResult))
+                            { this.smartCamera = boolResult; }
                             else
                             {
                                 Irbis.Irbis.WriteLine("error: variable \"" + variable + "\" could not be parsed");
@@ -2088,17 +2158,11 @@ public struct PlayerSettings
         }
 
         if (animationFrames.Count > 0)
-        {
-            checker++;
-        }
+        { checker++; }
         if (animationSpeed.Count > 0)
-        {
-            checker++;
-        }
+        { checker++; }
         if (characterWidth.Count > 0)
-        {
-            checker++;
-        }
+        { checker++; }
 
         this.animationFrames = animationFrames.ToArray();
         this.animationSpeed = animationSpeed.ToArray();
@@ -2300,28 +2364,97 @@ public struct PlayerSettings
                 if (int.TryParse(widthVal, out int widthResult))
                 {
                     if (int.TryParse(heightVal, out int HeightResult))
-                    {
-                        return new Rectangle(Xresult - (widthResult / 2), Yresult - (HeightResult / 2), widthResult, HeightResult);
-                    }
+                    { return new Rectangle(Xresult, Yresult, widthResult, HeightResult); }
                     else
-                    {
-                        Irbis.Irbis.WriteLine("error: Rectangle could not be parsed");
-                    }
+                    { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
                 }
                 else
-                {
-                    Irbis.Irbis.WriteLine("error: Rectangle could not be parsed");
-                }
+                { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
             }
             else
-            {
-                Irbis.Irbis.WriteLine("error: Rectangle could not be parsed");
-            }
+            { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
         }
         else
+        { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
+        return new Rectangle(-0, -1, -1, -2);
+    }
+
+    private static Rectangle RectangleCenterParser(string value)
+    {
+        string Xval = string.Empty;
+        string Yval = string.Empty;
+        string widthVal = string.Empty;
+        string heightVal = string.Empty;
+        //value = {X:000Y:000Width:000Height:000}
+        value = value.Substring(1);
+        //value = X:000Y:000Width:000Height:000}
+        while (value.Length > 0 && !value[0].Equals('\u007d'))   //'\u007d'://}
         {
-            Irbis.Irbis.WriteLine("error: Rectangle could not be parsed");
+            if (value[0].Equals('\u0058') || value[0].Equals('\u0078'))  //'\u0058'://X '\u0078'://x
+            {
+                // X + : = 2 characters before data starts
+                int j = 2;
+                while (value.Length > j && (char.IsDigit(value[j]) || value[j].Equals('\u002d'))) //'\u002d'://- This is the same as Vector2Variable(string), with the caviet that ints will never have a decimal
+                {
+                    Xval += value[j];
+                    j++;
+                }
+                value = value.Substring(j);
+            }
+            if (value[0].Equals('\u0059') || value[0].Equals('\u0079')) //'\u0059'://Y '\u0079'://y
+            {
+                // Y + : = 2 characters before data starts
+                int j = 2;
+                while (value.Length > j && (char.IsDigit(value[j]) || value[j].Equals('\u002d'))) //'\u002d'://-
+                {
+                    Yval += value[j];
+                    j++;
+                }
+                value = value.Substring(j);
+            }
+            if (value[0].Equals('\u0057') || value[0].Equals('\u0077')) //'\u0057'://W '\u0077'://w
+            {
+                // Width + : = 6 characters before data starts
+                int j = 6;
+                while (value.Length > j && (char.IsDigit(value[j]) || value[j].Equals('\u002d'))) //'\u002d'://-
+                {
+                    widthVal += value[j];
+                    j++;
+                }
+                value = value.Substring(j);
+            }
+            if (value[0].Equals('\u0048') || value[0].Equals('\u0068')) //'\u0048'://H '\u0068'://h
+            {
+                // Height + : = 7 characters before data starts
+                int j = 7;
+                while (value.Length > j && (char.IsDigit(value[j]) || value[j].Equals('\u002d'))) //'\u002d'://-
+                {
+                    heightVal += value[j];
+                    j++;
+                }
+                value = value.Substring(j);
+            }
         }
+        //boundingBox.X = int.Parse(buttonList[menuSelection].buttonStatement) - (boundingBox.Width / 2);
+        if (int.TryParse(Xval, out int Xresult))
+        {
+            if (int.TryParse(Yval, out int Yresult))
+            {
+                if (int.TryParse(widthVal, out int widthResult))
+                {
+                    if (int.TryParse(heightVal, out int HeightResult))
+                    { return new Rectangle(Xresult - (widthResult / 2), Yresult - (HeightResult / 2), widthResult, HeightResult); }
+                    else
+                    { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
+                }
+                else
+                { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
+            }
+            else
+            { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
+        }
+        else
+        { Irbis.Irbis.WriteLine("error: Rectangle could not be parsed"); }
         return new Rectangle(-0, -1, -1, -2);
     }
 }

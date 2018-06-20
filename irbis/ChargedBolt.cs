@@ -47,9 +47,9 @@ public class ChargedBolt
         collider = new Rectangle((int)(position.X - radius), (int)(position.Y - radius), 2 * radius, 2 * radius);
         for (int i = 0; i < count; i++)
         {
-            tails[i] = new DotTail(RandomPoint(radius).ToPoint(), (int)(5 * Irbis.Irbis.screenScale), RenderColor, LightColor, 0.8f);
+            tails[i] = new DotTail(Irbis.Irbis.RandomPoint(radius).ToPoint(), (int)(5 * Irbis.Irbis.screenScale), RenderColor, LightColor, 0.8f);
             initialPositions[i] = positions[i] = tails[i].Position.ToVector2();
-            targets[i] = RandomPoint(radius);
+            targets[i] = Irbis.Irbis.RandomPoint(radius);
             initialLerptimes[i] = lerptimes[i] = Vector2.Distance(positions[i], targets[i]) / speed;
         }
     }
@@ -64,23 +64,12 @@ public class ChargedBolt
             if (lerptimes[i] <= 0)
             {
                 initialPositions[i] = positions[i];
-                targets[i] = RandomPoint(radius);
+                targets[i] = Irbis.Irbis.RandomPoint(radius);
                 initialLerptimes[i] = lerptimes[i] = Vector2.Distance(positions[i], targets[i]) / speed;
             }
         }
 
         collider.Location = new Point ((int)(position.X - radius), (int)(position.Y - radius));
-    }
-
-    Vector2 RandomPoint(float Radius)
-    {
-        float t = 2 * MathHelper.Pi * Irbis.Irbis.RandomFloat;
-        float u = Irbis.Irbis.RandomFloat + Irbis.Irbis.RandomFloat;
-        if (u > 1)
-        { Radius = Radius * (2 - u); }
-        else
-        { Radius = Radius * u; }
-        return new Vector2((float)(Radius * Math.Cos(t)), (float)(Radius * Math.Sin(t)));
     }
 
     public void Draw(SpriteBatch sb)

@@ -260,7 +260,6 @@ public struct Shape
                 for (int i = 0; i < vertexList.Count; i++)
                 { Irbis.Irbis.Write(" vertex[" + vertexList[i] + "]:" + vertices[vertexList[i]]); }
                 Irbis.Irbis.WriteLine();
-                Irbis.Irbis.WriteLine();
             }
             fail = true;
             return false;

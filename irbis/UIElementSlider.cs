@@ -22,7 +22,18 @@ public class UIElementSlider
     float timeSinceLastFrame;
 
 
-    public float value;
+    private float value;
+    private object valuelock = new object();
+    public float Value
+    {
+        get
+        { return this.value; }
+        set
+        {
+            lock (valuelock)
+            { Update(value); }
+        }
+    }
     public float maxValue;
     float halfWidth;
     float halfMaxValue;
@@ -47,7 +58,7 @@ public class UIElementSlider
     Print printValue;
     public Vector2 printLocation;
 
-    public UIElementSlider(Direction AlignSide, Rectangle Bounds, Point TextOffset, float MaxValue, Color FillColor, Nullable<Color> BackgroundColor, Nullable<Color> OverlayColor, Nullable<Color> BorderColor, Texture2D FillTexture,
+    public UIElementSlider(Direction AlignSide, Rectangle Bounds, Point TextOffset, Direction TextAlign, float MaxValue, Color FillColor, Nullable<Color> BackgroundColor, Nullable<Color> OverlayColor, Nullable<Color> BorderColor, Texture2D FillTexture,
        Texture2D BackgroundTexture, Texture2D OverlayTexture, bool DrawBorder, Nullable<Font> PrintFont, bool ScreenScale, float FillDepth, float BackgroundDepth, float OverlayDepth, float TextDepth)
     {
         overlayDepth = OverlayDepth;
@@ -83,9 +94,7 @@ public class UIElementSlider
         else
         { drawOverlay = false; }
         if (PrintFont != null)
-        {
-            drawText = true;
-        }
+        { drawText = true; }
         else
         { drawText = false; }
         drawBorder = DrawBorder;
@@ -97,24 +106,12 @@ public class UIElementSlider
             {
                 bounds = new Rectangle(Bounds.X - Bounds.Width, Bounds.Y, Bounds.Width, Bounds.Height);
                 valueRect = new Rectangle(0, 0, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
-                if (drawText)
-                {
-                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Right - (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Right, textDepth);
-                    printLocation = new Vector2(bounds.Right - (((Font)PrintFont).charHeight / 2), bounds.Center.Y) + TextOffset.ToVector2();
-                    printValue.Update(value.ToString());
-                }
             }
             else if (align == Direction.Forward)
             {
                 bounds = new Rectangle(Bounds.X - (Bounds.Width / 2), Bounds.Y, Bounds.Width, Bounds.Height);
                 halfWidth = bounds.Width / 2;
                 valueRect = new Rectangle(0, 0, (int)((value / maxValue) * bounds.Width * Irbis.Irbis.screenScale), (int)(bounds.Height * Irbis.Irbis.screenScale));
-                if (drawText)
-                {
-                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, bounds.Center, Direction.Forward, textDepth);
-                    printLocation = bounds.Center.ToVector2() + TextOffset.ToVector2();
-                    printValue.Update(value.ToString());
-                }
             }
             else
             {
@@ -123,11 +120,34 @@ public class UIElementSlider
                 if (drawText)
                 {
                     printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Left + (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Left, textDepth);
-                    printLocation = new Vector2(bounds.Left + (((Font)PrintFont).charHeight / 2), bounds.Center.Y) + TextOffset.ToVector2();
+                    printLocation = new Vector2(bounds.Left + ((Font)PrintFont).charHeight * Irbis.Irbis.screenScale / 8, bounds.Center.Y) + TextOffset.ToVector2();
                     printValue.Update(value.ToString());
                 }
             }
             valueLocation = origin = bounds.Location.ToVector2() * Irbis.Irbis.screenScale;
+            if (drawText)
+            {
+                if (TextAlign == Direction.Right)
+                {
+                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Right - (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Right, textDepth);
+                    printLocation = new Vector2(bounds.Right - ((Font)PrintFont).charHeight * Irbis.Irbis.screenScale / 8, bounds.Center.Y) + TextOffset.ToVector2();
+                    printValue.Update(value.ToString());
+                }
+                else if (TextAlign == Direction.Forward)
+                {
+                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, bounds.Center, Direction.Forward, textDepth);
+                    printLocation = bounds.Center.ToVector2() + TextOffset.ToVector2();
+                    printValue.Update(value.ToString());
+                }
+                else
+                {
+                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Left + (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Left, textDepth);
+                    printLocation = new Vector2(bounds.Left + ((Font)PrintFont).charHeight * Irbis.Irbis.screenScale / 8, bounds.Center.Y) + TextOffset.ToVector2();
+                    printValue.Update(value.ToString());
+                }
+
+            }
+
         }
         else
         {
@@ -138,7 +158,7 @@ public class UIElementSlider
                 if (drawText)
                 {
                     printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Right - (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Right, textDepth);
-                    printLocation = new Vector2(bounds.Right - (((Font)PrintFont).charHeight / 2), bounds.Center.Y) + TextOffset.ToVector2();
+                    printLocation = new Vector2(bounds.Right - ((Font)PrintFont).charHeight * Irbis.Irbis.screenScale / 8, bounds.Center.Y) + TextOffset.ToVector2();
                     printValue.Update(value.ToString());
                 }
             }
@@ -161,7 +181,28 @@ public class UIElementSlider
                 if (drawText)
                 {
                     printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Left + (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Left, textDepth);
-                    printLocation = new Vector2(bounds.Left + (((Font)PrintFont).charHeight / 2), bounds.Center.Y) + TextOffset.ToVector2();
+                    printLocation = new Vector2(bounds.Left + ((Font)PrintFont).charHeight * Irbis.Irbis.screenScale / 8, bounds.Center.Y) + TextOffset.ToVector2();
+                    printValue.Update(value.ToString());
+                }
+            }
+            if (drawText)
+            {
+                if (TextAlign == Direction.Right)
+                {
+                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Right - (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Right, textDepth);
+                    printLocation = new Vector2(bounds.Right - ((Font)PrintFont).charHeight * Irbis.Irbis.screenScale / 8, bounds.Center.Y) + TextOffset.ToVector2();
+                    printValue.Update(value.ToString());
+                }
+                else if (TextAlign == Direction.Forward)
+                {
+                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, bounds.Center, Direction.Forward, textDepth);
+                    printLocation = bounds.Center.ToVector2() + TextOffset.ToVector2();
+                    printValue.Update(value.ToString());
+                }
+                else
+                {
+                    printValue = new Print(bounds.Width, ((Font)PrintFont), Color.White, false, new Point(bounds.Left + (((Font)PrintFont).charHeight / 2), bounds.Center.Y), Direction.Left, textDepth);
+                    printLocation = new Vector2(bounds.Left + ((Font)PrintFont).charHeight * Irbis.Irbis.screenScale / 8, bounds.Center.Y) + TextOffset.ToVector2();
                     printValue.Update(value.ToString());
                 }
             }
@@ -201,7 +242,7 @@ public class UIElementSlider
 
     public void Update(float v)
     {
-        timeSinceLastFrame += Irbis.Irbis.DeltaTime;
+        /*timeSinceLastFrame += Irbis.Irbis.DeltaTime;
         if (timeSinceLastFrame >= overlayAnimationSpeed)
         {
             timeSinceLastFrame -= overlayAnimationSpeed;
@@ -211,7 +252,7 @@ public class UIElementSlider
         {
             currentOverlayFrame = 0;
         }
-        overlaySourceRect.X = currentOverlayFrame * 150;
+        overlaySourceRect.X = currentOverlayFrame * 150;/**/
 
         UpdateRect(v);
     }
@@ -314,13 +355,9 @@ public class UIElementSlider
         {
             if (drawOverlay) { sb.Draw(overlayTexture, origin, overlaySourceRect, overlayColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, overlayDepth); }
             if (align == Direction.Left)
-            {
-                sb.Draw(fillTexture, valueLocation, valueRect, fillColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, fillDepth);
-            }
+            { sb.Draw(fillTexture, valueLocation, valueRect, fillColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, fillDepth); }
             else
-            {
-                sb.Draw(fillTexture, valueLocation, valueRect, fillColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, fillDepth);
-            }
+            { sb.Draw(fillTexture, valueLocation, valueRect, fillColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, fillDepth); }
             if (drawText) { printValue.Draw(sb, (printLocation).ToPoint()); }
             if (drawBorder) { RectangleBorder.Draw(sb, bounds, borderColor, false); }
             if (drawBackground) { /* draw background */ }

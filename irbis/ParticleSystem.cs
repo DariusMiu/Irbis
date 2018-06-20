@@ -155,21 +155,21 @@ public class ParticleSystem
     {
         if (Irbis.Irbis.debug > 1)
         { RectangleBorder.Draw(sb, spawnArea, Color.Magenta, true); }
-        foreach (Particle p in particleList)
-        { p.Draw(sb); }
+        for (int i = particleList.Count - 1; i >= 0; i--)
+        { particleList[i].Draw(sb); }
     }
 
     public void Light(SpriteBatch sb, bool UseColor)
     {
         if (UseColor)
         {
-            foreach (Particle p in particleList)
-            { p.ColoredLight(sb); }
+            for (int i = particleList.Count - 1; i >= 0; i--)
+            { particleList[i].ColoredLight(sb); }
         }
         else
         {
-            foreach (Particle p in particleList)
-            { p.Light(sb); }
+            for (int i = particleList.Count - 1; i >= 0; i--)
+            { particleList[i].Light(sb); }
         }
     }
 }

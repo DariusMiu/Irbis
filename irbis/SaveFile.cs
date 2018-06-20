@@ -129,7 +129,6 @@ public struct SaveFile
             {
                 Irbis.Irbis.WriteLine("lose list[" + i + "]: " + thisSave.loseList[i] + ", best time: " + thisSave.timerLoseList[i]);
             }
-            Irbis.Irbis.WriteLine();
         }
         catch (SerializationException e)
         {

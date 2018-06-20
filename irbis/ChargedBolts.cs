@@ -51,7 +51,7 @@ public class ChargedBolts
             initialPositions[i] = bolts[i].position;
             float angle = (i / (float)count) * MathHelper.Pi - MathHelper.PiOver2 + AngleOffset;
             directions[i] = new Vector2((float)Math.Sin(angle), (float)Math.Cos(angle)) * 10;
-            targets[i] = new Vector2(directions[i].X + randomness * (Irbis.Irbis.RandomFloat * 2 - 1), directions[i].Y + randomness * (Irbis.Irbis.RandomFloat * 2 - 1)) * lerpCounts[i] + center;
+            targets[i] = new Vector2(directions[i].X + randomness * (Irbis.Irbis.RandomFloat - 1), directions[i].Y + randomness * (Irbis.Irbis.RandomFloat - 1)) * lerpCounts[i] + center;
             //targets[i] = directions[i] + center;
             initialLerptimes[i] = lerptimes[i] = Vector2.Distance(bolts[i].position, targets[i]) / velocity;
         }
@@ -71,7 +71,7 @@ public class ChargedBolts
                 {
                     lerpCounts[i]++;
                     initialPositions[i] = bolts[i].position;
-                    targets[i] = new Vector2(directions[i].X + randomness * (Irbis.Irbis.RandomFloat * 2 - 1), directions[i].Y + randomness * (Irbis.Irbis.RandomFloat * 2 - 1)) * lerpCounts[i] + center;
+                    targets[i] = new Vector2(directions[i].X + randomness * (Irbis.Irbis.RandomFloat - 1), directions[i].Y + randomness * (Irbis.Irbis.RandomFloat - 1)) * lerpCounts[i] + center;
                     initialLerptimes[i] = lerptimes[i] = Vector2.Distance(bolts[i].position, targets[i]) / velocity;
                 }
                 if (Collision(bolts[i].Collider, i))
@@ -87,9 +87,7 @@ public class ChargedBolts
             if (collider.Intersects(s.Collider))
             {
                 if (s.GetType() == typeof(Player))
-                {
-                    ((Player)s).Zap(damage[index], stunTime);
-                }
+                { ((Player)s).Zap(damage[index], stunTime); }
                 return true;
             }
         }
@@ -105,7 +103,7 @@ public class ChargedBolts
         }
     }
 
-    public void Light()
+    public void Light(SpriteBatch sb, bool UseColor)
     {
 
     }

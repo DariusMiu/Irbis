@@ -33,48 +33,6 @@ public class VendingMachine
         drawDepth = depth;
 
         type = vendingType;
-
-        Texture2D[] icons;
-        string[] itemNames;
-
-
-        switch (vendingType)
-        {
-            case VendingType.Enchant:
-                icons = Irbis.Irbis.LoadEnchantIcons();
-                itemNames = new string[icons.Length];
-                itemNames[0] = "Bleed";
-                itemNames[1] = "Fire";
-                itemNames[2] = "Frost";
-                itemNames[3] = "Knockback";
-                itemNames[4] = "Poison";
-                itemNames[5] = "Sharpness";
-                itemNames[6] = "Stun";
-                itemDescriptions = Irbis.Irbis.LoadEnchantDescriptions();
-                break;
-            default:
-                icons = Irbis.Irbis.LoadEnchantIcons();
-                itemNames = new string[icons.Length];
-                itemDescriptions = Irbis.Irbis.LoadEnchantDescriptions();
-                for (int i = 0; i < icons.Length; i++)
-                {
-                    itemNames[i] = "butts";
-                }
-                break;
-        }
-
-
-        cost = new ulong[icons.Length];
-        for (int i = 0; i < icons.Length; i++)
-        {
-            cost[i] = 200;
-        }
-
-
-        menu = new VendingMenu(icons, itemNames, cost);
-
-        string popuptext = Irbis.Irbis.useKey + " to use";
-        tooltip = Irbis.Irbis.tooltipGenerator.CreateTooltip(popuptext, new Point((int)((displayLocation.X + (sourceRect.Width / 2)) * Irbis.Irbis.screenScale), (int)((displayLocation.Y - (10 / Irbis.Irbis.screenScale)) * Irbis.Irbis.screenScale)), drawDepth);
     }
 
     public void Purchase(int item)
@@ -152,6 +110,49 @@ public class VendingMachine
                 break;
         }
         Irbis.Irbis.vendingMachineMenu = menu;
+    }
+
+    public void Update()
+    {
+
+        if (tooltip == null)
+        {
+            tooltip = Irbis.Irbis.tooltipGenerator.CreateTooltip(Irbis.Irbis.useKey + " to use", new Point((int)((displayLocation.X + (sourceRect.Width / 2)) * Irbis.Irbis.screenScale), (int)((displayLocation.Y - (10 / Irbis.Irbis.screenScale)) * Irbis.Irbis.screenScale)), drawDepth);
+            Texture2D[] icons;
+            string[] itemNames;
+
+
+            switch (type)
+            {
+                case VendingType.Enchant:
+                    icons = Irbis.Irbis.LoadEnchantIcons();
+                    itemNames = new string[icons.Length];
+                    itemNames[0] = "Bleed";
+                    itemNames[1] = "Fire";
+                    itemNames[2] = "Frost";
+                    itemNames[3] = "Knockback";
+                    itemNames[4] = "Poison";
+                    itemNames[5] = "Sharpness";
+                    itemNames[6] = "Stun";
+                    itemDescriptions = Irbis.Irbis.LoadEnchantDescriptions();
+                    break;
+                default:
+                    icons = Irbis.Irbis.LoadEnchantIcons();
+                    itemNames = new string[icons.Length];
+                    itemDescriptions = Irbis.Irbis.LoadEnchantDescriptions();
+                    for (int i = 0; i < icons.Length; i++)
+                    { itemNames[i] = "butts"; }
+                    break;
+            }
+
+
+            cost = new ulong[icons.Length];
+            for (int i = 0; i < icons.Length; i++)
+            { cost[i] = 200; }
+
+
+            menu = new VendingMenu(icons, itemNames, cost);
+        }
     }
 
     public void LoadMenu()
@@ -255,8 +256,6 @@ public class VendingMachine
         //    }
         //}
         if (!drawMenu && Irbis.Irbis.jamie != null && Irbis.Irbis.DistanceSquared(collider.Center, Irbis.Irbis.jamie.Collider.Center) <= Irbis.Irbis.vendingMachineUseDistanceSqr)
-        {
-            tooltip.Draw(sb);
-        }
+        { tooltip.Draw(sb); }
     }
 }

@@ -102,9 +102,7 @@ public class Print
         for (int i = 0; i < 10; i++)
         {
             for (int j = 0; j < 10; j++)
-            {
-                fontSourceRect[(i * 10) + j] = new Rectangle((j * CONSOLE.charHeight) + (CONSOLE.charHeight - CONSOLE.charWidth[(i * 10) + j]), i * CONSOLE.charHeight, CONSOLE.charWidth[(i * 10) + j], CONSOLE.charHeight);
-            }
+            { fontSourceRect[(i * 10) + j] = new Rectangle((j * CONSOLE.charHeight) + (CONSOLE.charHeight - CONSOLE.charWidth[(i * 10) + j]), i * CONSOLE.charHeight, CONSOLE.charWidth[(i * 10) + j], CONSOLE.charHeight); }
         }
     }
 
@@ -588,7 +586,7 @@ public class Print
                 return 100;
 
             default:
-                return 95;
+                return 98;
         }
     }
 
@@ -680,8 +678,7 @@ public class Print
                 {
                     height = 0;
 
-                    int statementLength = statement.Length;
-                    for (int i = 0; i < statementLength; i++)
+                    for (int i = 0; i < statement.Length; i++)
                     {
                         if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
                         {
@@ -778,9 +775,7 @@ public class Print
                 else
                 { height = -lines; }
 
-                int statementLengthMinOne = statement.Length - 1;
-                //for (int i = 0; i < statementLength; i++)
-                for (int i = statementLengthMinOne; i >= 0; i--)
+                for (int i = statement.Length - 1; i >= 0; i--)
                 {
                     if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
                     {
@@ -898,10 +893,9 @@ public class Print
                 else
                 { height = -lines; }
 
-                int statementLength = statement.Length;
-                foreach (char c in statement)
+                for (int i = 0; i < statement.Length; i++)
                 {
-                    if (c.Equals('\n'))
+                    if (statement[i].Equals('\n') || statement[i].Equals('\u000D'))
                     {
                         width = 0;
                         height++;
@@ -913,7 +907,7 @@ public class Print
                             width = 0;
                             height++;
                         }
-                        int charIndex = ReturnCharacterIndex(c);
+                        int charIndex = ReturnCharacterIndex(statement[i]);
                         displayPosition.X = width + origin.X;
                         displayPosition.Y = height * (int)(characterHeight * textScale) + origin.Y;
                         if (charIndex < 100)

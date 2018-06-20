@@ -26,9 +26,9 @@ class WizardGuy : IEnemy
     public Vector2 TrueCenter
     {
         get
-        { return new Vector2(position.X + standardCollider.X + (standardCollider.Width / 2f), position.Y + standardCollider.Y + (standardCollider.Height / 2f)); }
+        { return position; }
         set
-        { position = new Vector2(value.X - standardCollider.X - (standardCollider.Width / 2f), value.Y - standardCollider.Y - (standardCollider.Height / 2f)); }
+        { position = value; }
     }
     public Rectangle Collider
     {
@@ -54,26 +54,18 @@ class WizardGuy : IEnemy
     public Vector2 Position
     {
         get
-        {
-            return position;
-        }
+        { return position; }
         set
-        {
-            position = value;
-        }
+        { position = value; }
     }
     private Vector2 position;
 
     public Vector2 Velocity
     {
         get
-        {
-            return velocity;
-        }
+        { return velocity; }
         set
-        {
-            velocity = value;
-        }
+        { velocity = value; }
     }
     private Vector2 velocity;
 
@@ -141,9 +133,7 @@ class WizardGuy : IEnemy
     public float ShockwaveMaxEffectDistanceSquared
     {
         get
-        {
-            return shockwaveMaxEffectDistanceSquared;
-        }
+        { return shockwaveMaxEffectDistanceSquared; }
     }
     private float shockwaveMaxEffectDistanceSquared;
 
@@ -183,6 +173,8 @@ class WizardGuy : IEnemy
         }
     }
 
+    Vector2 Origin;
+
     public float speed;
     public float defaultSpeed;
     public WizardActivity previousActivity;
@@ -192,6 +184,7 @@ class WizardGuy : IEnemy
     public Print animationFrame;
 
     Texture2D tex;
+    Texture2D fireballtex;
     public Rectangle displayRect;
     public Rectangle animationSourceRect;
     public Rectangle standardCollider;
@@ -241,7 +234,7 @@ class WizardGuy : IEnemy
     int previousTeleport;
 
     public BossState bossState = 0;
-    public int combatPhase = 0;
+    public int combatPhase = 1;
     Vector2 spawnPoint;
     Vector2 initialPoint;
     float stepTime;
@@ -251,6 +244,7 @@ class WizardGuy : IEnemy
     List<Lazor> lazers = new List<Lazor>();
     Texture2D[] lazertextures = new Texture2D[5];
 
+    // distance squared at which a cooldown ticks more quickly 
     float lazersFastTick;
     float novaFastTick = 62500;
     float boltsFastTick = 10000;
@@ -259,7 +253,13 @@ class WizardGuy : IEnemy
     Rectangle bossArena;
     List<Nova> firenovas = new List<Nova>();
     List<float> firenovaTTL = new List<float>();
-    ChargedBolts bolts = new ChargedBolts(new Vector2(100), 0, 0, 0, 0, 0, 0);
+    List<Fireball> fireballs = new List<Fireball>();
+    List<float> fireballTTL = new List<float>();
+    List<ChargedBolts> bolts = new List<ChargedBolts>();
+    List<float> boltsTTL = new List<float>();
+
+    int fireballCastingCount;
+    int boltsCastingCount;
 
     Vector2 explosionLocation;
     float explosionDamage = 50;
@@ -275,22 +275,24 @@ class WizardGuy : IEnemy
     float playerDistanceSQR;
 
     public int[] state = new int[5];
-    float[] cooldown = new float[6];
-    public float[] timer = new float[6];
-
+    float[] cooldown = new float[9];
+    public float[] timer = new float[9];
 
     public WizardGuy(Texture2D t, int? iPos, float enemyHealth, float enemyDamage, Vector2[] TeleportPoints, Rectangle? BossArena, float drawDepth)
     {
-        timer[0] = cooldown[0] = .5f; // idle
+        timer[0] = cooldown[0] = 01f; // idle
         timer[1] = cooldown[1] = 17f; // teleport
-        timer[2] = cooldown[2] = 08f; // nova
-        timer[3] = cooldown[3] = 09f; // bolt
-        timer[4] = cooldown[4] = 15f; // lazers
+        timer[2] = cooldown[2] = 05f; // nova
+        timer[3] = cooldown[3] = 08f; // bolt
+        timer[4] = cooldown[4] = 08f; // lazers
       /*timer[5]*/ cooldown[5] = .3f; // lazer delay 
+      /*timer[6]*/ cooldown[6] = .2f; // fireball delay 
+      /*timer[7]*/ cooldown[7] = 01f; // nova delay 
+        timer[8] = cooldown[8] = 15f; // heal (phase 3 only)
 
 
 
-
+        Fireball.fireballtex = Irbis.Irbis.LoadTexture("fireball");
 
         idleTime = 0f;
 
@@ -307,8 +309,9 @@ class WizardGuy : IEnemy
         initialWanderTime = 0f;
 
         animationNoLoop = false;
-        standardCollider.Location = new Point(47, 37);
         collider.Size = trueCollider.Size = standardCollider.Size = new Point(32, 56);
+        standardCollider.Location = new Point((int)-(standardCollider.Width / 2f), (int)-(standardCollider.Height / 2f));
+        Origin = new Vector2(47, 37) - standardCollider.Location.ToVector2();
 
         maxHealth = health = enemyHealth;
 
@@ -421,7 +424,6 @@ class WizardGuy : IEnemy
         prevInput = input;
         input = Point.Zero;
         frameInput = false;
-        playerDistanceSQR = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.Collider, TrueCenter);
 
         if (Irbis.Irbis.GetMouseState.LeftButton == ButtonState.Pressed && collider.Contains(Irbis.Irbis.WorldSpaceMouseLocation))
         { position = new Vector2(Irbis.Irbis.WorldSpaceMouseLocation.X - standardCollider.X - (collider.Width/2), Irbis.Irbis.WorldSpaceMouseLocation.Y - standardCollider.Y - (collider.Height/2)); }
@@ -444,90 +446,336 @@ class WizardGuy : IEnemy
             case BossState.Combat:      // 3
                 if (Irbis.Irbis.jamie != null)
                 {
+                    playerDistanceSQR = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.Collider, TrueCenter);
+
                     if (aiEnabled && timer[0] <= 0 && stunned <= 0)
                     {
-                        if (timer[4] <= 0)
+                        switch (combatPhase)
                         {
-                            if (timer[5] <= 0)
-                            {
-                                switch (lazerindex)
+                            case 1: // phase 1
+                                if (timer[4] <= 0)
                                 {
-                                    case 0:
-                                        lazers.Clear();
-                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y - 15), new Point(30)), new Vector2(2000, 0), new Texture2D[] { lazertextures[0], Irbis.Irbis.dottex }, 20));
-                                        timer[5] = cooldown[5];
-                                        lazerindex++;
-                                        break;
-                                    case 1:
-                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(1, 1)) * 2000f, new Texture2D[] { lazertextures[1], Irbis.Irbis.dottex }, 20));
-                                        timer[5] = cooldown[5];
-                                        lazerindex++;
-                                        break;
-                                    case 2:
-                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Center.X - 15, collider.Center.Y + 15), new Point(30)), new Vector2(0, 2000), new Texture2D[] { lazertextures[2], Irbis.Irbis.dottex }, 20));
-                                        timer[5] = cooldown[5];
-                                        lazerindex++;
-                                        break;
-                                    case 3:
-                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(-1, 1)) * 2000f, new Texture2D[] { lazertextures[3], Irbis.Irbis.dottex }, 20));
-                                        timer[5] = cooldown[5];
-                                        lazerindex++;
-                                        break;
-                                    case 4:
-                                        lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y - 15), new Point(30)), new Vector2(-2000, 0), new Texture2D[] { lazertextures[4], Irbis.Irbis.dottex }, 20));
-                                        timer[4] = cooldown[4];
-                                        timer[0] = cooldown[0];
-                                        lazerindex = 0;
-                                        break;
+                                    if (timer[5] <= 0)
+                                    {
+                                        switch (lazerindex)
+                                        {
+                                            case 0:
+                                                lazers.Clear();
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y - 15), new Point(30)), new Vector2(2000, 0), new Texture2D[] { lazertextures[0], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 1:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(1, 1)) * 2000f, new Texture2D[] { lazertextures[1], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 2:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Center.X - 15, collider.Center.Y + 15), new Point(30)), new Vector2(0, 2000), new Texture2D[] { lazertextures[2], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 3:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(-1, 1)) * 2000f, new Texture2D[] { lazertextures[3], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 4:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y - 15), new Point(30)), new Vector2(-2000, 0), new Texture2D[] { lazertextures[4], Irbis.Irbis.dottex }, 20));
+                                                timer[4] = cooldown[4];
+                                                timer[0] = cooldown[0];
+                                                lazerindex = 0;
+                                                break;
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                        else if (timer[1] <= 0)
-                        {
-                            SetAnimation(4, true);
-                            // play teleport animation
-                            // trigger "explosion"
-                            // set position on noloop
+                                else if (timer[1] <= 0)
+                                {
+                                    SetAnimation(4, true);
+                                    // play teleport animation
+                                    // trigger "explosion"
+                                    // set position on noloop
 
-                            timer[1] = cooldown[1];
-                            timer[0] = cooldown[0];
-                        }
-                        else if (timer[3] <= 0)
-                        {
-                            bolts = new ChargedBolts(TrueCenter, 4, (MathHelper.Pi / 8), 1, 100, 1, 30);
-                            timer[3] = cooldown[3];
-                            timer[0] = cooldown[0];
-                        }
-                        else if (timer[2] <= 0)
-                        {
-                            firenovas.Add(new Nova(new Rectangle(new Point(collider.Center.X - 5, collider.Center.Y - 5), new Point(10)), 12, 0, 100, 20));
-                            firenovaTTL.Add(30f);
-                            timer[2] = cooldown[2];
-                            timer[0] = cooldown[0];
-                        }
+                                    timer[1] = cooldown[1];
+                                    timer[0] = cooldown[0];
+                                }
+                                else if (timer[2] <= 0)
+                                {
+                                    if (timer[6] <= 0)
+                                    {
+                                        Vector2 toJamie = Vector2.Normalize(Irbis.Irbis.jamie.TrueCenter - TrueCenter);
+                                        fireballs.Add(new Fireball(new Rectangle(new Point(collider.Center.X - 5, collider.Center.Y - 5), new Point(10)),
+                                            (toJamie * 10f + new Vector2((Irbis.Irbis.RandomFloat - 1),(Irbis.Irbis.RandomFloat - 1))) * 20f, 20));
+                                        fireballTTL.Add(30f);
+                                        fireballCastingCount++;
 
+                                        if (fireballCastingCount >= 3)
+                                        {
+                                            timer[2] = cooldown[2];
+                                            timer[0] = cooldown[0];
+                                            fireballCastingCount = 0;
+                                        }
+                                        else
+                                        { timer[6] = cooldown[6]; }
+                                    }
+                                }
+                                /* else if (timer[3] <= 0)
+                                {
+                                    bolts = new ChargedBolts(TrueCenter, 4, (MathHelper.Pi / 8), 2, 100, 1, 30);
+                                    timer[3] = cooldown[3];
+                                    timer[0] = cooldown[0];
+                                }/**/
+
+                                if (teleportFastTick > playerDistanceSQR)
+                                { timer[1] -= Irbis.Irbis.DeltaTime * 3; }
+                                else if (boltsFastTick > playerDistanceSQR)
+                                { timer[3] -= Irbis.Irbis.DeltaTime * 3; }
+                                /*else if (novaFastTick > playerDistanceSQR)
+                                { timer[2] -= Irbis.Irbis.DeltaTime * 3; }
+                                else if (lazersFastTick > playerDistanceSQR)
+                                { timer[4] -= Irbis.Irbis.DeltaTime * 3; }/**/
+
+
+                                if (health <= maxHealth * (4f / 5f))
+                                {
+                                    combatPhase = 2;
+                                    timer[2] = cooldown[2] = 08f; // nova
+                                    timer[4] = cooldown[4] = 12f; // lazers
+                                }
+                                break;
+                            case 2: // phase 2
+                                if (timer[4] <= 0)
+                                {
+                                    if (timer[5] <= 0)
+                                    {
+                                        switch (lazerindex)
+                                        {
+                                            case 0:
+                                                lazers.Clear();
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y - 15), new Point(30)), new Vector2(2000, 0), new Texture2D[] { lazertextures[0], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 1:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(1, 1)) * 2000f, new Texture2D[] { lazertextures[1], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 2:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Center.X - 15, collider.Center.Y + 15), new Point(30)), new Vector2(0, 2000), new Texture2D[] { lazertextures[2], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 3:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(-1, 1)) * 2000f, new Texture2D[] { lazertextures[3], Irbis.Irbis.dottex }, 20));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 4:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y - 15), new Point(30)), new Vector2(-2000, 0), new Texture2D[] { lazertextures[4], Irbis.Irbis.dottex }, 20));
+                                                timer[4] = cooldown[4];
+                                                timer[0] = cooldown[0];
+                                                lazerindex = 0;
+                                                break;
+                                        }
+                                    }
+                                }
+                                else if (timer[1] <= 0)
+                                {
+                                    SetAnimation(4, true);
+                                    // play teleport animation
+                                    // trigger "explosion"
+                                    // set position on noloop
+
+                                    timer[1] = cooldown[1];
+                                    timer[0] = cooldown[0];
+                                }
+                                else if (timer[3] <= 0)
+                                {
+                                    bolts.Add(new ChargedBolts(TrueCenter, 4, (MathHelper.Pi / 8), 2, 100, 1, 30));
+                                    boltsTTL.Add(30f);
+                                    timer[3] = cooldown[3];
+                                    timer[0] = cooldown[0];
+                                }
+                                else if (timer[2] <= 0)
+                                {
+                                    firenovas.Add(new Nova(new Rectangle(new Point(collider.Center.X - 5, collider.Center.Y - 5), new Point(10)), 12, 0, 100, 20));
+                                    firenovaTTL.Add(30f);
+                                    timer[2] = cooldown[2];
+                                    timer[0] = cooldown[0];
+                                }
+
+                                if (teleportFastTick > playerDistanceSQR)
+                                { timer[1] -= Irbis.Irbis.DeltaTime * 3; }
+                                else if (boltsFastTick > playerDistanceSQR)
+                                { timer[3] -= Irbis.Irbis.DeltaTime * 3; }
+                                if (novaFastTick > playerDistanceSQR)
+                                { timer[2] -= Irbis.Irbis.DeltaTime * 3; }
+                                if (lazersFastTick > playerDistanceSQR)
+                                { timer[4] -= Irbis.Irbis.DeltaTime; }
+
+                                if (health <= maxHealth * (3f/ 5f))
+                                {
+                                    timer[1] = cooldown[1] = .25f; // idle
+                                    timer[1] = cooldown[1] = 10f; // teleport
+                                    timer[2] = cooldown[2] = 07f; // nova
+                                    timer[3] = cooldown[3] = 06f; // bolt
+                                    timer[4] = cooldown[4] = 08f; // lazers
+                                  /*timer[5]*/ cooldown[5] = .2f; // lazer delay 
+                                  /*timer[6]*/ cooldown[6] = .5f; // fireball delay 
+                                    
+                                    combatPhase = 3;
+                                }
+                                break;
+                            case 3: // phase 3
+                                if (timer[4] <= 0)
+                                {
+                                    if (timer[5] <= 0)
+                                    {
+                                        switch (lazerindex)
+                                        {
+                                            case 0:
+                                                lazers.Clear();
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y - 15), new Point(30)), new Vector2(2000, 0), new Texture2D[] { lazertextures[0], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 1:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(1, 1)) * 2000f, new Texture2D[] { lazertextures[1], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 2:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Center.X - 15, collider.Center.Y + 15), new Point(30)), new Vector2(0, 2000), new Texture2D[] { lazertextures[2], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 3:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(-1, 1)) * 2000f, new Texture2D[] { lazertextures[3], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 4:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y - 15), new Point(30)), new Vector2(-2000, 0), new Texture2D[] { lazertextures[4], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 5:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Left - 30, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(-1, 1)) * 2000f, new Texture2D[] { lazertextures[3], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 6:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Center.X - 15, collider.Center.Y + 15), new Point(30)), new Vector2(0, 2000), new Texture2D[] { lazertextures[2], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 7:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y + 15), new Point(30)), Vector2.Normalize(new Vector2(1, 1)) * 2000f, new Texture2D[] { lazertextures[1], Irbis.Irbis.dottex }, 50));
+                                                timer[5] = cooldown[5];
+                                                lazerindex++;
+                                                break;
+                                            case 8:
+                                                lazers.Add(new Lazor(new Rectangle(new Point(collider.Right, collider.Center.Y - 15), new Point(30)), new Vector2(2000, 0), new Texture2D[] { lazertextures[0], Irbis.Irbis.dottex }, 50));
+                                                timer[4] = cooldown[4];
+                                                timer[0] = cooldown[0];
+                                                lazerindex = 0;
+                                                break;
+                                        }
+                                    }
+                                }
+                                else if (timer[1] <= 0)
+                                {
+                                    SetAnimation(4, true);
+                                    // play teleport animation
+                                    // trigger "explosion"
+                                    // set position on noloop
+
+                                    timer[1] = cooldown[1];
+                                    timer[0] = cooldown[0];
+                                }
+                                else if (timer[3] <= 0)
+                                {
+                                    if (timer[7] <= 0)
+                                    {
+                                        if (boltsCastingCount >= 1)
+                                        {
+                                            bolts.Add(new ChargedBolts(TrueCenter, 5, (MathHelper.Pi / 10), 1, 100, 1, 40));
+                                            boltsTTL.Add(30f);
+                                            boltsCastingCount = 0;
+                                            timer[3] = cooldown[3];
+                                            timer[0] = cooldown[0];
+                                        }
+                                        else
+                                        {
+                                            bolts.Add(new ChargedBolts(TrueCenter, 4, (MathHelper.Pi / 8), 1, 100, 1, 40));
+                                            boltsTTL.Add(30f);
+                                            boltsCastingCount++;
+                                            timer[7] = cooldown[7];
+                                        }
+                                    }
+                                }
+                                else if (timer[2] <= 0)
+                                {
+                                    if (timer[6] <= 0)
+                                    {
+
+                                        if (fireballCastingCount >= 1)
+                                        {
+                                            firenovas.Add(new Nova(new Rectangle(new Point(collider.Center.X - 5, collider.Center.Y - 5), new Point(10)), 12, MathHelper.Pi / 12, 200, 40));
+                                            firenovaTTL.Add(30f);
+                                            timer[2] = cooldown[2];
+                                            timer[0] = cooldown[0];
+                                            fireballCastingCount = 0;
+                                        }
+                                        else
+                                        {
+                                            firenovas.Add(new Nova(new Rectangle(new Point(collider.Center.X - 5, collider.Center.Y - 5), new Point(10)), 12, 0, 200, 40));
+                                            firenovaTTL.Add(30f);
+                                            timer[6] = cooldown[6];
+                                            fireballCastingCount++;
+                                        }
+                                    }
+                                }
+                                else if (timer[8] <= 0)
+                                {
+                                    Heal(100);
+                                    timer[8] = cooldown[8];
+                                    timer[0] = cooldown[0];
+                                }
+
+                                if (health > maxHealth * (3f / 5f))
+                                { combatPhase = 2; }
+
+                                if (teleportFastTick > playerDistanceSQR)
+                                { timer[1] -= Irbis.Irbis.DeltaTime; }
+                                else if (boltsFastTick > playerDistanceSQR)
+                                { timer[3] -= Irbis.Irbis.DeltaTime; }
+                                if (novaFastTick > playerDistanceSQR)
+                                { timer[2] -= Irbis.Irbis.DeltaTime; }
+                                if (lazersFastTick > playerDistanceSQR)
+                                { timer[4] -= Irbis.Irbis.DeltaTime; }
+
+                                if (timer[8] > 0) // heal
+                                { timer[8] -= Irbis.Irbis.DeltaTime; }
+                                break;
+                        }
                         if (timer[1] > 0) // teleport
                         { timer[1] -= Irbis.Irbis.DeltaTime; }
                         if (timer[2] > 0) // nova
                         { timer[2] -= Irbis.Irbis.DeltaTime; }
+                        else if (timer[6] > 0) // fireball delay
+                        { timer[6] -= Irbis.Irbis.DeltaTime; }
                         if (timer[3] > 0) // bolts
                         { timer[3] -= Irbis.Irbis.DeltaTime; }
+                        else if (timer[7] > 0) // bolts delay
+                        { timer[7] -= Irbis.Irbis.DeltaTime; }
                         if (timer[4] > 0) // lazers
                         { timer[4] -= Irbis.Irbis.DeltaTime; }
-                        if (timer[5] > 0) // lazer delay
+                        else if (timer[5] > 0) // lazer delay
                         { timer[5] -= Irbis.Irbis.DeltaTime; }
-
-                        if (teleportFastTick > playerDistanceSQR)
-                        { timer[1] -= Irbis.Irbis.DeltaTime * 3; }
-                        else if (boltsFastTick > playerDistanceSQR)
-                        { timer[3] -= Irbis.Irbis.DeltaTime * 3; }
-                        else if (novaFastTick > playerDistanceSQR)
-                        { timer[2] -= Irbis.Irbis.DeltaTime * 3; }
-                        else if (lazersFastTick > playerDistanceSQR)
-                        { timer[4] -= Irbis.Irbis.DeltaTime * 3; }
                     }
-
-                    if (timer[0] > 0)
+                    else if (timer[0] > 0)
                     { timer[0] -= Irbis.Irbis.DeltaTime; }
                 }
                 break;
@@ -551,7 +799,32 @@ class WizardGuy : IEnemy
                 firenovaTTL.RemoveAt(i);
             }
         }
-        bolts.Update();
+
+        for (int i = fireballs.Count - 1; i >= 0; i--)
+        {
+            fireballTTL[i] -= Irbis.Irbis.DeltaTime;
+            if (fireballTTL[i] > 0)
+            { fireballs[i].Update(); }
+            else
+            {
+                fireballs[i].Death();
+                fireballs.RemoveAt(i);
+                fireballTTL.RemoveAt(i);
+            }
+        }
+
+        for (int i = bolts.Count - 1; i >= 0; i--)
+        {
+            boltsTTL[i] -= Irbis.Irbis.DeltaTime;
+            if (boltsTTL[i] > 0)
+            { bolts[i].Update(); }
+            else
+            {
+                bolts.RemoveAt(i);
+                boltsTTL.RemoveAt(i);
+            }
+        }
+        
         for (int i = lazers.Count - 1; i >= 0; i--)
         {
             if (lazers[i].Update())
@@ -580,95 +853,20 @@ class WizardGuy : IEnemy
         }
     }
 
-    public bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack)
+    public bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack, Vector2 Damage)
     {
-        Irbis.Irbis.WriteLine(name + " response:\nattackCollider:" + AttackCollider + " this.collider:" + trueCollider);
-        if (AttackCollider.Intersects(trueCollider))
+        if (AttackCollider.Intersects(collider))
         {
-            PlayerAttackCollision(Attack);
-            Irbis.Irbis.WriteLine("hit. health remaining:" + health);
+            float tempDamage = Irbis.Irbis.RandomFloatInRange(Damage);
+            PlayerAttackCollision(tempDamage);
+            Irbis.Irbis.WriteLine(name + " hit. health remaining:" + health + " (" + tempDamage + ")");
         }
-        else
-        { Irbis.Irbis.WriteLine("miss. health remaining:" + health); }
-        Irbis.Irbis.WriteLine(name + " done.\n");
         return true;
     }
 
-    public bool Enemy_OnPlayerShockwave(Point Origin, int RangeSquared, int Range, float Power)
+    public bool Enemy_OnPlayerShockwave(Vector2 Origin, float Range, Attacking Attack, float Power)
     {
         Irbis.Irbis.WriteLine(name + " Enemy_OnPlayerShockwave triggered");
-        float DistanceSQR = Irbis.Irbis.DistanceSquared(trueCollider, Origin);
-        if (DistanceSQR <= RangeSquared)
-        {
-            float Distance = (float)Math.Sqrt(DistanceSQR);
-            if (Power > 1.5f)
-            {
-                if (state[1] >= 7)
-                {
-                    state[1] = 100;
-                    stunned = ((Range - Distance) / Range) * shockwaveStunTime * Power;
-                    Irbis.Irbis.WriteLine("roll interrupted! stunned for:" + stunned);
-                    activity = WizardActivity.Dying;
-                }
-                else if (ActivelyAttacking)
-                {
-                    if (state[2] > 0 || state[3] > 0)
-                    {
-                        if (Irbis.Irbis.Directions(Origin, collider.Center) == Direction.Left)
-                        { velocity += new Vector2(-shockwaveKnockback.X, shockwaveKnockback.Y) * (Range - Distance) * Power * (1 / mass); }
-                        else
-                        { velocity += shockwaveKnockback * (Range - Distance) * Power * (1 / mass); }
-                    }
-                    stunned = 1.5f;
-                    Irbis.Irbis.WriteLine("attack slowed! stunned for:" + stunned);
-                }
-                else
-                {
-                    if (Irbis.Irbis.Directions(Origin, collider.Center) == Direction.Left)
-                    { velocity += new Vector2(-shockwaveKnockback.X, shockwaveKnockback.Y) * (Range - Distance) * Power * (1 / mass); }
-                    else
-                    { velocity = shockwaveKnockback * (Range - Distance) * Power * (1 / mass); }
-                    stunned = ((Range - Distance) / Range) * shockwaveStunTime * Power;
-                    activity = WizardActivity.Dying;
-                    Irbis.Irbis.WriteLine("attack slowed! stunned for:" + stunned);
-                }
-            }
-            else
-            {
-                if (state[1] >= 7)
-                {
-                    state[1] += 2;
-                    if (Irbis.Irbis.Directions(Origin, collider.Center) == Direction.Left)
-                    { velocity.X += -shockwaveKnockback.X * (Range - Distance) * Power * (1 / mass); }
-                    else
-                    { velocity.X += shockwaveKnockback.X * (Range - Distance) * Power * (1 / mass); }
-                    Irbis.Irbis.WriteLine("roll slowed! stunned for:" + stunned);
-                }
-                else if (ActivelyAttacking)
-                {
-                    if (state[2] > 0 || state[3] > 0)
-                    {
-                        if (Irbis.Irbis.Directions(Origin, collider.Center) == Direction.Left)
-                        { velocity += new Vector2(-shockwaveKnockback.X, shockwaveKnockback.Y) * (Range - Distance) * Power * (1 / mass); }
-                        else
-                        { velocity += shockwaveKnockback * (Range - Distance) * Power * (1 / mass); }
-                    }
-                    stunned = 0.5f;
-                    Irbis.Irbis.WriteLine("attack slowed! stunned for:" + stunned);
-                }
-                else
-                {
-                    if (Irbis.Irbis.Directions(Origin, collider.Center) == Direction.Left)
-                    { velocity += new Vector2(-shockwaveKnockback.X, shockwaveKnockback.Y) * (Range - Distance) * Power * (1 / mass); }
-                    else
-                    { velocity += shockwaveKnockback * (Range - Distance) * Power * (1 / mass); }
-                    stunned = ((Range - Distance) / Range) * shockwaveStunTime * Power;
-                    activity = WizardActivity.Dying;
-                    Irbis.Irbis.WriteLine("attack slowed! stunned for:" + stunned);
-                }
-            }
-        }
-        Irbis.Irbis.WriteLine(name + " done.\n");
         return true;
     }
 
@@ -681,9 +879,9 @@ class WizardGuy : IEnemy
         //Irbis.Irbis.jamie.OnPlayerShockwave -= firenova.Enemy_OnPlayerShockwave;
     }
 
-    public void PlayerAttackCollision(Attacking Attack)
+    public void PlayerAttackCollision(float Damage)
     {
-        Hurt(Irbis.Irbis.jamie.attackDamage);
+        Hurt(Damage);
 
         foreach (Enchant enchant in Irbis.Irbis.jamie.enchantList)
         { enchant.AddEffect(this); }
@@ -711,8 +909,9 @@ class WizardGuy : IEnemy
     {
         //displayRect = new Rectangle((int)position.X, (int)position.Y, 128, 128);
         //collider = new Rectangle((int)position.X + XcolliderOffset, (int)position.Y + YcolliderOffset, colliderSize.X, colliderSize.Y);
-        trueCollider.X = (int)Math.Round((decimal)position.X) + standardCollider.X;
-        trueCollider.Y = (int)Math.Round((decimal)position.Y) + standardCollider.Y;
+        trueCollider = standardCollider;
+        trueCollider.X += (int)Math.Round((double)position.X);
+        trueCollider.Y += (int)Math.Round((double)position.Y);
         //trueCollider.Size = colliderSize;
         if (collider != Rectangle.Empty)
         { collider = trueCollider; }
@@ -819,7 +1018,7 @@ class WizardGuy : IEnemy
         if (playerDistanceSQR <= explosionRadiusSQR)
         {
             float Distance = (float)Math.Sqrt(playerDistanceSQR);
-            Irbis.Irbis.jamie.Hurt(((explosionRadius - Distance) / explosionRadius) * explosionDamage, true);
+            Irbis.Irbis.jamie.Hurt(((explosionRadius - Distance) / explosionRadius) * explosionDamage, true, Irbis.Irbis.Directions(TrueCenter, Irbis.Irbis.jamie.TrueCenter));
             Irbis.Irbis.jamie.velocity += Vector2.Normalize(Irbis.Irbis.jamie.TrueCenter - explosionLocation) * explosionVelocity;
         }
     }
@@ -851,6 +1050,13 @@ class WizardGuy : IEnemy
     {
         health -= damage;
         Irbis.Irbis.CameraShake(0.075f, 0.05f * damage);
+    }
+
+    public void Heal(float amount)
+    {
+        health += amount;
+        if (health > maxHealth)
+        { health = maxHealth; }
     }
 
     public void Stun(float duration)
@@ -887,12 +1093,15 @@ class WizardGuy : IEnemy
             default:
                 for (int i = firenovas.Count - 1; i >= 0; i--)
                 { firenovas[i].Draw(sb); }
-                bolts.Draw(sb);
+                for (int i = fireballs.Count - 1; i >= 0; i--)
+                { fireballs[i].Draw(sb); }
+                for (int i = bolts.Count - 1; i >= 0; i--)
+                { bolts[i].Draw(sb); }
                 foreach (Lazor l in lazers)
                 { l.Draw(sb); }
                 if (exploding)
                 { sb.Draw(Irbis.Irbis.explosiontex, explosionLocation * Irbis.Irbis.screenScale, explosionSourceRect, Color.SteelBlue, 0f, new Vector2(64f), Irbis.Irbis.screenScale, SpriteEffects.None, depth); }
-                sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Origin, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                 break;
         }
     }
@@ -901,6 +1110,10 @@ class WizardGuy : IEnemy
     {
         for (int i = firenovas.Count - 1; i >= 0; i--)
         { firenovas[i].Light(sb, UseColor); }
+        for (int i = fireballs.Count - 1; i >= 0; i--)
+        { fireballs[i].Light(sb, UseColor); }
+        for (int i = bolts.Count - 1; i >= 0; i--)
+        { bolts[i].Light(sb, UseColor); }
         foreach (Lazor l in lazers)
         { l.Light(sb, UseColor); }
     }

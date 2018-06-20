@@ -237,7 +237,10 @@ public struct Level
                 else { throw new ArraysNotSameLengthException(); }
             }
             catch (Exception e)
-            { Irbis.Irbis.WriteLine("caught: " + e.Message); Console.WriteLine("caught: " + e.Message); }
+            {
+                Irbis.Irbis.WriteLine("exception caught during level get:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
+                Irbis.Irbis.DisplayInfoText("exception caught during level get:" + e.Message);
+            }
             return new ParticleSystem[0];
         }
         set
@@ -302,7 +305,10 @@ public struct Level
                 else { throw new ArraysNotSameLengthException(); }
             }
             catch (Exception e)
-            { Irbis.Irbis.WriteLine("caught: " + e.Message); Console.WriteLine("caught: " + e.Message); }
+            {
+                Irbis.Irbis.WriteLine("exception caught during grass get:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
+                Irbis.Irbis.DisplayInfoText("exception caught during grass get:" + e.Message);
+            }
             return new Grass[0];
         }
         set
@@ -480,15 +486,15 @@ public struct Level
         }
         catch (SerializationException e)
         {
-            Console.WriteLine("failed.\n" + e.Message);
-            Irbis.Irbis.WriteLine("failed.\n" + e.Message);
-            Irbis.Irbis.WriteLine("attempting conversion...\n");
-            stream.Close();
+            Console.WriteLine("load failed.\n" + e.Message);
+            Irbis.Irbis.WriteLine("load failed.\n" + e.Message);
+            Irbis.Irbis.WriteLine("attempting conversion...");
             thisLevel = Irbis.Irbis.ConvertOldLevelFileToNew(filename);
         }
         finally
         {
             Irbis.Irbis.WriteLine();
+            stream.Close();
         }
     }
 

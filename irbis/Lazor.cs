@@ -67,8 +67,8 @@ public class Lazor
         {
             if (s.GetType() != typeof(WizardGuy) && collider.Intersects(s.Collider))
             {
-                if (s.Equals(Irbis.Irbis.jamie))
-                { Irbis.Irbis.jamie.Hurt(damage, true); }
+                if (s.GetType() == typeof(Player))
+                { ((Player)s).Hurt(damage, true, Irbis.Irbis.Directions(Irbis.Irbis.jamie.Collider.Center, collider.Center)); }
                 return true;
             }
         }

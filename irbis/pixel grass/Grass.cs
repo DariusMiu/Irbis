@@ -16,18 +16,21 @@ public class Grass
     float rotationRange;
     public Vector2 bladeOrigin;
     public Texture2D bladeTextures;
-    List<GrassBlade> bladeList;
+    GrassBlade[] bladeList;
     public Rectangle area;
     int efficiency;
-    int bladeCount;
+    int bladeCountOver2;
     public float initialRotation;
     public float density;
-    public float depth;
+    public float depth1;
+    public float depth2;
     public float[] randomness;
     public Point textureDimentions;
     public float brushDistanceSqr = 900;
-
     public static SpriteBatch spriteBatch;
+    RenderTarget2D renderTarget1;
+    RenderTarget2D renderTarget2;
+    public Vector2 position;
 
     /// <summary>
     /// plant some grass in an area
@@ -51,7 +54,8 @@ public class Grass
         rotationMax = RotationMax;
         textureDimentions = TextureDimentions;
         randomness = Randomness;
-        depth = Depth;
+        depth1 = Depth - Randomness[3] / 2;
+        depth2 = Depth + Randomness[3] / 2;
         density = Density;
         initialRotation = InitialRotation;
         area = Area;
@@ -59,6 +63,11 @@ public class Grass
         rotationRandomness = Randomness[1];
         bladeOrigin = OriginOffset;
         bladeTextures = BladeTextures;
+
+        renderTarget1 = new RenderTarget2D(Irbis.Irbis.game.GraphicsDevice, area.Width + textureDimentions.Y * 2, area.Height * 2 + textureDimentions.Y);
+        renderTarget2 = new RenderTarget2D(Irbis.Irbis.game.GraphicsDevice, area.Width + textureDimentions.Y * 2, area.Height * 2 + textureDimentions.Y);
+        position = new Vector2(area.X - textureDimentions.Y, area.Y - textureDimentions.Y);
+
         if (Efficiency > 0)
         { efficiency = Efficiency; }
         else
@@ -67,33 +76,33 @@ public class Grass
         rotationRange = RotationMax - rotationMin;
 
         List<float> posList = new List<float>();
-        float currentXpos = Area.X;
+        float currentXpos = 0;
 
-        while (currentXpos < (Area.X + Area.Width) - (100f / Density))
+        while (currentXpos < (Area.Width) - (150f / Density))
         {
             posList.Add(currentXpos);
-            currentXpos += (100f / Density);
+            currentXpos += (150f / Density);
         }
 
-        bladeList = new List<GrassBlade>();
+        bladeList = new GrassBlade[posList.Count];
 
         while (posList.Count > 0)
         {
             int next = Irbis.Irbis.RandomInt(posList.Count);
-            bladeList.Add(new GrassBlade(this, InitialRotation + (((Irbis.Irbis.RandomFloat * 2f) - 1f) * Randomness[0]),
+            bladeList[posList.Count - 1] = (new GrassBlade(this, InitialRotation + (((Irbis.Irbis.RandomFloat * 2f) - 1f) * Randomness[0]),
                 rotationMin + (Irbis.Irbis.RandomFloat * rotationRange),
                 rotationTime + (((Irbis.Irbis.RandomFloat * 2f) - 1f) * rotationRandomness),
-                new Vector2(posList[next] + (((Irbis.Irbis.RandomFloat * 2f) - 1f) * Randomness[2]), Area.Y + (Irbis.Irbis.RandomFloat * Area.Height)),
+                new Vector2(posList[next] + (((Irbis.Irbis.RandomFloat * 2f) - 1f) * Randomness[2]) + textureDimentions.Y, textureDimentions.Y + (Irbis.Irbis.RandomFloat * Area.Height)),
                 new Rectangle(new Point(Irbis.Irbis.RandomInt(BladeTextures.Width / TextureDimentions.X) * TextureDimentions.X, 0), TextureDimentions),
                 Depth + (((Irbis.Irbis.RandomFloat * 2f) - 1f) * Randomness[3])));
             posList.RemoveAt(next);
         }
-        bladeCount = bladeList.Count;
+        bladeCountOver2 = bladeList.Length / 2;
     }
 
-    public void Update()
+    public void Update ()
     {
-        for (int i = 0; i < bladeCount; i += efficiency)
+        for (int i = 0; i < bladeList.Length; i += efficiency)
         {
             bladeList[i].Update();
             if (bladeList[i].RotationTime <= 0)
@@ -103,7 +112,7 @@ public class Grass
             }
 
             for (int j = 1; j < efficiency; j++)
-            { if (i+j < bladeCount) { bladeList[i+j].rotation = bladeList[i].rotation; } }
+            { if (i+j < bladeList.Length) { bladeList[i+j].rotation = bladeList[i].rotation; } }
         }
     }
 
@@ -119,13 +128,30 @@ public class Grass
     }
 
     public void PreDraw()
-    { }
+    {
+        Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(renderTarget1);
+        Irbis.Irbis.game.GraphicsDevice.Clear(Color.Transparent);
+        spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Matrix.Identity);
+        for (int i = bladeList.Length - 1; i >= bladeCountOver2; i--)
+        { bladeList[i].Draw(spriteBatch); }
+        spriteBatch.End();
+        Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(renderTarget2);
+        Irbis.Irbis.game.GraphicsDevice.Clear(Color.Transparent);
+        spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Matrix.Identity);
+        for (int i = bladeCountOver2; i >= 0; i--)
+        { bladeList[i].Draw(spriteBatch); }
+        spriteBatch.End();
+        Irbis.Irbis.game.GraphicsDevice.SetRenderTarget(null);
+    }
 
     public void Draw(SpriteBatch sb)
     {
         if (Irbis.Irbis.debug > 1)
-        { RectangleBorder.Draw(sb, area, Color.Green, true); }
-        foreach (GrassBlade g in bladeList)
-        { g.Draw(sb); }
+        {
+            RectangleBorder.Draw(sb, area, Color.Green, true);
+            RectangleBorder.Draw(sb, new Rectangle(position.ToPoint(), renderTarget1.Bounds.Size), Color.Green, true);
+        }
+        sb.Draw(renderTarget1, position * Irbis.Irbis.screenScale, null, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth1);
+        sb.Draw(renderTarget2, position * Irbis.Irbis.screenScale, null, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth2);
     }
 }
