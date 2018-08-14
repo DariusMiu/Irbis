@@ -240,6 +240,8 @@ class WizardGuy : IEnemy
     float stepTime;
     float stepTimeMax = 5f;
 
+    float castingTime;
+
     int lazerindex = 0;
     List<Lazor> lazers = new List<Lazor>();
     Texture2D[] lazertextures = new Texture2D[5];
@@ -367,18 +369,24 @@ class WizardGuy : IEnemy
             int rightmostLeft = Irbis.Irbis.squareList[0].Collider.Left;
             int bottommosttop = Irbis.Irbis.squareList[0].Collider.Top;
 
+            Irbis.Irbis.WriteLine("squareList.Count:" + Irbis.Irbis.squareList.Count);
             foreach (Square s in Irbis.Irbis.squareList)
             {
-                if (s.Collider.Bottom < topmostBottom)
-                { topmostBottom = s.Collider.Bottom; }
-                if (s.Collider.Right < leftmostRight)
-                { leftmostRight = s.Collider.Right; }
-                if (s.Collider.Left > rightmostLeft)
-                { rightmostLeft = s.Collider.Left; }
-                if (s.Collider.Top > bottommosttop)
-                { bottommosttop = s.Collider.Top; }
+                if (s.Collider != Rectangle.Empty)
+                {
+                    Irbis.Irbis.WriteLine("s.Collider:" + s.Collider);
+                    if (s.Collider.Bottom < topmostBottom)
+                    { topmostBottom = s.Collider.Bottom; }
+                    if (s.Collider.Right < leftmostRight)
+                    { leftmostRight = s.Collider.Right; }
+                    if (s.Collider.Left > rightmostLeft)
+                    { rightmostLeft = s.Collider.Left; }
+                    if (s.Collider.Top > bottommosttop)
+                    { bottommosttop = s.Collider.Top; }
+                }
             }
             bossArena = new Rectangle(leftmostRight, topmostBottom, (rightmostLeft - leftmostRight), (bottommosttop - topmostBottom));
+            Irbis.Irbis.WriteLine("bossArena:" + bossArena);
         }
 
         if (TeleportPoints == null || TeleportPoints.Length <= 1)
@@ -428,6 +436,8 @@ class WizardGuy : IEnemy
         if (Irbis.Irbis.GetMouseState.LeftButton == ButtonState.Pressed && collider.Contains(Irbis.Irbis.WorldSpaceMouseLocation))
         { position = new Vector2(Irbis.Irbis.WorldSpaceMouseLocation.X - standardCollider.X - (collider.Width/2), Irbis.Irbis.WorldSpaceMouseLocation.Y - standardCollider.Y - (collider.Height/2)); }
 
+        if (castingTime > 0)
+        { castingTime -= Irbis.Irbis.DeltaTime; }
 
         switch (bossState)
         {
@@ -435,13 +445,46 @@ class WizardGuy : IEnemy
                 stepTime += Irbis.Irbis.DeltaTime;
                 TrueCenter = Irbis.Irbis.SmootherStep(spawnPoint, initialPoint, (stepTime / stepTimeMax));
                 if (stepTime >= stepTimeMax)
-                { bossState++; SetAnimation(4, true); }
+                { bossState++; castingTime = 5; }
                 break;
             case BossState.Entrance:    // 1
-                bossState++;
+                if (Irbis.Irbis.currentLevel == "c1b2") // just makes sure that there are actually platforms to move
+                {
+                    Irbis.Irbis.CameraShake(1, 7);
+                    float newYpos = Irbis.Irbis.SmoothStep(Irbis.Irbis.squareList[1].InitialPosition.Y - 150,
+                        Irbis.Irbis.squareList[1].InitialPosition.Y, castingTime / 5);
+                    float newrotation = Irbis.Irbis.SmoothStep(MathHelper.PiOver2, 0, castingTime / 5);
+
+                    Irbis.Irbis.squareList[1].Position = new Vector2(Irbis.Irbis.squareList[1].InitialPosition.X, newYpos);
+                    Irbis.Irbis.squareList[2].Position = new Vector2(Irbis.Irbis.squareList[2].InitialPosition.X, newYpos);
+                    Irbis.Irbis.squareList[3].Position = new Vector2(Irbis.Irbis.squareList[3].InitialPosition.X, newYpos);
+
+                    Irbis.Irbis.squareList[4].rotation = newrotation;
+                    Irbis.Irbis.squareList[5].rotation = -newrotation;
+                    Irbis.Irbis.grassList[7].rotation = newrotation;
+                    Irbis.Irbis.grassList[8].rotation = -newrotation;
+
+                    Irbis.Irbis.grassList[1].area.Y = (int)newYpos - 1;
+                    Irbis.Irbis.grassList[3].area.Y = (int)newYpos-1;
+                    Irbis.Irbis.grassList[5].area.Y = (int)newYpos-1;
+
+                    if (castingTime <= 0)
+                    {
+                        bossState++;
+                        Irbis.Irbis.CameraShake(0.5f, 5);
+                    }
+                }
+                else // if it's not the right level, then just move on
+                {
+                    bossState++;
+                    goto case BossState.Engage;
+                }
                 break;
             case BossState.Engage:      // 2
+
                 bossState++;
+                SetAnimation(4, true);
+                goto case BossState.Combat;
                 break;
             case BossState.Combat:      // 3
                 if (Irbis.Irbis.jamie != null)

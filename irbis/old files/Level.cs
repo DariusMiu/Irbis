@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.Serialization.Formatters.Binary;
 
 [Serializable]
-public struct OldLevel
+public struct Level
 {
     //public List<Square> squareList;
     private List<int> squareSpawnPointsX;
@@ -434,7 +434,7 @@ public struct OldLevel
     }
 
 
-    public OldLevel(bool construct)
+    public Level(bool construct)
     {
         squareSpawnPointsX = new List<int>();
         squareSpawnPointsY = new List<int>();
@@ -578,13 +578,13 @@ public struct OldLevel
 
     public void Load(string filename)
     {
-        OldLevel thisLevel = new OldLevel(true);
+        Level thisLevel = new Level(true);
         Irbis.Irbis.WriteLine("loading " + filename + "...");
         FileStream stream = new FileStream(filename, FileMode.Open);
         try
         {
             BinaryFormatter formatter = new BinaryFormatter();
-            thisLevel = (OldLevel)formatter.Deserialize(stream);
+            thisLevel = (Level)formatter.Deserialize(stream);
             AssignLocalVariables(thisLevel);
             Irbis.Irbis.WriteLine("load successful.");
         }
@@ -592,6 +592,8 @@ public struct OldLevel
         {
             Console.WriteLine("load failed.\n" + e.Message);
             Irbis.Irbis.WriteLine("load failed.\n" + e.Message);
+            Irbis.Irbis.WriteLine("attempting conversion...");
+            thisLevel = Irbis.Irbis.ConvertOldLevelFileToNew(filename);
         }
         finally
         {
@@ -623,7 +625,7 @@ public struct OldLevel
         }
     }
 
-    private void AssignLocalVariables(OldLevel level)
+    private void AssignLocalVariables(Level level)
     {
         this = level;
         Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);

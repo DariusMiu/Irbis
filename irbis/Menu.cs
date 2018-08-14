@@ -99,8 +99,8 @@ public class Menu
                 {
                     if (i < 11)
                     {
-                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale)), Irbis.Irbis.buttonList[i].bounds.Y), new Point(200 * Irbis.Irbis.textScale, Irbis.Irbis.textScale), Irbis.Irbis.screenScale, false, true, 0.1f));
-                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(27, 28, 32), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale) + Irbis.Irbis.textScale), Irbis.Irbis.buttonList[i].bounds.Y + Irbis.Irbis.textScale), new Point(200 * Irbis.Irbis.textScale, Irbis.Irbis.textScale), Irbis.Irbis.screenScale, false, true, 0.09f));
+                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale)), Irbis.Irbis.buttonList[i].bounds.Y), null, Vector2.Zero, 1, 0.1f));
+                        Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(27, 28, 32), new Point((int)(Irbis.Irbis.buttonList[i].bounds.X - (5 * Irbis.Irbis.textScale) + Irbis.Irbis.textScale), Irbis.Irbis.buttonList[i].bounds.Y + Irbis.Irbis.textScale), null, Vector2.Zero, 1, 0.09f));
                     }
                 }
 
@@ -233,21 +233,23 @@ public class Menu
                 op47t.Update("Lighting");
                 Irbis.Irbis.printList.Add(op47t);
 
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 83), Irbis.Irbis.resolution.Y - (tempLP.Y - 23)), new Point(65, 1), Irbis.Irbis.textScale, false, true, 0.5f));
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 82), Irbis.Irbis.resolution.Y - (tempLP.Y - 24)), new Point(65, 1), Irbis.Irbis.textScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 83), Irbis.Irbis.resolution.Y - (tempLP.Y - 23)), null, Vector2.Zero, 1, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X + 82), Irbis.Irbis.resolution.Y - (tempLP.Y - 24)), null, Vector2.Zero, 1, 0.5f));
 
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 25), Irbis.Irbis.resolution.Y - (tempLP.Y - 23)), new Point(69, 1), Irbis.Irbis.textScale, false, true, 0.5f));
-                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 26), Irbis.Irbis.resolution.Y - (tempLP.Y - 24)), new Point(69, 1), Irbis.Irbis.textScale, false, true, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(223, 227, 236), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 25), Irbis.Irbis.resolution.Y - (tempLP.Y - 23)), null, Vector2.Zero, 1, 0.5f));
+                Irbis.Irbis.sList.Add(new Square(Irbis.Irbis.nullTex, new Color(027, 028, 032), new Point(Irbis.Irbis.resolution.X - (tempLP.X - 26), Irbis.Irbis.resolution.Y - (tempLP.Y - 24)), null, Vector2.Zero, 1,  0.5f));
 
                 if (Irbis.Irbis.graphics.IsFullScreen)
                 {
-                    Irbis.Irbis.sList[0].drawTex = Irbis.Irbis.sList[1].drawTex = false;
-                    Irbis.Irbis.sList[2].drawTex = Irbis.Irbis.sList[3].drawTex = true;
+                    Irbis.Irbis.sList[0].color = Irbis.Irbis.sList[1].color = Color.Transparent;
+                    Irbis.Irbis.sList[2].color = new Color(223, 227, 236);
+                    Irbis.Irbis.sList[3].color = new Color(027, 028, 032);
                 }
                 else
                 {
-                    Irbis.Irbis.sList[0].drawTex = Irbis.Irbis.sList[1].drawTex = true;
-                    Irbis.Irbis.sList[2].drawTex = Irbis.Irbis.sList[3].drawTex = false;
+                    Irbis.Irbis.sList[2].color = Irbis.Irbis.sList[3].color = Color.Transparent;
+                    Irbis.Irbis.sList[0].color = new Color(223, 227, 236);
+                    Irbis.Irbis.sList[1].color = new Color(027, 028, 032);
                 }
 
                 Irbis.Irbis.buttonList.Add(new Button(new Rectangle(tempLP.X - (60 * Irbis.Irbis.textScale), (Irbis.Irbis.resolution.Y - tempLP.Y) - (35 * Irbis.Irbis.textScale), 80 * Irbis.Irbis.textScale, 16 * Irbis.Irbis.textScale), Direction.Forward, "windowed", ">WINDOWED<", new Color(223, 227, 236), Irbis.Irbis.nullTex, Irbis.Irbis.font, Color.Magenta, true, false, 0.5f));
@@ -494,6 +496,7 @@ public class Menu
                                     game.LoadUI();
                                     Irbis.Irbis.levelLoaded = 11;
                                     Irbis.Irbis.displayUI = true;
+                                    if (Irbis.Irbis.debug <= 0) { game.IsMouseVisible = false; }
                                     //Irbis.Irbis.WriteLine("    loading " + Irbis.Irbis.savefile.lastPlayedLevel);
                                     //game.LoadLevel(Irbis.Irbis.savefile.lastPlayedLevel, true);
                                 }
@@ -1149,16 +1152,18 @@ public class Menu
                                 Irbis.Irbis.graphics.IsFullScreen = false;
                                 Irbis.Irbis.buttonList[0].buttonStatement = Irbis.Irbis.buttonList[0].highlightStatement;
                                 Irbis.Irbis.buttonList[1].buttonStatement = Irbis.Irbis.buttonList[1].originalStatement;
-                                Irbis.Irbis.sList[0].drawTex = Irbis.Irbis.sList[1].drawTex = true;
-                                Irbis.Irbis.sList[2].drawTex = Irbis.Irbis.sList[3].drawTex = false;
-                                
+                                Irbis.Irbis.sList[2].color = Irbis.Irbis.sList[3].color = Color.Transparent;
+                                Irbis.Irbis.sList[0].color = new Color(223, 227, 236);
+                                Irbis.Irbis.sList[1].color = new Color(027, 028, 032);
+
                                 break;
                             case 1:                         //1 == fullscreen
                                                             //playerSettings.fullscreen = Irbis.Irbis.graphics.IsFullScreen = true;
                                 Irbis.Irbis.buttonList[0].buttonStatement = Irbis.Irbis.buttonList[0].originalStatement;
                                 Irbis.Irbis.buttonList[1].buttonStatement = Irbis.Irbis.buttonList[1].highlightStatement;
-                                Irbis.Irbis.sList[0].drawTex = Irbis.Irbis.sList[1].drawTex = false;
-                                Irbis.Irbis.sList[2].drawTex = Irbis.Irbis.sList[3].drawTex = true;
+                                Irbis.Irbis.sList[0].color = Irbis.Irbis.sList[1].color = Color.Transparent;
+                                Irbis.Irbis.sList[2].color = new Color(223, 227, 236);
+                                Irbis.Irbis.sList[3].color = new Color(027, 028, 032);
                                 break;
                             case 2:                         //2 == ___x
                                 Irbis.Irbis.acceptTextInput = true;
@@ -1649,12 +1654,15 @@ public class Menu
                 if (Irbis.Irbis.menuSelection < 0)
                 { Irbis.Irbis.menuSelection = Irbis.Irbis.buttonList.Count - 1; }
                 //game DECIDES WHAT EACH BUTTON DOES
+                Console.WriteLine("0 " + Irbis.Irbis.buttonList.Count + ">" + Irbis.Irbis.menuSelection);
                 if (Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].Pressed(Irbis.Irbis.GetMouseState, Irbis.Irbis.GetPreviousMouseState) || Irbis.Irbis.Use())
                 {
+                    Console.WriteLine("1 " + Irbis.Irbis.buttonList.Count + ">" + Irbis.Irbis.menuSelection);
                     if (Irbis.Irbis.menuSelection == 0)
                     { game.LoadMenu(0, 0, false); }
                     else
                     {
+                        Console.WriteLine("2 " + Irbis.Irbis.buttonList.Count + ">" + Irbis.Irbis.menuSelection);
                         Thread loadlevel = new Thread(new ParameterizedThreadStart(game.LoadLevel));
                         loadlevel.Start(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].data);
                         //game.LoadLevel(Irbis.Irbis.buttonList[Irbis.Irbis.menuSelection].data, true);

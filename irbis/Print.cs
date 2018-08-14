@@ -17,7 +17,7 @@ public class Print
     Texture2D tex;
     Vector2 displayPosition;
 
-    Color fontColor;
+    public Color fontColor;
     int width;
     int height;
     int maxWidth;

@@ -29,10 +29,12 @@ public class GrassBlade
     float rotationTimeMax;
     float targetRotation;
     Vector2 position;
+    Vector2 initialPosition;
     Rectangle bladeTextureArea;
     float depth;
     float brushRotation;
     Grass parentGrass;
+    float parentGrassRotation;
 
     public GrassBlade (Grass ParentGrass, float InitialRotation, float InitialTargetRotation, float InitialRotationTime, Vector2 Position, Rectangle BladeTextureArea, float Depth)
     {
@@ -40,19 +42,27 @@ public class GrassBlade
         oldRotation = rotation = InitialRotation;
         targetRotation = InitialTargetRotation;
         rotationTimeMax = rotationTime = InitialRotationTime;
-        position = Position;
+        initialPosition = position = Position;
         bladeTextureArea = BladeTextureArea;
         depth = Depth;
     }
 
     public void Update()
     {
+        if (parentGrassRotation != parentGrass.rotation)
+        {
+            float sin = (float)Math.Sin(parentGrass.rotation);
+            float cos = (float)Math.Cos(parentGrass.rotation);
+            position.X = cos * initialPosition.X - sin * initialPosition.Y;
+            position.Y = sin * initialPosition.X + cos * initialPosition.Y;
+            parentGrassRotation = parentGrass.rotation;
+        }
         rotationTime -= Irbis.Irbis.DeltaTime;
         rotation = Irbis.Irbis.SmootherStep(targetRotation, oldRotation, (rotationTime / rotationTimeMax));
-        float distanceSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.BottomCenter, position);
+        float distanceSqr = Irbis.Irbis.DistanceSquared(Irbis.Irbis.jamie.BottomCenter, parentGrass.area.Location.ToVector2() + position);
         if (distanceSqr <= parentGrass.brushDistanceSqr)
         {
-            if (Irbis.Irbis.Directions(Irbis.Irbis.jamie.BottomCenter, position) == Direction.Right)
+            if (Irbis.Irbis.Directions(Irbis.Irbis.jamie.BottomCenter, parentGrass.area.Location.ToVector2() + position) == Direction.Right)
             { brushRotation = Irbis.Irbis.LerpNoClamp(brushRotation, -((distanceSqr / parentGrass.brushDistanceSqr) - 1f), Irbis.Irbis.DeltaTime * 15); }
             else
             { brushRotation = Irbis.Irbis.LerpNoClamp(brushRotation, (distanceSqr / parentGrass.brushDistanceSqr) - 1f, Irbis.Irbis.DeltaTime * 15); }
@@ -62,6 +72,6 @@ public class GrassBlade
     }
 
     public void Draw(SpriteBatch sb)
-    { sb.Draw(parentGrass.bladeTextures, position * Irbis.Irbis.screenScale, bladeTextureArea, Color.White, rotation + brushRotation, parentGrass.bladeOrigin, Irbis.Irbis.screenScale, SpriteEffects.None, depth); }
+    { sb.Draw(parentGrass.bladeTextures, (parentGrass.area.Location.ToVector2() + position) * Irbis.Irbis.screenScale, bladeTextureArea, Color.White, rotation + brushRotation + parentGrass.rotation, parentGrass.bladeOrigin, Irbis.Irbis.screenScale, SpriteEffects.None, depth); }
 
 }

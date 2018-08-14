@@ -16,12 +16,19 @@ public struct Level
     //public List<Square> squareList;
     private List<int> squareSpawnPointsX;
     private List<int> squareSpawnPointsY;
+    private List<int?> squareCollidersX;
+    private List<int?> squareCollidersY;
+    private List<int?> squareCollidersW;
+    private List<int?> squareCollidersH;
+    private List<float> squareOriginsX;
+    private List<float> squareOriginsY;
     public List<string> squareTextures;
     public List<float> squareDepths;
     private List<int> backgroundSquaresX;
     private List<int> backgroundSquaresY;
     public List<string> backgroundTextures;
     public List<float> backgroundSquareDepths;
+    private uint backgroundColor;
     public string levelName;
     private List<float> enemySpawnPointsX;
     private List<float> enemySpawnPointsY;
@@ -78,6 +85,7 @@ public struct Level
     string[] GbladeTextures;
     int[] GtextureDimentionsX;
     int[] GtextureDimentionsY;
+    int[] Gefficiencies;
 
 
     public Point[] VendingMachineLocations
@@ -124,16 +132,20 @@ public struct Level
             vendingMachineTypes = value;
         }
     }
-    public List<Point> SquareSpawnPoints
+    public Point[] SquareSpawnPoints
     {
         get
         {
-            List<Point> squareSpawns = new List<Point>();
-            for (int i = 0; i < squareSpawnPointsX.Count; i++)
+            if (squareSpawnPointsX.Count == squareSpawnPointsY.Count)
             {
-                squareSpawns.Add(new Point(squareSpawnPointsX[i], squareSpawnPointsY[i]));
+                Point[] squareSpawns = new Point[squareSpawnPointsX.Count];
+                for (int i = 0; i < squareSpawns.Length; i++)
+                {
+                    squareSpawns[i] = new Point(squareSpawnPointsX[i], squareSpawnPointsY[i]);
+                }
+                return squareSpawns;
             }
-            return squareSpawns;
+            else { throw new ArraysNotSameLengthException(); }
         }
         set
         {
@@ -146,16 +158,20 @@ public struct Level
             }
         }
     }
-    public List<Point> BackgroundSquares
+    public Point[] BackgroundSquares
     {
         get
         {
-            List<Point> bgSquares = new List<Point>();
-            for (int i = 0; i < backgroundSquaresX.Count; i++)
+            if (backgroundSquaresX.Count == backgroundSquaresY.Count)
             {
-                bgSquares.Add(new Point(backgroundSquaresX[i], backgroundSquaresY[i]));
+                Point[] bgSquares = new Point[backgroundSquaresX.Count];
+                for (int i = 0; i < bgSquares.Length; i++)
+                {
+                    bgSquares[i] = new Point(backgroundSquaresX[i], backgroundSquaresY[i]);
+                }
+                return bgSquares;
             }
-            return bgSquares;
+            else { throw new ArraysNotSameLengthException(); }
         }
         set
         {
@@ -166,6 +182,84 @@ public struct Level
                 backgroundSquaresX.Add(P.X);
                 backgroundSquaresY.Add(P.Y);
             }
+        }
+    }
+    public Color BackgroundColor
+    {
+        get
+        { return new Color(backgroundColor); }
+        set
+        { backgroundColor = ColorToUint(value); }
+    }
+    public Rectangle?[] SquareColliders
+    {
+        get
+        {
+            if (squareCollidersX.Count == squareCollidersY.Count && squareCollidersW.Count == squareCollidersH.Count && squareCollidersX.Count == squareCollidersW.Count)
+            {
+                Rectangle?[] returnColliders = new Rectangle?[squareCollidersX.Count];
+                for (int i = 0; i < returnColliders.Length; i++)
+                {
+                    if (squareCollidersX[i] == null || squareCollidersY[i] == null || squareCollidersW[i] == null || squareCollidersH[i] == null)
+                    { returnColliders[i] = null; }
+                    else
+                    { returnColliders[i] = new Rectangle((int)squareCollidersX[i], (int)squareCollidersY[i], (int)squareCollidersW[i], (int)squareCollidersH[i]); }
+                }
+                return returnColliders;
+            }
+            else { throw new ArraysNotSameLengthException(); }
+        }
+        set
+        {
+            squareCollidersX.Clear();
+            squareCollidersY.Clear();
+            squareCollidersW.Clear();
+            squareCollidersH.Clear();
+            foreach (Rectangle? r in value)
+            {
+                if (r == null)
+                {
+                    squareCollidersX.Add(null);
+                    squareCollidersY.Add(null);
+                    squareCollidersW.Add(null);
+                    squareCollidersH.Add(null);
+                }
+                else
+                {
+                    squareCollidersX.Add(((Rectangle)r).X);
+                    squareCollidersY.Add(((Rectangle)r).Y);
+                    squareCollidersW.Add(((Rectangle)r).Width);
+                    squareCollidersH.Add(((Rectangle)r).Height);
+                }
+            }
+            if (squareCollidersX.Count != squareCollidersY.Count || squareCollidersW.Count != squareCollidersH.Count || squareCollidersX.Count != squareCollidersW.Count || squareCollidersX.Count != value.Length)
+            { throw new ArraysNotSameLengthException(); }
+        }
+    }
+    public Vector2[] SquareOrigins
+    {
+        get
+        {
+            if (squareOriginsX.Count == squareOriginsY.Count)
+            {
+                Vector2[] returnOrigins = new Vector2[squareOriginsX.Count];
+                for (int i = 0; i < returnOrigins.Length; i++)
+                { returnOrigins[i] = new Vector2(squareOriginsX[i], squareOriginsY[i]); }
+                return returnOrigins;
+            }
+            else { throw new ArraysNotSameLengthException(); }
+        }
+        set
+        {
+            squareOriginsX.Clear();
+            squareOriginsY.Clear();
+            foreach (Vector2 v in value)
+            {
+                squareOriginsX.Add(v.X);
+                squareOriginsY.Add(v.Y);
+            }
+            if (squareOriginsX.Count != squareOriginsY.Count)
+            { throw new ArraysNotSameLengthException(); }
         }
     }
     public Vector2 PlayerSpawn
@@ -192,16 +286,19 @@ public struct Level
             bossSpawnY = value.Y;
         }
     }
-    public List<Vector2> EnemySpawnPoints
+    public Vector2[] EnemySpawnPoints
     {
         get
         {
-            List<Vector2> enemySpawns = new List<Vector2>();
-            for (int i = 0; i < enemySpawnPointsX.Count; i++)
+
+            if (enemySpawnPointsX.Count == enemySpawnPointsY.Count)
             {
-                enemySpawns.Add(new Vector2(enemySpawnPointsX[i], enemySpawnPointsY[i]));
+                Vector2[] enemySpawns = new Vector2[enemySpawnPointsX.Count];
+                for (int i = 0; i < enemySpawns.Length; i++)
+                { enemySpawns[i] = new Vector2(enemySpawnPointsX[i], enemySpawnPointsY[i]); }
+                return enemySpawns;
             }
-            return enemySpawns;
+            else { throw new ArraysNotSameLengthException(); }
         }
         set
         {
@@ -270,10 +367,10 @@ public struct Level
 
                 PSColors[i] = new uint[value[i].stateColors.Length];
                 for (int j = 0; j < value[i].stateColors.Length; j++)
-                { PSColors[i][j] = ColorToUInt(value[i].stateColors[j]); }
+                { PSColors[i][j] = ColorToUint(value[i].stateColors[j]); }
                 PSLightColors[i] = new uint[value[i].stateLightColors.Length];
                 for (int j = 0; j < value[i].stateLightColors.Length; j++)
-                { PSLightColors[i][j] = ColorToUInt(value[i].stateLightColors[j]); }
+                { PSLightColors[i][j] = ColorToUint(value[i].stateLightColors[j]); }
 
                 PSFrames[i] = value[i].animationFrames;
                 PSAnimationDelay[i] = value[i].animationDelay;
@@ -298,7 +395,7 @@ public struct Level
                     {
                         grasses[i] = new Grass(GinitialRotation[i], GrotationTime[i], Gdensity[i], Gdepth[i], Grandomness[i], GrotationMin[i], GrotationMax[i],
                             new Vector2(GoriginOffsetX[i], GoriginOffsetY[i]), new Rectangle(GareaX[i], GareaY[i], GareaW[i], GareaH[i]),
-                            Irbis.Irbis.LoadTexture(GbladeTextures[i]), new Point(GtextureDimentionsX[i], GtextureDimentionsY[i]), 900, 2);
+                            Irbis.Irbis.LoadTexture(GbladeTextures[i]), new Point(GtextureDimentionsX[i], GtextureDimentionsY[i]), 900, Gefficiencies[i]);
                     }
                     return grasses;
                 }
@@ -326,13 +423,14 @@ public struct Level
                 GrotationMax[i] = value[i].rotationMax;
                 GoriginOffsetX[i] = value[i].bladeOrigin.X;
                 GoriginOffsetY[i] = value[i].bladeOrigin.Y;
-                GareaX[i] = value[i].area.X;
-                GareaY[i] = value[i].area.Y;
-                GareaW[i] = value[i].area.Width;
-                GareaH[i] = value[i].area.Height;
+                GareaX[i] = value[i].Area.X;
+                GareaY[i] = value[i].Area.Y;
+                GareaW[i] = value[i].Area.Width;
+                GareaH[i] = value[i].Area.Height;
                 GbladeTextures[i] = value[i].bladeTextures.Name;
                 GtextureDimentionsX[i] = value[i].textureDimentions.X;
                 GtextureDimentionsY[i] = value[i].textureDimentions.Y;
+                Gefficiencies[i] = value[i].Efficiency;
             }
         }
     }
@@ -342,11 +440,19 @@ public struct Level
     {
         squareSpawnPointsX = new List<int>();
         squareSpawnPointsY = new List<int>();
+        squareCollidersX = new List<int?>();
+        squareCollidersY = new List<int?>();
+        squareCollidersW = new List<int?>();
+        squareCollidersH = new List<int?>();
+        squareOriginsX = new List<float>();
+        squareOriginsY = new List<float>();
+
         squareTextures = new List<string>();
         backgroundSquaresX = new List<int>();
         backgroundSquaresY = new List<int>();
         backgroundTextures = new List<string>();
         backgroundSquareDepths = new List<float>();
+        backgroundColor = ColorToUint(Color.CornflowerBlue);
         squareDepths = new List<float>();
         levelName = string.Empty;
         enemySpawnPointsX = new List<float>();
@@ -403,12 +509,13 @@ public struct Level
         GbladeTextures = new string[0];
         GtextureDimentionsX = new int[0];
         GtextureDimentionsY = new int[0];
+        Gefficiencies = new int[0];
     }
 
-    private uint ColorToUInt(Color color)
-    { return (uint)((color.A << 24) | (color.R << 16) | (color.G << 8) | (color.B << 0)); }
+    public static uint ColorToUint(Color color)
+    { return (uint)((color.A << 24) | (color.B << 16) | (color.G << 8) | (color.R << 0)); }
 
-    private Color[] LoadColorArray(uint[] colors)
+    private static Color[] LoadColorArray(uint[] colors)
     {
         Color[] colorArray = new Color[colors.Length];
 
@@ -446,6 +553,7 @@ public struct Level
         GbladeTextures = new string[length];
         GtextureDimentionsX = new int[length];
         GtextureDimentionsY = new int[length];
+        Gefficiencies = new int[length];
     }
 
     public void InitializeParticleSystem(int length)
@@ -527,7 +635,7 @@ public struct Level
         Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
         Irbis.Irbis.WriteLine("       background squares: " + backgroundSquareDepths.Count);
         Irbis.Irbis.WriteLine("               level name: " + levelName);
-        Irbis.Irbis.WriteLine("       enemy spawn points: " + EnemySpawnPoints.Count);
+        Irbis.Irbis.WriteLine("       enemy spawn points: " + EnemySpawnPoints.Length);
         Irbis.Irbis.WriteLine("              isOnslaught: " + isOnslaught);
         Irbis.Irbis.WriteLine("             player spawn: " + PlayerSpawn);
         Irbis.Irbis.WriteLine("               boss spawn: " + BossSpawn);
@@ -545,26 +653,18 @@ public struct Level
             returnstring += "\nsquare[" + i + "] tex: " + squareTextures[i];
             returnstring += "\nsquare[" + i + "] pos: {X:" + squareSpawnPointsX[i] + " Y:" + squareSpawnPointsY[i] + "}";
         }
-        returnstring += "\nEnemy Spawn Points: " + EnemySpawnPoints.Count;
-        for (int i = 0; i < EnemySpawnPoints.Count; i++)
-        {
-            returnstring += "\nenemy[" + i + "] pos: " + EnemySpawnPoints[i];
-        }
+        returnstring += "\nEnemy Spawn Points: " + EnemySpawnPoints.Length;
+        for (int i = 0; i < EnemySpawnPoints.Length; i++)
+        { returnstring += "\nenemy[" + i + "] pos: " + EnemySpawnPoints[i]; }
         returnstring += "\nVending Machine Locations: " + VendingMachineLocations.Length;
         for (int i = 0; i < VendingMachineLocations.Length; i++)
-        {
-            returnstring += "\nvendingMachineLocations[" + i + "]: " + VendingMachineLocations[i];
-        }
+        { returnstring += "\nvendingMachineLocations[" + i + "]: " + VendingMachineLocations[i]; }
         returnstring += "\nVending Machine Textures: " + VendingMachineTextures.Length;
         for (int i = 0; i < VendingMachineTextures.Length; i++)
-        {
-            returnstring += "\nVendingMachineTextures[" + i + "]: " + VendingMachineTextures[i];
-        }
+        { returnstring += "\nVendingMachineTextures[" + i + "]: " + VendingMachineTextures[i]; }
         returnstring += "\nVending Machine Types: " + VendingMachineTypes.Length;
         for (int i = 0; i < VendingMachineTypes.Length; i++)
-        {
-            returnstring += "\nVendingMachineTypes[" + i + "]: " + VendingMachineTypes[i];
-        }
+        { returnstring += "\nVendingMachineTypes[" + i + "]: " + VendingMachineTypes[i]; }
         return returnstring;
     }
 }

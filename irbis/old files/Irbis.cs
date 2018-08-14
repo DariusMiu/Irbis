@@ -179,7 +179,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        public const string versionNo = "0.2.1.4";
+        public const string versionNo = "0.2.1.3";
         public const string versionID = "beta";
         public const string versionTy = "debug";
         /// Different version types: 
@@ -222,7 +222,7 @@ namespace Irbis
         private static Rectangle consoleRect;
         private static Color consoleRectColor = new Color(31, 29, 37, 255);
         private static Texture2D consoleTex;
-        private static object writeLock = new object();
+        private static object writelock = new object();
 
                                                                                                     // properties
         public static float DeltaTime
@@ -702,7 +702,7 @@ namespace Irbis
 
                                                                                                     // player
         public static Player jamie;
-        public static Vector2 initialPos = new Vector2(-1000, -1000); // = new Vector2(156, 93);
+        public static Vector2 initialPos = new Vector2(156, 93);
         public static float analogCutoff = 0.1f;
 
                                                                                                     // onslaught
@@ -789,7 +789,7 @@ namespace Irbis
         public static float minSqrDetectDistance;
         public static bool displayEnemyHealth;
         public static int vendingMenu;
-        public static bool displayUI;
+        public static bool displayUI = true;
         public static Texture2D[] fontLogos = new Texture2D[3];
 
                                                                                                     // credits/intro vars
@@ -1093,7 +1093,7 @@ namespace Irbis
             originTexture = LoadTexture("originTexture");
 
             jamie = new Player(playerTex, shieldTex, playerSettings, 0.5f);
-            jamie.Respawn(initialPos);
+            jamie.Respawn(new Vector2(-1000f, -1000f));
 
 
             loadingBar = new UIElementSlider(Direction.Left, new Rectangle(0, (int)(resolution.Y - (font.charHeight + 1) * textScale), resolution.X, (int)((font.charHeight + 1) * textScale)), Point.Zero, Direction.Forward, 100, new Color(038, 118, 213), null, null, Color.Black, nullTex, null, null, true, font, false, 0.8f, 0.799f, 0.801f, 0.803f);
@@ -1119,6 +1119,12 @@ namespace Irbis
 
             particleSystems = new List<ParticleSystem>();
             //torch = new Torch(Point.Zero);
+
+            //printList.Add(infoText);
+            //printList.Add(topright);
+            //printList.Add(debuginfo);
+            //printList.Add(consoleWriteline);
+            //printList.Add(developerConsole);
 
             smartFPS = new SmartFramerate(5);
             smoothFPS = new SmoothFramerate(100);
@@ -1188,8 +1194,6 @@ namespace Irbis
             shadowShape = new Shape(shadows.ToArray());
 
             //scenes 0-10 are reserved for menus
-
-            LoadUI();
 
             LoadScene(11);   //master scene ID
                              //LOAD THIS FROM SAVE FILE FOR BACKGROUND
@@ -1316,7 +1320,7 @@ namespace Irbis
 
             if (jamie != null)
             {
-                jamie.Respawn(initialPos);
+                jamie.Respawn(new Vector2(-1000f, -1000f));
                 screenSpacePlayerPos = mainCamera = boundingBox.Center.ToVector2();
             }
             else
@@ -1334,16 +1338,16 @@ namespace Irbis
                 { filename = filename.Substring(filename.Length - 4, 4); }
 
                 WriteLine("loading level: " + filename + ".lvl");
-                /*if (!File.Exists(".\\levels\\" + filename + ".lvl"))
-                { filename = "c1b1"; }/**/
+                if (!File.Exists(".\\levels\\" + filename + ".lvl"))
+                { filename = "c1b1"; }
 
                 thisLevel.Load(".\\levels\\" + filename + ".lvl");
             }
             catch (Exception e)
             {
-                WriteLine("Error - " + filename + ".lvl could not be loaded");
+                WriteLine("Error - level " + filename + " could not be loaded");
                 WriteLine("Exception: " + e.Message + "\n");
-                DisplayInfoText("Error - " + filename + ".lvl could not be loaded", Color.Red);
+                DisplayInfoText("Error - level " + filename + " could not be loaded");
                 loadingBar.Value = 100;
                 return;
             }
@@ -1357,7 +1361,6 @@ namespace Irbis
             deathBackgroundOpacity = 1;
             loadingBar.Value += 1;
             ClearLevel();
-            initialPos = thisLevel.PlayerSpawn;
 
             //Thread loadSquares = new Thread(new ParameterizedThreadStart(LoadSquares));
             //loadSquares.Start(thisLevel);
@@ -1380,6 +1383,7 @@ namespace Irbis
 
             timeScale = 1f;
 
+            initialPos = thisLevel.PlayerSpawn;
             enemySpawnPoints = new List<Vector2>(thisLevel.EnemySpawnPoints);
             loadingBar.Value += 1;
             //enemy0Tex = LoadTexture("enemy0");
@@ -1417,23 +1421,19 @@ namespace Irbis
             particleSystems = new List<ParticleSystem>(thisLevel.ParticleSystems);
             loadingBar.Value += 1;
             Grass.spriteBatch = new SpriteBatch(GraphicsDevice);
-            grassList = new List<Grass>(thisLevel.Grasses);
+            grassList = new List<Grass>(/*thisLevel.Grasses*/);
             backgroundColor = thisLevel.BackgroundColor;
-            //backgroundColor = new Color(69, 61, 54);
+            backgroundColor = Color.CornflowerBlue;
             loadingBar.Value += 1;
 
-            /*grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(-160, 259, 263, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
+            grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(-160, 259, 263, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
             grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle( 105, 259, 152, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
             grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle( 259, 259, 390, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
             grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle( 651, 259, 160, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
             grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle( 813, 259, 368, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
             grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(1184, 259, 171, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
             grassList.Add(new Grass(0f, 2.0f, 100, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(1357, 259, 263, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 2));
-            grassList.Add(new Grass(0f, 2.0f, -75, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(-478, 259, 318, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 1));
-            grassList.Add(new Grass(0f, 2.0f,  75, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(1620, 259, 318, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 1));
-            grassList.Add(new Grass(0f, 2.0f,  75, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(1938, 259, 318, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 5));
-            grassList.Add(new Grass(0f, 2.0f,  75, 0.5f, new float[] { 0.5f, 0.5f, 1, 0.1f }, -0.5f, -0.1f, new Vector2(3, 26), new Rectangle(-796, 259, 318, 10), LoadTexture("wizardgrass"), new Point(7, 29), null, 5));
-            particleSystems.Add(new ParticleSystem(Vector2.Zero, new Vector2(-.1f,-.2f), new float[]{2,3,2}, new float[]{1,1,1,1},
+            /*particleSystems.Add(new ParticleSystem(Vector2.Zero, new Vector2(-.1f,-.2f), new float[]{2,3,2}, new float[]{1,1,1,1},
                 new float[]{2,2,2,2}, 0.75f, 0.8f, new float[]{0,1f,0,0.01f,0.01f,0.01f},new Rectangle(100,15,200,100),
                 new Texture2D[]{LoadTexture("godray1")//,LoadTexture("godray2"),LoadTexture("godray3"),LoadTexture("godray4"),LoadTexture("godray5"),LoadTexture("godray6")
                 },new Color[]{Color.Transparent,Color.White,Color.White},new Color[]{Color.Transparent,new Color(1f,1f,0.5f,1f),new Color(1f,1f,1f,.5f)},
@@ -1451,7 +1451,7 @@ namespace Irbis
                 savefile.Save(autosave);
                 WriteLine("for a list of all squares, enter: squareList");
             }
-            loadingBar.Value += 1;
+            loadingBar.Value += 2;
 
             //Thread loadBoss = new Thread(new ParameterizedThreadStart(LoadBoss));
             //loadBoss.Start(thisLevel);
@@ -1468,55 +1468,45 @@ namespace Irbis
         {
             Level thisLevel = (Level)data;
 
-            Vector2[] squareOrigins = thisLevel.SquareOrigins;
-            loadingBar.Value += 1;
-            Point[] squareSpawns = thisLevel.SquareSpawnPoints;
+            /*Point[] squareSpawns = thisLevel.SquareSpawnPoints;
             loadingBar.Value += 1;
             Rectangle?[] squareColliders = thisLevel.SquareColliders;
             loadingBar.Value += 1;
-            float[] squareDepths = thisLevel.squareDepths.ToArray();
+            float[] squareDepths;
+            squareDepths = thisLevel.squareDepths.ToArray();
             loadingBar.Value += 1;
 
             float baradd = 57f / thisLevel.squareTextures.Count;
             for (int i = 0; i < thisLevel.squareTextures.Count; i++)
             {
                 Square tempSquare;
-                if (thisLevel.squareDepths[i] > 0)     // has collider, is displayed (usually debug)       // squareOrigins[i]
-                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], squareOrigins[i], screenScale, thisLevel.squareDepths[i]); }
+                if (thisLevel.squareDepths[i] > 0)     // has collider, is displayed (usually debug)
+                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], Vector2.Zero, screenScale, thisLevel.squareDepths[i]); }
                 else                                   // has collider, is not displayed (this is generally used after backgrounds are added)
-                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], squareOrigins[i], screenScale, null); }
+                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], Vector2.Zero, screenScale, null); }
                 collisionObjects.Add(tempSquare);
                 squareList.Add(tempSquare);
                 loadingBar.Value += baradd;
             }/**/
 
 
-            /*Square
+            Square
             tempSquare = new Square(LoadPNG("environment//wizardground"), Color.White, new Point(-160, 260), null, Vector2.Zero, screenScale, 0.15f);
             collisionObjects.Add(tempSquare);
             squareList.Add(tempSquare);
-            tempSquare = new Square(LoadPNG("environment//wizardplatform1"), Color.White, new Point(100, 260), new Rectangle(5, 0, 152, 30), Vector2.Zero, screenScale, 0.1f);
+            tempSquare = new Square(LoadPNG("environment//wizardplatform1"), Color.White, new Point(100, 260), new Rectangle(5, 0, 152, 20), Vector2.Zero, screenScale, 0.1f);
             collisionObjects.Add(tempSquare);
             squareList.Add(tempSquare);
-            tempSquare = new Square(LoadPNG("environment//wizardplatform2"), Color.White, new Point(642, 260), new Rectangle(9, 0, 160, 30), Vector2.Zero, screenScale, 0.1f);
+            tempSquare = new Square(LoadPNG("environment//wizardplatform2"), Color.White, new Point(642, 260), new Rectangle(9, 0, 160, 20), Vector2.Zero, screenScale, 0.1f);
             collisionObjects.Add(tempSquare);
             squareList.Add(tempSquare);
-            tempSquare = new Square(LoadPNG("environment//wizardplatform3"), Color.White, new Point(1179, 260), new Rectangle(5, 0, 171, 30), Vector2.Zero, screenScale, 0.1f);
+            tempSquare = new Square(LoadPNG("environment//wizardplatform3"), Color.White, new Point(1179, 260), new Rectangle(5, 0, 171, 20), Vector2.Zero, screenScale, 0.1f);
             collisionObjects.Add(tempSquare);
             squareList.Add(tempSquare);
-            tempSquare = new Square(LoadPNG("environment//wizardwallleft"), Color.White, new Point(-160, 260), Rectangle.Empty, new Vector2(318,0), screenScale, 0.1f);
+            tempSquare = new Square(nullTex, Color.Transparent, new Point(-180, 0), new Rectangle(0, 0, 20, 280), Vector2.Zero, screenScale, null);
             collisionObjects.Add(tempSquare);
             squareList.Add(tempSquare);
-            tempSquare = new Square(LoadPNG("environment//wizardwallright"), Color.White, new Point(1620, 260), Rectangle.Empty, Vector2.Zero, screenScale, 0.1f);
-            collisionObjects.Add(tempSquare);
-            squareList.Add(tempSquare);
-            tempSquare = new Square(nullTex, Color.Transparent, new Point(-220, 0), new Rectangle(0, -578, 60, 858), Vector2.Zero, screenScale, null);
-            collisionObjects.Add(tempSquare);
-            squareList.Add(tempSquare);
-            tempSquare = new Square(nullTex, Color.Transparent, new Point(1620, 0), new Rectangle(0, -578, 60, 858), Vector2.Zero, screenScale, null);
-            collisionObjects.Add(tempSquare);
-            squareList.Add(tempSquare);
-            tempSquare = new Square(nullTex, Color.Transparent, new Point(-180, 0), new Rectangle(0, -598, 1820, 40), Vector2.Zero, screenScale, null);
+            tempSquare = new Square(nullTex, Color.Transparent, new Point(1620, 0), new Rectangle(0, 0, 20, 280), Vector2.Zero, screenScale, null);
             collisionObjects.Add(tempSquare);
             squareList.Add(tempSquare);
             /**/
@@ -1553,11 +1543,6 @@ namespace Irbis
                 backgroundSquareList.Add(tempSquare);
                 loadingBar.Value += baradd;
             }
-            //squareTex = LoadPNG("environment//wizardbgground");
-
-            //backgroundSquareList.Add(new Square(squareTex, Color.White, new Point(0, 300), null, squareTex.Bounds.Size.ToVector2() / 2, screenScale, 1));
-            //backgroundSquareList.Add(new Square(squareTex, Color.White, new Point(1620, 300), null, squareTex.Bounds.Size.ToVector2() / 2, screenScale, 1));
-
             //{
             //    Texture2D squareTex = LoadTexture("cave");
             //    Square tempSquare = new Square(squareTex, new Point(300, squareTex.Bounds.Height / 2), screenScale, true, 1f);
@@ -1594,11 +1579,9 @@ namespace Irbis
 
         public void LoadUI()
         {
-            if (bars == null)
-            { bars = new Bars(LoadTexture("bar health"), LoadTexture("bar shield"), LoadTexture("bar energy"), LoadTexture("bar potion fill 1"), LoadTexture("bar enemy fill"), LoadTexture("shieldBar"), LoadTexture("bars"), LoadTexture("bar enemy"), new[] { LoadTexture("bar potion 1"), LoadTexture("bar potion 2"), LoadTexture("bar potion 3") }); }
+            bars = new Bars(LoadTexture("bar health"), LoadTexture("bar shield"), LoadTexture("bar energy"), LoadTexture("bar potion fill 1"), LoadTexture("bar enemy fill"), LoadTexture("shieldBar"), LoadTexture("bars"), LoadTexture("bar enemy"), new[] { LoadTexture("bar potion 1"), LoadTexture("bar potion 2"), LoadTexture("bar potion 3") });
             if (jamie == null)
             { LoadPlayer(); }
-            jamie.Respawn(initialPos);
         }
 
         public static Texture2D LoadTexture(string TextureFile)
@@ -2237,25 +2220,16 @@ namespace Irbis
             return false;
         }
 
-        public static void DisplayInfoText(string Text)
+        public static void DisplayInfoText(string text)
         {
-            infoText.Update(Text, true);
-            infoText.fontColor = Color.White;
+            infoText.Update(text, true);
             infoTextTimer = infoTextTimerMax;
         }
 
-        public static void DisplayInfoText(string Text, float Howlong)
+        public static void DisplayInfoText(string text, float howlong)
         {
-            infoText.Update(Text, true);
-            infoText.fontColor = Color.White;
-            infoTextTimer = Howlong;
-        }
-
-        public static void DisplayInfoText(string Text, Color FontColor)
-        {
-            infoText.Update(Text, true);
-            infoText.fontColor = FontColor;
-            infoTextTimer = infoTextTimerMax;
+            infoText.Update(text, true);
+            infoTextTimer = howlong;
         }
 
         private void DebugUpdate(Object threadContext)
@@ -2304,7 +2278,7 @@ namespace Irbis
                             catch (Exception e)
                             {
                                 WriteLine("exception caught during debug:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
-                                DisplayInfoText("exception caught during debug:" + e.Message, Color.Red);
+                                DisplayInfoText("exception caught during debug:" + e.Message);
                             }
                         }
                         break;
@@ -2383,7 +2357,6 @@ namespace Irbis
                 debuginfo.Update("\nspecialTime:" + jamie.specialTime);
                 debuginfo.Update("\nfallableSquare:" + jamie.fallableSquare);
                 debuginfo.Update("\n          animation:" + jamie.currentAnimation);
-                debuginfo.Update("\n       currentFrame:" + jamie.CurrentFrame);
                 debuginfo.Update("\nanimationSourceRect:" + jamie.animationSourceRect);
                 debuginfo.Update("\n    animationNoLoop:" + jamie.animationNoLoop);
             }
@@ -2820,7 +2793,6 @@ namespace Irbis
 
             thisLevel.SquareSpawnPoints = squareSpawns.ToArray();
             thisLevel.SquareColliders = squareColliders.ToArray();
-            thisLevel.SquareOrigins = squareOrigins.ToArray();
             thisLevel.squareDepths = squareDepths;
             thisLevel.squareTextures = squareTextures;
             thisLevel.BackgroundSquares = BackgroundSquares.ToArray();
@@ -3628,7 +3600,7 @@ namespace Irbis
                             //if (Location != null)
                             //{ tempWizardGuy = new WizardGuy(LoadTexture("wizard"), null, 500, 50, new Vector2[] { (Vector2)Location }, null, 0.45f); }
                             //else
-                            { tempWizardGuy = new WizardGuy(LoadTexture("wizard"), 2, 400, 50, null, new Rectangle(-160, -100, 1780, 360), 0.45f); }
+                            { tempWizardGuy = new WizardGuy(LoadTexture("wizard"), 2, 400, 50, null, null, 0.45f); }
                             loadingBar.Value += 8;
                             enemyList.Add(tempWizardGuy);
                             //collisionObjects.Add(tempWizardGuy);
@@ -4082,16 +4054,14 @@ namespace Irbis
                 Irbis.WriteLine(" median: " + ((minFPS + maxFPS) / 2));
             }
 
-            lock (writeLock)
-            { ExportString(developerConsole.Konsole); }
+            ExportString(developerConsole.Konsole);
         }
 
         private void CleanConsole()
         {
             while (developerConsole.lines > 10000)
             {
-                lock (writeLock)
-                { developerConsole.Clear(); }
+                developerConsole.Clear();
             }
         }
 
@@ -4118,7 +4088,7 @@ namespace Irbis
 
         public static void WriteLine(string line)
         {
-            lock (writeLock)
+            lock (writelock)
             {
                 developerConsole.WriteLine(line);
                 consoleLine = developerConsole.lines + 1;
@@ -4127,7 +4097,7 @@ namespace Irbis
 
         public static void WriteLine()
         {
-            lock (writeLock)
+            lock (writelock)
             {
                 developerConsole.WriteLine();
                 consoleLine = developerConsole.lines + 1;
@@ -4136,7 +4106,7 @@ namespace Irbis
 
         public static void Write(string line)
         {
-            lock (writeLock)
+            lock (writelock)
             { developerConsole.Write(line); }
         }
 
@@ -5466,8 +5436,7 @@ Thank you, Ze Frank, for the inspiration.";
                         WriteLine(developerConsole.lines.ToString());
                         break;
                     case "clearlog":
-                        lock (writeLock)
-                        { developerConsole.Clear(); }
+                        developerConsole.Clear();
                         break;
                     case "version":
                         PrintVersion();
@@ -5891,7 +5860,7 @@ Thank you, Ze Frank, for the inspiration.";
                             {
                                 WriteLine("");
                                 for (int i = 0; i < intResult; i++)
-                                { Write("mow"); }
+                                { developerConsole.Write("mow"); }
 
                                 if (intResult > 25)
                                 { WriteLine("It's probably pretty cluttered here now... why don't you -clearlog-?"); }
@@ -6055,7 +6024,7 @@ Thank you, Ze Frank, for the inspiration.";
                 catch (Exception e)
                 {
                     WriteLine("exception caught during draw:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
-                    DisplayInfoText("exception caught during draw:" + e.Message, Color.Red);
+                    DisplayInfoText("exception caught during draw:" + e.Message);
                 }
             }
 
@@ -6129,8 +6098,7 @@ Thank you, Ze Frank, for the inspiration.";
                         if (levelLoaded > 0 || (creditsActive && intro <= 0))
                         { // everything in this if is displayed after a game has already been started
                           //darken bg screen
-                            spriteBatch.Draw(cf, Vector2.Zero, zeroScreenspace, Color.White, 0f, Vector2.Zero, 1, SpriteEffects.None, 0.01f);
-                            spriteBatch.Draw(nullTex, zeroScreenspace, null, new Color(0, 0, 0, 0.25f), 0f, Vector2.Zero, SpriteEffects.None, 0f);
+                            spriteBatch.Draw(cf, Vector2.Zero, zeroScreenspace, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.01f);
                         }
                         else if (scene <= 0)
                         { // everything in this if is displayed ONLY on the main menu before a game has been started
@@ -6244,7 +6212,7 @@ Thank you, Ze Frank, for the inspiration.";
                     }
                     else
                     {
-                        spriteBatch.Draw(cf, Vector2.Zero, zeroScreenspace, Color.White * intro, 0f, Vector2.Zero, 1, SpriteEffects.None, 0.51f);
+                        spriteBatch.Draw(cf, Vector2.Zero, zeroScreenspace, Color.White * intro, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0.51f);
                         spriteBatch.Draw(nullTex, zeroScreenspace, null, Color.Black * (intro-1), 0f, Vector2.Zero, SpriteEffects.None, 0.52f);
                         //spriteBatch.Draw(logos[0], halfResolution.ToVector2(), null, Color.White * intro, 0f, logos[0].Bounds.Size.ToVector2() / 2, 1f, SpriteEffects.None, 1f);
                     }
@@ -6265,8 +6233,7 @@ Thank you, Ze Frank, for the inspiration.";
                 spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
                 spriteBatch.Draw(consoleTex, consoleRect, null, consoleRectColor, 0f, Vector2.Zero, SpriteEffects.None, 0.999f);
                 consoleWriteline.Draw(spriteBatch);
-                lock (writeLock)
-                { developerConsole.Draw(spriteBatch); }
+                developerConsole.Draw(spriteBatch);
                 spriteBatch.End();
             }
 

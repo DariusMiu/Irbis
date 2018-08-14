@@ -81,6 +81,12 @@ public class Player : ICollisionObject
         { return jumpable > 0; }
     }
 
+    public int CurrentFrame
+    {
+        get
+        { return currentFrame; }
+    }
+
     private Wall prevWalled;
     Texture2D tex;
     Texture2D shieldTex;
@@ -529,7 +535,7 @@ public class Player : ICollisionObject
 
     private bool Player_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack, Vector2 Damage)
     {
-        Irbis.Irbis.WriteLine("\n" + name + " attack:" + Attack);
+        Irbis.Irbis.WriteLine("\n" + name + " attack:" + Attack + " currentFrame:" + currentFrame + " attackFrame:" + attackFrame);
         return true;
     }
 
@@ -1561,11 +1567,12 @@ public class Player : ICollisionObject
         walled = Wall.Zero;
     }
 
-    public void Attack(Attacking attack)
+    public void Attack(Attacking Attack)
     {
         attacked = false;
-        attacking = attack;
+        attacking = Attack;
         SetActivity(Activity.Attacking);
+        currentFrame = 0;
     }
 
     private void Hit()
