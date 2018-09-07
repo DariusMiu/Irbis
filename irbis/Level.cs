@@ -87,7 +87,6 @@ public struct Level
     int[] GtextureDimentionsY;
     int[] Gefficiencies;
 
-
     public Point[] VendingMachineLocations
     {
         get
@@ -435,6 +434,7 @@ public struct Level
         }
     }
 
+    public Trigger[] Triggers;
 
     public Level(bool construct)
     {
@@ -510,6 +510,8 @@ public struct Level
         GtextureDimentionsX = new int[0];
         GtextureDimentionsY = new int[0];
         Gefficiencies = new int[0];
+
+        Triggers = new Trigger[0];
     }
 
     public static uint ColorToUint(Color color)
@@ -632,9 +634,11 @@ public struct Level
     private void AssignLocalVariables(Level level)
     {
         this = level;
+        Irbis.Irbis.WriteLine("               level name: " + levelName);
         Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
         Irbis.Irbis.WriteLine("       background squares: " + backgroundSquareDepths.Count);
-        Irbis.Irbis.WriteLine("               level name: " + levelName);
+        if (Triggers != null)
+        { Irbis.Irbis.WriteLine("                 triggers: " + Triggers.Length); }
         Irbis.Irbis.WriteLine("       enemy spawn points: " + EnemySpawnPoints.Length);
         Irbis.Irbis.WriteLine("              isOnslaught: " + isOnslaught);
         Irbis.Irbis.WriteLine("             player spawn: " + PlayerSpawn);

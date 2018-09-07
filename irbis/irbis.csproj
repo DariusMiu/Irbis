@@ -120,6 +120,7 @@
     <Compile Include="TooltipGenerator.cs" />
     <Compile Include="Torch.cs" />
     <Compile Include="TotalMeanFramerate.cs" />
+    <Compile Include="Trigger.cs" />
     <Compile Include="UIElementDiscreteSlider.cs" />
     <Compile Include="UIElementSlider.cs" />
     <Compile Include="VendingMachine.cs" />
@@ -132,6 +133,7 @@
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\DesktopGL\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>

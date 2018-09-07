@@ -21,7 +21,7 @@ namespace Irbis
                 {
                     Irbis.WriteLine("Exception: " + e.Message);
                     Irbis.WriteLine("Data: " + e.Data);
-                    Irbis.WriteLine("StackTrace: " + e.StackTrace);
+                    Irbis.WriteLine("StackTrace:\n" + e.StackTrace);
                     Console.WriteLine("Exception: " + e.Message);
                 }
                 finally

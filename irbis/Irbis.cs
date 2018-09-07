@@ -776,6 +776,7 @@ namespace Irbis
 
                                                                                                     // enemy/AI variables
         public static bool AIenabled;
+        public IEnemy boss;
         Texture2D enemy0Tex;
         private Vector2 bossSpawn;
         private string bossName;
@@ -911,6 +912,7 @@ namespace Irbis
         public static float deathBackgroundOpacity = 1;
         public static UIElementSlider loadingBar;
         public static float deathTimeScale;
+        public static Trigger[] Triggers;
         //static Torch torch;
 
 
@@ -1342,7 +1344,8 @@ namespace Irbis
             catch (Exception e)
             {
                 WriteLine("Error - " + filename + ".lvl could not be loaded");
-                WriteLine("Exception: " + e.Message + "\n");
+                WriteLine("Exception: " + e.Message);
+                WriteLine("Stacktrace:\n" + e.StackTrace + "\n");
                 DisplayInfoText("Error - " + filename + ".lvl could not be loaded", Color.Red);
                 loadingBar.Value = 100;
                 return;
@@ -1457,6 +1460,13 @@ namespace Irbis
             //loadBoss.Start(thisLevel);
             LoadBoss(thisLevel);
 
+            Triggers = thisLevel.Triggers;
+
+            if (Triggers != null)
+            {
+                foreach (Trigger t in Triggers)
+                { t.Check(); }
+            }
 
             justLeftMenu = true;
             if (loadingThreads <= 0) { loadEvent.Set(); }
@@ -1587,6 +1597,8 @@ namespace Irbis
             loadingBar.Value += 1;
 
             SummonBoss(bossName, bossSpawn);
+
+            Triggers = new Trigger[1]; Triggers[0] = new Trigger(typeof(LizardGuy).GetMethod("StartUp"), "boss", new Rectangle(20, 779, 579, 1), 1);
 
             if (Interlocked.Decrement(ref loadingThreads) <= 0)
             { loadEvent.Set(); }
@@ -1831,6 +1843,12 @@ namespace Irbis
                         if (deathBackgroundOpacity > 0)
                         { deathBackgroundOpacity -= RealTime; }
                     }
+
+                    if (Triggers != null)
+                    {
+                        foreach (Trigger t in Triggers)
+                        { t.Update(jamie); }
+                    }
                 }
                 else
                 {
@@ -1851,6 +1869,12 @@ namespace Irbis
                         { KillEnemy(enemyList[i]); }
                     }
                     UpdateEnemyHealthBar(null);
+
+                    if (Triggers != null)
+                    {
+                        foreach (Trigger t in Triggers)
+                        { t.Update(jamie); }
+                    }
                 }
 
                 if (timerDisplay != null) { timerDisplay.Update(TimerText(timer), true); }
@@ -2533,7 +2557,7 @@ namespace Irbis
                         foreach (IEnemy e in enemyList)
                         {
                             thisEnemysSqrDistance = DistanceSquared(jamie.Collider, e.Collider);
-                            if (thisEnemysSqrDistance < closestSqrDistance)
+                            if (thisEnemysSqrDistance < closestSqrDistance && e.AIenabled)
                             {
                                 closestSqrDistance = thisEnemysSqrDistance;
                                 closest = e;
@@ -2865,6 +2889,8 @@ namespace Irbis
             thisLevel.ParticleSystems = particleSystems.ToArray();
             thisLevel.darkness = darkness;
             thisLevel.Grasses = grassList.ToArray();
+
+            thisLevel.Triggers = Triggers;
 
 
             thisLevel.Save(".\\levels\\" + levelname + ".lvl");
@@ -3618,6 +3644,7 @@ namespace Irbis
                             loadingBar.Value += 8;
                             enemyList.Add(tempLizardGuy);
                             collisionObjects.Add(tempLizardGuy);
+                            boss = tempLizardGuy;
                             loadingBar.Value += 1;
                         }
                         break;
@@ -3632,6 +3659,7 @@ namespace Irbis
                             loadingBar.Value += 8;
                             enemyList.Add(tempWizardGuy);
                             //collisionObjects.Add(tempWizardGuy);
+                            boss = tempWizardGuy;
                             loadingBar.Value += 1;
                         }
                         break;
@@ -5854,6 +5882,13 @@ Thank you, Ze Frank, for the inspiration.";
                         { throw new Exception("test exception"); }
                         else
                         { throw new Exception(value); }
+                    case "triggers":
+                        if (Triggers != null)
+                        {
+                            foreach (Trigger t in Triggers)
+                            { WriteLine(t.ToString()); }
+                        }
+                        break;
 
 
 
@@ -5983,6 +6018,11 @@ Thank you, Ze Frank, for the inspiration.";
                     { particleSystems[i].Draw(spriteBatch); }
                     for (int i = 0; i < grassList.Count; i++)
                     { grassList[i].Draw(spriteBatch); }
+                    if (debug > 2 && Triggers != null)
+                    {
+                        foreach (Trigger t in Triggers)
+                        { t.Draw(spriteBatch); }
+                    }
                     //torch.Draw(spriteBatch);
                     if (jamie != null) { jamie.Draw(spriteBatch); }
                     if (debug > 1)

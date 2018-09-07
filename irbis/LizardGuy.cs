@@ -146,15 +146,11 @@ class LizardGuy : IEnemy
     public bool AIenabled
     {
         get
-        {
-            return aiEnabled;
-        }
+        { return aiEnabled; }
         set
-        {
-            aiEnabled = value;
-        }
+        { aiEnabled = value; }
     }
-    public bool aiEnabled = true;
+    public bool aiEnabled = false;
 
     public float Mass
     {
@@ -379,7 +375,6 @@ class LizardGuy : IEnemy
         animationFrame = new Print((int)(Irbis.Irbis.font.charHeight * 2f * Irbis.Irbis.textScale), Irbis.Irbis.font, Color.White, true, Point.Zero, Direction.Left, drawDepth + 0.001f);
 
         tex = t;
-        AIenabled = true;
 
         depth = drawDepth;
 
@@ -669,6 +664,12 @@ class LizardGuy : IEnemy
             if (Interlocked.Decrement(ref Irbis.Irbis.pendingThreads) <= 0)
             { Irbis.Irbis.doneEvent.Set(); }
         }
+    }
+
+    public void StartUp(object dump)
+    {
+        Irbis.Irbis.WriteLine(name + " starting up...");
+        aiEnabled = true;
     }
 
     public bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack, Vector2 Damage)
