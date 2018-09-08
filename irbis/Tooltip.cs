@@ -10,7 +10,12 @@ using Microsoft.Xna.Framework.Graphics;
 
 public class Tooltip
 {
-    Print text;
+    public Print Text
+    {
+        get
+        { return text; }
+    }
+    private Print text;
     Texture2D texture;
     Rectangle displayRectangle;
     float textureDepth;
@@ -24,9 +29,7 @@ public class Tooltip
     }
 
     public override string ToString()
-    {
-        return "text:" + text.ToString() + " texture:{Width:" + texture.Width + " Height:" + texture.Height + "}" + " displayRectangle:" + displayRectangle;
-    }
+    { return "text:" + text.ToString() + " texture:{Width:" + texture.Width + " Height:" + texture.Height + "}" + " displayRectangle:" + displayRectangle; }
 
     public void Draw(SpriteBatch sb)
     {

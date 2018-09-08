@@ -117,7 +117,7 @@ class WizardGuy : IEnemy
     public bool AIenabled
     {
         get
-        { return aiEnabled; }
+        { return (aiEnabled && bossState > (BossState)0); }
         set
         { aiEnabled = value; }
     }
@@ -453,6 +453,7 @@ class WizardGuy : IEnemy
                     Irbis.Irbis.CameraShake(1, 7);
                     float newYpos = Irbis.Irbis.SmoothStep(Irbis.Irbis.squareList[1].InitialPosition.Y - 150,
                         Irbis.Irbis.squareList[1].InitialPosition.Y, castingTime / 5);
+                    health = Irbis.Irbis.SmoothStep(maxHealth, 0, castingTime / 5);
                     float newrotation = Irbis.Irbis.SmoothStep(MathHelper.PiOver2, 0, castingTime / 5);
 
                     Irbis.Irbis.squareList[1].Position = new Vector2(Irbis.Irbis.squareList[1].InitialPosition.X, newYpos);
@@ -471,6 +472,7 @@ class WizardGuy : IEnemy
                     if (castingTime <= 0)
                     {
                         bossState++;
+                        health = maxHealth;
                         Irbis.Irbis.CameraShake(0.5f, 5);
                     }
                 }

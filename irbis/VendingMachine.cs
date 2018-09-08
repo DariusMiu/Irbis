@@ -217,22 +217,10 @@ public class VendingMachine
 
     public override string ToString()
     {
-        string debugstring = string.Empty;
-
-        debugstring += "{location:" + displayLocation;
-        debugstring += " depth:" + drawDepth;
-
-        //for (int i = 0; i < cost.Length; i++)
-        //{
-        //    debugstring += " cost[" + i + "]:" + cost[i];
-        //}
-
-        //for (int i = 0; i < icons.Length; i++)
-        //{
-        //    debugstring += " icon[" + i + "]:" + icons[i];
-        //}
-
-        debugstring += "}";
+        string debugstring = 
+            "{location:" + displayLocation +
+            " depth:" + drawDepth +
+            "}";
 
         return debugstring;
     }

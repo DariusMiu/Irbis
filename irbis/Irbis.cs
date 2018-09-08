@@ -170,6 +170,7 @@ namespace Irbis
         void Draw(SpriteBatch sb);
         void Light(SpriteBatch sb, bool UseColor);
         void Death();
+
     }
 
 
@@ -781,6 +782,7 @@ namespace Irbis
         private Vector2 bossSpawn;
         private string bossName;
         public List<Vector2> enemySpawnPoints;
+        public static List<IEnemy> killList;
 
                                                                                                     // UI
         public static Font font;
@@ -872,8 +874,9 @@ namespace Irbis
         private static object listLock = new object();
         private static object texLock = new object();
         private static object pngLock = new object();
+        private static object uintpngLock = new object();
 
-                                                                                                    // events
+        // events
         public delegate bool AttackEventDelegate(Rectangle AttackCollider, Attacking Attack, Vector2 Damage);
         public delegate bool ShockwaveEventDelegate(Vector2 Origin, float Range, Attacking Attack, float Power);
 
@@ -913,6 +916,8 @@ namespace Irbis
         public static UIElementSlider loadingBar;
         public static float deathTimeScale;
         public static Trigger[] Triggers;
+        public static Doodad[] Doodads;
+        //public static Doodad testdoodad;
         //static Torch torch;
 
 
@@ -971,6 +976,7 @@ namespace Irbis
             backgroundSquareList = new List<Square>();
             buttonList = new List<Button>();
             enemyList = new List<IEnemy>();
+            killList = new List<IEnemy>();
             printList = new List<Print>();
             sliderList = new List<UIElementSlider>();
             doneEvent = new ManualResetEvent(false);
@@ -1205,6 +1211,7 @@ namespace Irbis
             LoadMusic();
             PlaySong("bensound-relaxing", true);
 
+
             //WriteLine("Type 'help' for a few commands");
             Console.WriteLine("done.");
         }
@@ -1369,6 +1376,9 @@ namespace Irbis
 
             LoadSquares(thisLevel);
             LoadBackgrounds(thisLevel);
+            //Doodads = new Doodad[1];
+            //Doodads[0] = new Doodad(LoadTexture("danger"), new Point(174, 186), "Danger below!", 35, 0.499f);
+            Doodads = thisLevel.Doodads;
 
             if (jamie != null)
             {
@@ -1465,7 +1475,10 @@ namespace Irbis
             if (Triggers != null)
             {
                 foreach (Trigger t in Triggers)
-                { t.Check(); }
+                {
+                    if (!t.Check())
+                    { WriteLine(t.ToString()); }
+                }
             }
 
             justLeftMenu = true;
@@ -1598,7 +1611,7 @@ namespace Irbis
 
             SummonBoss(bossName, bossSpawn);
 
-            Triggers = new Trigger[1]; Triggers[0] = new Trigger(typeof(LizardGuy).GetMethod("StartUp"), "boss", new Rectangle(20, 779, 579, 1), 1);
+            //Triggers = new Trigger[1]; Triggers[0] = new Trigger(typeof(LizardGuy).GetMethod("StartUp"), "boss", new Rectangle(20, 779, 579, 1), 1);
 
             if (Interlocked.Decrement(ref loadingThreads) <= 0)
             { loadEvent.Set(); }
@@ -1613,6 +1626,9 @@ namespace Irbis
             jamie.Respawn(initialPos);
         }
 
+        /// <summary>
+        /// Tries to load a texture. If it fails, it attempts to load a PNG.
+        /// </summary>
         public static Texture2D LoadTexture(string TextureFile)
         {
             lock (texLock)
@@ -1623,10 +1639,18 @@ namespace Irbis
                 else if (!File.Exists(@".\content\" + TextureFile + ".xnb"))
                 { return LoadPNG(TextureFile); }
                 else
-                { return game.Content.Load<Texture2D>(TextureFile); }
+                {
+                    try
+                    { return game.Content.Load<Texture2D>(TextureFile); }
+                    catch
+                    { return LoadPNG(TextureFile); }
+                }
             }
         }
 
+        /// <summary>
+        /// Tries to load a PNG
+        /// </summary>
         public static Texture2D LoadPNG(string TextureFile)
         {
             lock (pngLock)
@@ -1646,6 +1670,37 @@ namespace Irbis
                     spriteAtlas.Name = TextureFile;
                     WriteLine();
                     return spriteAtlas;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Tries to load a PNG as uint array (uint[0] = pixel array, uint[1][0] = texture width, uint[1][1] = texture height)
+        /// </summary>
+        public static uint[][] LoadPNGasArray(string TextureFile)
+        {
+            lock (uintpngLock)
+            {
+                WriteLine("loading .png: " + TextureFile);
+
+                if (TextureFile.Length >= 4 && TextureFile.Substring(TextureFile.Length - 4, 4).ToLower().Equals(".png"))
+                { TextureFile = TextureFile.Substring(TextureFile.Length - 4, 4); }
+
+                if (string.IsNullOrWhiteSpace(TextureFile) || !File.Exists(@".\content\textures\" + TextureFile + ".png"))
+                { Write(" failed. (" + TextureFile + ")"); return null; }
+                else
+                {
+                    FileStream fileStream = new FileStream(@".\content\textures\" + TextureFile + ".png", FileMode.Open);
+                    Texture2D spriteAtlas = Texture2D.FromStream(graphics.GraphicsDevice, fileStream);
+                    fileStream.Dispose();
+                    uint[][] returnArray = new uint[2][];
+                    returnArray[0] = new uint[spriteAtlas.Width * spriteAtlas.Height];
+                    returnArray[1] = new uint[2];
+                    spriteAtlas.GetData(returnArray[0]);
+                    returnArray[1][0] = (uint)spriteAtlas.Width;
+                    returnArray[1][1] = (uint)spriteAtlas.Height;
+                    WriteLine();
+                    return returnArray;
                 }
             }
         }
@@ -1796,6 +1851,11 @@ namespace Irbis
             previousGamePadState = gamePadState;
             if (pendingThreads <= 0) { doneEvent.Set(); }
             doneEvent.WaitOne();
+
+            // must be sure that all enemies have finished updating to avoid conflicts
+            for (int i = killList.Count - 1; i >= 0; i--)
+            { RemoveEnemy(killList[i]); }
+
             base.Update(gameTime);
         }
 
@@ -1865,8 +1925,8 @@ namespace Irbis
                     for (int i = enemyList.Count - 1; i >= 0; i--)
                     {
                         enemyList[i].Update();
-                        if (enemyList[i].Health <= 0 || enemyList[i].Position.Y > 5000f)
-                        { KillEnemy(enemyList[i]); }
+                        //if (enemyList[i].Health <= 0 || enemyList[i].Position.Y > 5000f)
+                        //{ KillEnemy(enemyList[i]); }
                     }
                     UpdateEnemyHealthBar(null);
 
@@ -1876,6 +1936,10 @@ namespace Irbis
                         { t.Update(jamie); }
                     }
                 }
+
+                for (int i = Doodads.Length - 1; i >= 0; i--)
+                { Doodads[i].Update(jamie); }
+                
 
                 if (timerDisplay != null) { timerDisplay.Update(TimerText(timer), true); }
 
@@ -2445,23 +2509,25 @@ namespace Irbis
                     //debuginfo.Update("\nYDistance:" + YDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
                     //debuginfo.Update("\n Distance:" + Distance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
                     //debuginfo.Update("\n Arena side closest:" + SideClosest(((LizardGuy)enemyList[0]).bossArena, Irbis.jamie.Collider));
-                    debuginfo.Update("\n\n   Lizard Activity:" + ((LizardGuy)enemyList[0]).activity);
-                    debuginfo.Update("\n  melee activities:" + ((LizardGuy)enemyList[0]).meleeActivitiesInARow);
+                    //debuginfo.Update("\n\n   Lizard Activity:" + ((LizardGuy)enemyList[0]).activity);
+                    //debuginfo.Update("\n  melee activities:" + ((LizardGuy)enemyList[0]).meleeActivitiesInARow);
                     //debuginfo.Update("\n  proper direction:" + Directions(((LizardGuy)enemyList[0]).TrueCollider, jamie.Collider));
                     //debuginfo.Update("\n         Direction:" + ((LizardGuy)enemyList[0]).direction);
                     //debuginfo.Update("\n         Animation:" + ((LizardGuy)enemyList[0]).currentAnimation);
                     //debuginfo.Update("\n             speed:" + ((LizardGuy)enemyList[0]).animationSpeed[((LizardGuy)enemyList[0]).currentAnimation]);
                     //debuginfo.Update("\n\n ActivelyAttacking:" + ((LizardGuy)enemyList[0]).ActivelyAttacking);
-                    debuginfo.Update("\n     ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
+                    //debuginfo.Update("\n     ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
                     //debuginfo.Update("\ntimeSinceLastFrame:" + ((LizardGuy)enemyList[0]).timeSinceLastFrame);
                     //debuginfo.Update("\n            frames:" + ((LizardGuy)enemyList[0]).animationFrames[((LizardGuy)enemyList[0]).currentAnimation]);
-                    debuginfo.Update("\n          velocity:" + ((LizardGuy)enemyList[0]).Velocity);
-                    debuginfo.Update("\n         direction:" + ((LizardGuy)enemyList[0]).direction);
+                    debuginfo.Update("\n velocity:" + ((LizardGuy)enemyList[0]).Velocity);
+                    debuginfo.Update("\n Collider:" + ((LizardGuy)enemyList[0]).TrueCollider);
+                    debuginfo.Update("\nbossState:" + ((LizardGuy)enemyList[0]).bossState);
+                    //debuginfo.Update("\n         direction:" + ((LizardGuy)enemyList[0]).direction);
                     //debuginfo.Update("\n              stun:" + ((LizardGuy)enemyList[0]).stunned);
-                    debuginfo.Update("\n              roll:" + ((LizardGuy)enemyList[0]).state[1] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[1]);
-                    debuginfo.Update("\n             swipe:" + ((LizardGuy)enemyList[0]).state[2] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[2]);
-                    debuginfo.Update("\n              bury:" + ((LizardGuy)enemyList[0]).state[4] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[4]);
-                    debuginfo.Update("\n            wander:" + ((LizardGuy)enemyList[0]).state[0] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[0]);
+                    //debuginfo.Update("\n              roll:" + ((LizardGuy)enemyList[0]).state[1] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[1]);
+                    //debuginfo.Update("\n             swipe:" + ((LizardGuy)enemyList[0]).state[2] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[2]);
+                    //debuginfo.Update("\n              bury:" + ((LizardGuy)enemyList[0]).state[4] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[4]);
+                    //debuginfo.Update("\n            wander:" + ((LizardGuy)enemyList[0]).state[0] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[0]);
                     debuginfo.Update("\n");
                 }
                 else if (enemyList[0].GetType() == typeof(WizardGuy))
@@ -2607,6 +2673,7 @@ namespace Irbis
                 ClearUI();
                 levelEditor = sceneIsMenu = true;
                 enemyList.Clear();
+                killList.Clear();
                 texturePanel = new Rectangle((int)((float)resolution.X * 0.8f), 0, (int)((float)resolution.X * 0.2f), resolution.Y);
                 buttonList.Add(new Button(new Rectangle(texturePanel.X + 10, 10, 30 * textScale, 16 * textScale), Direction.Forward, "01", ">01",
                     new Color(223, 227, 236), nullTex, font, Color.Magenta, false, true, 0.9f));
@@ -2891,6 +2958,7 @@ namespace Irbis
             thisLevel.Grasses = grassList.ToArray();
 
             thisLevel.Triggers = Triggers;
+            thisLevel.Doodads = Doodads;
 
 
             thisLevel.Save(".\\levels\\" + levelname + ".lvl");
@@ -2912,9 +2980,14 @@ namespace Irbis
             //printList.Add(infoText);
             //eList.Clear();
             enemyList.Clear();
+            killList.Clear();
             squareList.Clear();
             collisionObjects.Clear();
             backgroundSquareList.Clear();
+            CameraShake(0, 0);
+            Doodads = new Doodad[0];
+            Triggers = new Trigger[0];
+            boss = null;
             if (jamie != null)
             { jamie.PlayerEventsReset(); }
 
@@ -3585,6 +3658,7 @@ namespace Irbis
                 jamie.Respawn(initialPos);
                 CameraShake(0, 0);
                 enemyList.Clear();
+                killList.Clear();
                 if (onslaughtMode)
                 { onslaughtSpawner = new OnslaughtSpawner(); }
                 else
@@ -3640,7 +3714,7 @@ namespace Irbis
                     case "lizard":
                         {
                             loadingBar.Value += 1;
-                            LizardGuy tempLizardGuy = new LizardGuy(LoadTexture("Lizard"), Location, 999, 50, 500, null, 0.45f);
+                            LizardGuy tempLizardGuy = new LizardGuy(LoadTexture("Lizard"), null, 999, 50, 500, null, 0.45f);
                             loadingBar.Value += 8;
                             enemyList.Add(tempLizardGuy);
                             collisionObjects.Add(tempLizardGuy);
@@ -3668,26 +3742,32 @@ namespace Irbis
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public static void KillEnemy(IEnemy killMe)
+        private static void RemoveEnemy(IEnemy KillMe)
         {
-            WriteLine("removing enemy. index:" + enemyList.IndexOf(killMe));
-
-            enemyList[enemyList.IndexOf(killMe)].Death();
-
-            if (enemyList.Contains(killMe))
+            if (enemyList.Contains(KillMe))
             {
-                enemyList.Remove(killMe);
+                int enemyIndex = enemyList.IndexOf(KillMe);
+                WriteLine("removing enemy. index:" + enemyIndex);
+                enemyList[enemyIndex].Death();
+                enemyList.RemoveAt(enemyIndex);
                 WriteLine("successfully removed from enemyList.");
             }
-            if (collisionObjects.Contains(killMe))
+            if (collisionObjects.Contains(KillMe))
             {
-                if (jamie.collided.Contains(killMe))
-                { jamie.RemoveCollision(killMe); }
-                collisionObjects.Remove(killMe);
+                if (jamie.collided.Contains(KillMe))
+                { jamie.RemoveCollision(KillMe); }
+                collisionObjects.Remove(KillMe);
                 WriteLine("successfully removed from collisionObjects.");
             }
             if (onslaughtMode) { onslaughtSpawner.EnemyKilled(); }
             WriteLine("done.");
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static void KillEnemy(IEnemy KillMe)
+        {
+            if (!killList.Contains(KillMe))
+            { killList.Add(KillMe); }
         }
 
         public void Load(PlayerSettings settings)
@@ -3925,20 +4005,14 @@ namespace Irbis
                     if (!char.IsDigit(c))
                     {
                         if (c.Equals('b') || c.Equals('o'))
-                        {
-                            encounteredMapChar = true;
-                        }
+                        { encounteredMapChar = true; }
                     }
                     else
                     {
                         if (encounteredMapChar)
-                        {
-                            map += c;
-                        }
+                        { map += c; }
                         else
-                        {
-                            chapter += c;
-                        }
+                        { chapter += c; }
                     }
                 }
 
@@ -5293,8 +5367,8 @@ Thank you, Ze Frank, for the inspiration.";
                         jamie.Noclip();
                         break;
                     case "killall":
-                        //eList.Clear();
-                        enemyList.Clear();
+                        foreach (Enemy e in enemyList)
+                        { KillEnemy(e); }
                         break;
                     case "savelevel":
                         if (string.IsNullOrWhiteSpace(value))
@@ -5849,7 +5923,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "printenemies":
                         for (int i = 0; i < enemyList.Count; i++)
                         {
-                            WriteLine("enemyList[" + i + "]:" + enemyList[i] + " Position:" + enemyList[i].Position + " Health:" + enemyList[i].Health + " StunTime:" + enemyList[i].StunTime);
+                            WriteLine("enemyList[" + i + "]:" + enemyList[i]);
                         }
                         break;
                     case "stunme":
@@ -5989,6 +6063,28 @@ Thank you, Ze Frank, for the inspiration.";
             return (Texture2D)renderTarget;
         }
 
+        public static Texture2D GenerateCircle(int radius, Color CircleColor)
+        {
+            uint[] pixels = new uint[radius * radius * 4];
+            uint color = Level.ColorToUint(CircleColor);
+            float x, y, angle, minAngle;
+            minAngle = 1f / (radius * MathHelper.TwoPi);
+            angle = 0;
+            while (angle < MathHelper.TwoPi)
+            {
+                x = (radius * (float)Math.Sin(angle)) + radius;
+                y = (radius * (float)Math.Cos(angle)) + radius;
+                try
+                { pixels[(int)y * radius * 2 + (int)x] = color; }
+                catch
+                { Irbis.WriteLine("radius:" + radius + " x:" + x + " y:" + y + " y*radius*2+x:" + (y * radius * 2 + x) + " radius*radius*4:" + (radius * radius * 4)); }
+                angle += minAngle;
+            }
+            Texture2D circle = new Texture2D(Irbis.game.GraphicsDevice, radius * 2, radius * 2);
+            circle.SetData(pixels);
+            return circle;
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             // TODO: Add your drawing code here    --------------------------------------------------------------------------------------------
@@ -6013,6 +6109,9 @@ Thank you, Ze Frank, for the inspiration.";
                     { squareList[i].Draw(spriteBatch); }
                     for (int i = enemyList.Count - 1; i >= 0; i--)
                     { if (enemyList[i] != null) { enemyList[i].Draw(spriteBatch); } }
+
+                    for (int i = Doodads.Length - 1; i >= 0; i--)
+                    { Doodads[i].Draw(spriteBatch); }
 
                     for (int i = particleSystems.Count - 1; i >= 0; i--)
                     { particleSystems[i].Draw(spriteBatch); }
@@ -6146,6 +6245,8 @@ Thank you, Ze Frank, for the inspiration.";
 
                 if (debug > 1)
                 { RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false); }
+
+                infoText.Draw(spriteBatch);
                 spriteBatch.End();
             }
             // --------------------------------------------------------------------------------------------------------------------------------
@@ -6258,7 +6359,6 @@ Thank you, Ze Frank, for the inspiration.";
                     // debug stuff
                     debuginfo.Draw(spriteBatch);
                     topright.Draw(spriteBatch);
-                    infoText.Draw(spriteBatch);
 
                     if (lastMenuScene == 3 && menuSelection >= 0 && menuSelection <= 3)
                     { RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false); }

@@ -86,6 +86,13 @@ public struct Level
     int[] GtextureDimentionsX;
     int[] GtextureDimentionsY;
     int[] Gefficiencies;
+    // Doodads
+    string[] Dtextures;
+    int[] DPositionsX;
+    int[] DPositionsY;
+    string[] Dtexts;
+    int[] Ddistances;
+    float[] Ddepths;
 
     public Point[] VendingMachineLocations
     {
@@ -402,8 +409,8 @@ public struct Level
             }
             catch (Exception e)
             {
-                Irbis.Irbis.WriteLine("exception caught during grass get:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
-                Irbis.Irbis.DisplayInfoText("exception caught during grass get:" + e.Message);
+                Irbis.Irbis.WriteLine("exception caught during Grass get:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
+                Irbis.Irbis.DisplayInfoText("exception caught during Grass get:" + e.Message);
             }
             return new Grass[0];
         }
@@ -430,6 +437,47 @@ public struct Level
                 GtextureDimentionsX[i] = value[i].textureDimentions.X;
                 GtextureDimentionsY[i] = value[i].textureDimentions.Y;
                 Gefficiencies[i] = value[i].Efficiency;
+            }
+        }
+    }
+    public Doodad[] Doodads
+    {
+        get
+        {
+            try
+            {
+                if (Dtextures.Length == DPositionsX.Length && DPositionsX.Length == DPositionsY.Length && DPositionsY.Length == Dtexts.Length &&
+                    Dtexts.Length == Ddistances.Length && Ddistances.Length == Ddepths.Length)
+                {
+                    int length = Dtextures.Length;
+                    Doodad[] doodads = new Doodad[length];
+                    for (int i = 0; i < length; i++)
+                    {
+                        doodads[i] = new Doodad(Irbis.Irbis.LoadTexture(Dtextures[i]), new Point(DPositionsX[i], DPositionsY[i]), Dtexts[i], Ddistances[i], Ddepths[i]);
+                    }
+                    return doodads;
+                }
+                else { throw new ArraysNotSameLengthException(); }
+            }
+            catch (Exception e)
+            {
+                Irbis.Irbis.WriteLine("exception caught during Doodad get:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
+                Irbis.Irbis.DisplayInfoText("exception caught during Doodad get:" + e.Message);
+            }
+            return new Doodad[0];
+        }
+        set
+        {
+            int length = value.Length;
+            InitializeDoodads(length);
+            for (int i = 0; i < length; i++)
+            {
+                Dtextures[i] = value[i].tex.Name;
+                DPositionsX[i] = (int)value[i].position.X;
+                DPositionsY[i] = (int)value[i].position.Y;
+                Dtexts[i] = value[i].tooltip.Text.statement;
+                Ddistances[i] = value[i].ToolTipDistance;
+                Ddepths[i] = value[i].depth;
             }
         }
     }
@@ -512,6 +560,14 @@ public struct Level
         Gefficiencies = new int[0];
 
         Triggers = new Trigger[0];
+
+        Dtextures = new string[0];
+        DPositionsX = new int[0];
+        DPositionsY = new int[0];
+        Dtexts = new string[0];
+        Ddistances = new int[0];
+        Ddepths = new float[0];
+
     }
 
     public static uint ColorToUint(Color color)
@@ -580,6 +636,16 @@ public struct Level
         PSFrames = new int[length][];
         PSAnimationDelay = new float[length];
         PSTimeToLive = new float[length];
+    }
+
+    public void InitializeDoodads(int length)
+    {
+        Dtextures = new string[length];
+        DPositionsX = new int[length];
+        DPositionsY = new int[length];
+        Dtexts = new string[length];
+        Ddistances = new int[length];
+        Ddepths = new float[length];
     }
 
     public void Load(string filename)

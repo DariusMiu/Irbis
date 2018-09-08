@@ -45,8 +45,11 @@ public class Trigger
         inst = Instance;
         instance = Irbis.Irbis.game.GetType().GetField(inst).GetValue(Irbis.Irbis.game);
         collider = Area;
-        repeat = Count;
-	}
+        if (Count == 0)
+        { repeat = -1; }
+        else
+        { repeat = Count; }
+    }
 
     public void Update(ICollisionObject CollisionObject)
     {
@@ -54,7 +57,14 @@ public class Trigger
         {
             if (collider.Intersects(CollisionObject.Collider))
             {
-                function.Invoke(instance, new object[]{CollisionObject});
+                try
+                { function.Invoke(instance, new object[] { CollisionObject }); }
+                catch (Exception e)
+                {
+                    Irbis.Irbis.WriteLine("Trigger Exception: " + e.Message);
+                    Irbis.Irbis.WriteLine("Stacktrace:\n" + e.StackTrace + "\n");
+                    Irbis.Irbis.DisplayInfoText("Trigger Exception: " + e.Message, Color.Red);
+                }
                 if (repeat > 0)
                 { repeat--; }
             }
@@ -64,18 +74,12 @@ public class Trigger
     public bool Check()
     {
         bool check = true;
+        function = type.GetMethod(serializedFunction);
         if (function == null)
-        {
-            function = type.GetMethod(serializedFunction);
-            if (function == null)
-            { check = false; }
-        }
+        { check = false; }
+        instance = Irbis.Irbis.game.GetType().GetField(inst).GetValue(Irbis.Irbis.game);
         if (instance == null)
-        {
-            instance = Irbis.Irbis.game.GetType().GetField(inst).GetValue(Irbis.Irbis.game);
-            if (instance == null)
-            { check = false; Irbis.Irbis.WriteLine("inst:" + inst); }
-        }
+        { check = false; }
         return check;
     }
 
@@ -113,8 +117,8 @@ public class Trigger
         //type = typeof(LizardGuy);
         instance = Irbis.Irbis.game.GetType().GetField(inst).GetValue(Irbis.Irbis.game);
         function = type.GetMethod(serializedFunction);
-        serializedFunction = null;
         rect = null;
+        //serializedFunction = null;
         //type = null;
     }
 
@@ -130,6 +134,6 @@ public class Trigger
 
     public void Draw(SpriteBatch sb)
     { //ff7f00 // Color(255, 127, 0)
-        RectangleBorder.Draw(sb, collider, Color.DarkOrange, true);
+        RectangleBorder.Draw(sb, collider, Color.Cyan, true);
     }
 }

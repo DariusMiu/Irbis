@@ -54,15 +54,17 @@ class LizardGuy : IEnemy
     public Vector2 Position
     {
         get
-        {
-            return position;
-        }
+        { return position; }
         set
-        {
-            position = value;
-        }
+        { position = value; }
     }
     private Vector2 position;
+
+    public Vector2 TrueCenter
+    {
+        get
+        { return new Vector2(position.X + standardCollider.X + (standardCollider.Width / 2f), position.Y + standardCollider.Y + (standardCollider.Height / 2f)); }
+    }
 
     public Vector2 Velocity
     {
@@ -146,11 +148,11 @@ class LizardGuy : IEnemy
     public bool AIenabled
     {
         get
-        { return aiEnabled; }
+        { return (aiEnabled && bossState > 0); }
         set
         { aiEnabled = value; }
     }
-    public bool aiEnabled = false;
+    public bool aiEnabled = true;
 
     public float Mass
     {
@@ -225,8 +227,7 @@ class LizardGuy : IEnemy
     public Rectangle displayRect;
     public Rectangle animationSourceRect;
     Rectangle testCollider;
-    public Point colliderOffset;
-    public Point colliderSize;
+    public Rectangle standardCollider;
     public float terminalVelocity = 5000f;
 
     float depth;
@@ -349,8 +350,9 @@ class LizardGuy : IEnemy
     public Collided collided;
 
     public int[] state = new int[5];
-    public float[] cooldown = new float[5];
-    
+    public float[] cooldown = new float[6];
+
+    public BossState bossState = (BossState)(-1);
 
     public LizardGuy(Texture2D t, Vector2? iPos, float enemyHealth, float enemyDamage, float enemySpeed, Rectangle? BossArena, float drawDepth)
     {
@@ -359,6 +361,7 @@ class LizardGuy : IEnemy
         cooldown[2] = 03f; // swipe
         //cooldown[3] = 00f; // none
         cooldown[4] = 15f; // bury
+        cooldown[5] = 0f; // entrance
 
         collided = new Collided();
 
@@ -388,11 +391,11 @@ class LizardGuy : IEnemy
 
         speed = defaultSpeed = enemySpeed;
         animationNoLoop = false;
-        colliderOffset = new Point(44, 26);
-        collider.Size = trueCollider.Size = colliderSize = new Point(60, 100);
+        standardCollider.Location = new Point(44, 26);
+        collider.Size = trueCollider.Size = standardCollider.Size = new Point(60, 100);
 
-        position.X -= colliderOffset.X;
-        position.Y -= colliderOffset.Y;
+        position.X -= standardCollider.X;
+        position.Y -= standardCollider.Y;
 
         maxHealth = health = enemyHealth;
         lastHitByAttackID = -1;
@@ -497,18 +500,14 @@ class LizardGuy : IEnemy
         }
 
         if (iPos == null)
-        { position = bossArena.Center.ToVector2(); }
+        { position = new Vector2(bossArena.X - standardCollider.X - standardCollider.Width / 2, bossArena.Y - standardCollider.Y - standardCollider.Height); }
         else
         { position = (Vector2)iPos; }
 
-        if ((bossArena.Height - colliderSize.Y) > 300)
-        {
-            rollLeapInitialYvelocity = -(float)Math.Sqrt(2 * Irbis.Irbis.gravity * mass * 300);
-        }
+        if ((bossArena.Height - standardCollider.Height) > 300)
+        { rollLeapInitialYvelocity = -(float)Math.Sqrt(2 * Irbis.Irbis.gravity * mass * 300); }
         else
-        {
-            rollLeapInitialYvelocity = -(float)Math.Sqrt(2 * Irbis.Irbis.gravity * mass * (bossArena.Height - colliderSize.Y));
-        }
+        { rollLeapInitialYvelocity = -(float)Math.Sqrt(2 * Irbis.Irbis.gravity * mass * (bossArena.Height - standardCollider.Height)); }
         rollLeapTime = -rollLeapInitialYvelocity / (Irbis.Irbis.gravity * mass);
         Irbis.Irbis.WriteLine("rollLeapInitialYvelocity:" + rollLeapInitialYvelocity + " rollLeapTime:" + rollLeapTime);
 
@@ -521,132 +520,170 @@ class LizardGuy : IEnemy
         prevInput = input;
         input = Point.Zero;
         frameInput = false;
-
-        if (Irbis.Irbis.jamie != null)
+        switch (bossState)
         {
-            if (aiEnabled && !ActivelyAttacking && cooldown[0] <= 0 && stunned <= 0 && walled.Bottom > 0)
-            {
-                Direction playerDirection = Irbis.Irbis.Directions(trueCollider, Irbis.Irbis.jamie.Collider);
-                if (meleeActivitiesInARow >= meleeActivityLimit)
+            case BossState.Spawn:
+                velocity.X = bossArena.Width / ((float)Math.Sqrt(bossArena.Height * 2f / Irbis.Irbis.gravity));
+                velocity.Y = Irbis.Irbis.gravity * mass * Irbis.Irbis.DeltaTime;
+                direction = Direction.Right;
+                SetAnimation(0, false);
+                bossState = BossState.Entrance;
+                Irbis.Irbis.WriteLine(this.ToString());
+                break;
+            case BossState.Entrance:
+                velocity.Y += Irbis.Irbis.gravity * mass * Irbis.Irbis.DeltaTime;
+                health = Irbis.Irbis.Clamp(maxHealth * (((float)trueCollider.Bottom - (float)bossArena.Top) / (float)bossArena.Height), 0, maxHealth);
+                
+                if (trueCollider.Bottom >= bossArena.Bottom)
                 {
-                    Irbis.Irbis.WriteLine(name + " melee activity limit reached.");
-                    if (Irbis.Irbis.RandomBool)
-                    { TriggerBuryAttack(); }
-                    else
+                    Irbis.Irbis.CameraShake(0.5f, 15f);
+                    Collision(Irbis.Irbis.collisionObjects);
+                    velocity = Vector2.Zero;
+                    cooldown[5] = 0f;
+                    health = maxHealth;
+                    bossState = BossState.Engage;
+                    Irbis.Irbis.WriteLine(this.ToString());
+                }
+                break;
+            case BossState.Engage:
+                cooldown[5] += Irbis.Irbis.DeltaTime;
+                velocity = Vector2.Zero;
+                if (cooldown[5] >= 3f)
+                {
+                    cooldown[5] = 0;
+                    bossState = BossState.Combat;
+                    Irbis.Irbis.WriteLine(this.ToString());
+                }
+                break; 
+            case BossState.Combat:
+                if (Irbis.Irbis.jamie != null)
+                {
+                    if (aiEnabled && !ActivelyAttacking && cooldown[0] <= 0 && stunned <= 0 && walled.Bottom > 0)
                     {
-                        if (Irbis.Irbis.Directions(bossArena, trueCollider) == Direction.Right)
-                        { state[1] = 2; /*state = 2 to roll right*/ }
-                        else
-                        { state[1] = 1; /*state = 1 to roll left*/ }
-                    }
-                    
-                    meleeActivitiesInARow = 0;
-                }
-                else if (playerDirection != direction && playerDirection != Direction.Forward)
-                { // turn around
-                    Irbis.Irbis.WriteLine(name + " not facing player. turning around...");
-                    direction = playerDirection;
-                    activity = LizardActivity.TurningAround;
-                    meleeActivitiesInARow++;
-                }
-                else if (Irbis.Irbis.jamie.Collider.Center.X < bossArena.Center.X && trueCollider.Center.X < bossArena.Center.X && Irbis.Irbis.jamie.stunTime <= 0.5f && cooldown[1] <= 0)
-                { // roll left
-                    //player is on left side of screen
-                    //leap to right side of screen, roll to the left
-                    Irbis.Irbis.WriteLine(name + " roll attack: roll left");
-                    state[1] = 1;   //state = 1 to roll left
-                    meleeActivitiesInARow = 0;
-                }
-                else if (Irbis.Irbis.jamie.Collider.Center.X > bossArena.Center.X && trueCollider.Center.X > bossArena.Center.X && Irbis.Irbis.jamie.stunTime <= 0.5f && cooldown[1] <= 0)
-                { // roll right
-                    //player is on right side of screen
-                    //leap to left side of screen, roll to the right
-                    Irbis.Irbis.WriteLine(name + " roll attack: roll right");
-                    state[1] = 2;   //state = 2 to roll right
-                    meleeActivitiesInARow = 0;
-                }
-                else if ((cooldown[4] <= 0 && Irbis.Irbis.XDistance(trueCollider, Irbis.Irbis.jamie.Collider) > swipeRange))
-                { // bury
-                    //Irbis.Irbis.WriteLine(name + " bury");
-                    TriggerBuryAttack();
-                    meleeActivitiesInARow = 0;
-                }
-                else if (cooldown[2] <= 0 && Irbis.Irbis.XDistance(trueCollider, Irbis.Irbis.jamie.Collider) <= swipeRange)
-                { // swipe/tailwhip
-                    meleeActivitiesInARow++;
-                    if (direction == playerDirection)
-                    {
-                        // use rng to determine if it's a swipe or tailwhip
-                        if (Irbis.Irbis.RandomInt(3) > 0)
+                        Direction playerDirection = Irbis.Irbis.Directions(trueCollider, Irbis.Irbis.jamie.Collider);
+                        if (meleeActivitiesInARow >= meleeActivityLimit)
                         {
-                            Irbis.Irbis.WriteLine(name + " swipe");
-                            if (direction == Direction.Left)
-                            { state[2] = 1; }
+                            Irbis.Irbis.WriteLine(name + " melee activity limit reached.");
+                            if (Irbis.Irbis.RandomBool)
+                            { TriggerBuryAttack(); }
                             else
-                            { state[2] = 2; }
-                            activity = LizardActivity.Swipe;
+                            {
+                                if (Irbis.Irbis.Directions(bossArena, trueCollider) == Direction.Right)
+                                { state[1] = 2; /*state = 2 to roll right*/ }
+                                else
+                                { state[1] = 1; /*state = 1 to roll left*/ }
+                            }
+
+                            meleeActivitiesInARow = 0;
+                        }
+                        else if (playerDirection != direction && playerDirection != Direction.Forward)
+                        { // turn around
+                            Irbis.Irbis.WriteLine(name + " not facing player. turning around...");
+                            direction = playerDirection;
+                            activity = LizardActivity.TurningAround;
+                            meleeActivitiesInARow++;
+                        }
+                        else if (Irbis.Irbis.jamie.Collider.Center.X < bossArena.Center.X && trueCollider.Center.X < bossArena.Center.X && Irbis.Irbis.jamie.stunTime <= 0.5f && cooldown[1] <= 0)
+                        { // roll left
+                          //player is on left side of screen
+                          //leap to right side of screen, roll to the left
+                            Irbis.Irbis.WriteLine(name + " roll attack: roll left");
+                            state[1] = 1;   //state = 1 to roll left
+                            meleeActivitiesInARow = 0;
+                        }
+                        else if (Irbis.Irbis.jamie.Collider.Center.X > bossArena.Center.X && trueCollider.Center.X > bossArena.Center.X && Irbis.Irbis.jamie.stunTime <= 0.5f && cooldown[1] <= 0)
+                        { // roll right
+                          //player is on right side of screen
+                          //leap to left side of screen, roll to the right
+                            Irbis.Irbis.WriteLine(name + " roll attack: roll right");
+                            state[1] = 2;   //state = 2 to roll right
+                            meleeActivitiesInARow = 0;
+                        }
+                        else if ((cooldown[4] <= 0 && Irbis.Irbis.XDistance(trueCollider, Irbis.Irbis.jamie.Collider) > swipeRange))
+                        { // bury
+                          //Irbis.Irbis.WriteLine(name + " bury");
+                            TriggerBuryAttack();
+                            meleeActivitiesInARow = 0;
+                        }
+                        else if (cooldown[2] <= 0 && Irbis.Irbis.XDistance(trueCollider, Irbis.Irbis.jamie.Collider) <= swipeRange)
+                        { // swipe/tailwhip
+                            meleeActivitiesInARow++;
+                            if (direction == playerDirection)
+                            {
+                                // use rng to determine if it's a swipe or tailwhip
+                                if (Irbis.Irbis.RandomInt(3) > 0)
+                                {
+                                    Irbis.Irbis.WriteLine(name + " swipe");
+                                    if (direction == Direction.Left)
+                                    { state[2] = 1; }
+                                    else
+                                    { state[2] = 2; }
+                                    activity = LizardActivity.Swipe;
+                                }
+                                else
+                                {
+                                    Irbis.Irbis.WriteLine(name + " tailwhip");
+                                    if (direction == Direction.Left)
+                                    { state[3] = 1; }
+                                    else
+                                    { state[3] = 2; }
+                                    activity = LizardActivity.Tailwhip;
+                                }
+                            }
+                            else
+                            {
+                                Irbis.Irbis.WriteLine(name + " swipe/tailwhip failed, facing wrong direction. turning around... (ERROR)");
+                                cooldown[2] = 0.5f;
+                                if (direction == Direction.Left)
+                                { direction = Direction.Right; }
+                                else
+                                { direction = Direction.Left; }
+                                Stun(0.5f);
+                                activity = LizardActivity.TurningAround;
+                            }
                         }
                         else
-                        {
-                            Irbis.Irbis.WriteLine(name + " tailwhip");
-                            if (direction == Direction.Left)
-                            { state[3] = 1; }
-                            else
-                            { state[3] = 2; }
-                            activity = LizardActivity.Tailwhip;
+                        { // wander around, maybe yell a bit, just don't look like a doofus
+                            Wander((Irbis.Irbis.RandomInt(3) + 1));
                         }
                     }
-                    else
+                }
+
+                if (Irbis.Irbis.IsTouching(trueCollider, Irbis.Irbis.jamie.Collider))
+                {
+                    if (stunned <= 0)
                     {
-                        Irbis.Irbis.WriteLine(name + " swipe/tailwhip failed, facing wrong direction. turning around... (ERROR)");
-                        cooldown[2] = 0.5f;
-                        if (direction == Direction.Left)
-                        { direction = Direction.Right; }
-                        else
-                        { direction = Direction.Left; }
-                        Stun(0.5f);
-                        activity = LizardActivity.TurningAround;
+                        collider = Rectangle.Empty;
+                        if (state[1] >= 9 && Irbis.Irbis.jamie.HurtOnTouch(rollDamage / 2, Irbis.Irbis.Directions(Irbis.Irbis.jamie.Collider.Center, TrueCollider.Center)))
+                        { OnTouch(trueCollider, rollKnockback); }
+                        else if (state[1] > 0 && Irbis.Irbis.jamie.HurtOnTouch(rollDamage, Irbis.Irbis.Directions(Irbis.Irbis.jamie.Collider.Center, TrueCollider.Center)))
+                        { OnTouch(trueCollider, rollKnockback); }
+                        else if (Irbis.Irbis.jamie.HurtOnTouch(10f, Irbis.Irbis.Directions(Irbis.Irbis.jamie.Collider.Center, TrueCollider.Center)))
+                        { OnTouch(trueCollider, swipeKnockback); }
+                    }
+                    else if (Irbis.Irbis.jamie.collided.Horizontal || Irbis.Irbis.jamie.collided.Vertical)
+                    {
+                        collider = Rectangle.Empty;
+                        OnTouch(trueCollider, swipeKnockback);
                     }
                 }
-                else
-                { // wander around, maybe yell a bit, just don't look like a doofus
-                    Wander((Irbis.Irbis.RandomInt(3) + 1));
-                }
-            }
-        }
+                else if (collider == Rectangle.Empty && Irbis.Irbis.jamie.invulnerableOnTouch <= 0)
+                { collider = trueCollider; }
 
-        if (Irbis.Irbis.IsTouching(trueCollider, Irbis.Irbis.jamie.Collider))
-        {
-            if (stunned <= 0)
-            {
-                collider = Rectangle.Empty;
-                if (state[1] >= 9 && Irbis.Irbis.jamie.HurtOnTouch(rollDamage / 2, Irbis.Irbis.Directions(Irbis.Irbis.jamie.Collider.Center, TrueCollider.Center)))
-                {
-                    OnTouch(trueCollider, rollKnockback);
-                }
-                else if (state[1] > 0 && Irbis.Irbis.jamie.HurtOnTouch(rollDamage, Irbis.Irbis.Directions(Irbis.Irbis.jamie.Collider.Center, TrueCollider.Center)))
-                {
-                    OnTouch(trueCollider, rollKnockback);
-                }
-                else if (Irbis.Irbis.jamie.HurtOnTouch(10f, Irbis.Irbis.Directions(Irbis.Irbis.jamie.Collider.Center, TrueCollider.Center)))
-                {
-                    OnTouch(trueCollider, swipeKnockback);
-                }
-            }
-            else if (Irbis.Irbis.jamie.collided.Horizontal || Irbis.Irbis.jamie.collided.Vertical)
-            {
-                collider = Rectangle.Empty;
-                OnTouch(trueCollider, swipeKnockback);
-            }
+                if (health <= 0 || position.Y > 5000f)
+                { Irbis.Irbis.KillEnemy(this); }
+                break;
+            case BossState.Disengage:
+                break;
+            case BossState.Death:
+                break;
         }
-        else if (collider == Rectangle.Empty && Irbis.Irbis.jamie.invulnerableOnTouch <= 0)
-        { collider = trueCollider; }
 
 
         Movement();
         CalculateMovement();
         Animate();
-        if (state[4] <= 0)
+        if (state[4] <= 0 && bossState > (BossState)1)
         { Collision(Irbis.Irbis.collisionObjects); }
         return true;
     }
@@ -654,11 +691,7 @@ class LizardGuy : IEnemy
     public void ThreadPoolCallback(Object threadContext)
     {
         try
-        {
-            Update();
-            if (health <= 0 || position.Y > 5000f)
-            { Irbis.Irbis.KillEnemy(this); }
-        }
+        { Update(); }
         finally
         {
             if (Interlocked.Decrement(ref Irbis.Irbis.pendingThreads) <= 0)
@@ -669,7 +702,8 @@ class LizardGuy : IEnemy
     public void StartUp(object dump)
     {
         Irbis.Irbis.WriteLine(name + " starting up...");
-        aiEnabled = true;
+        bossState = BossState.Spawn;
+        Irbis.Irbis.WriteLine(this.ToString());
     }
 
     public bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack, Vector2 Damage)
@@ -763,6 +797,7 @@ class LizardGuy : IEnemy
 
     public void Death()
     {
+        Irbis.Irbis.WriteLine(this.ToString());
         Irbis.Irbis.jamie.OnPlayerAttack -= Enemy_OnPlayerAttack;
         Irbis.Irbis.jamie.OnPlayerShockwave -= Enemy_OnPlayerShockwave;
     }
@@ -1256,8 +1291,8 @@ class LizardGuy : IEnemy
                 {
                     if (Irbis.Irbis.RandomFloat < buryEmergeChance)
                     {
-                        position.X = (Irbis.Irbis.jamie.Collider.Center.X - (colliderSize.X / 2)) - colliderOffset.X;
-                        position.Y = bossArena.Bottom - colliderSize.Y - colliderOffset.Y;
+                        position.X = (Irbis.Irbis.jamie.Collider.Center.X - (standardCollider.Width / 2)) - standardCollider.X;
+                        position.Y = bossArena.Bottom - standardCollider.Height - standardCollider.Y;
                         state[4] = 7;
                         activity = LizardActivity.Emerge;
                     }
@@ -1295,9 +1330,9 @@ class LizardGuy : IEnemy
     public void CalculateMovement()
     {
         //displayRect = new Rectangle((int)position.X, (int)position.Y, 128, 128);
-        //collider = new Rectangle((int)position.X + XcolliderOffset, (int)position.Y + YcolliderOffset, colliderSize.X, colliderSize.Y);
-        trueCollider.X = (int)Math.Round((decimal)position.X) + colliderOffset.X;
-        trueCollider.Y = (int)Math.Round((decimal)position.Y) + colliderOffset.Y;
+        //collider = new Rectangle((int)position.X + XstandardCollider.Location, (int)position.Y + YstandardCollider.Location, standardCollider.Width, standardCollider.Height);
+        trueCollider.X = (int)Math.Round((decimal)position.X) + standardCollider.X;
+        trueCollider.Y = (int)Math.Round((decimal)position.Y) + standardCollider.Y;
         //trueCollider.Size = colliderSize;
         if (collider != Rectangle.Empty)
         { collider = trueCollider; }
@@ -1461,7 +1496,7 @@ class LizardGuy : IEnemy
         activity = LizardActivity.GettingUp;
         previousActivity = activity;
         SetAnimation(26, true);
-        colliderOffset = new Point(44, 26);
+        standardCollider.Location = new Point(44, 26);
         trueCollider.Size = collider.Size = new Point(60, 100);
     }
 
@@ -1470,15 +1505,15 @@ class LizardGuy : IEnemy
         activity = LizardActivity.Dying;
         previousActivity = activity;
         trueCollider.Size = collider.Size = new Point(60, 32);
-        colliderOffset = new Point(44, 93);
+        standardCollider.Location = new Point(44, 93);
         SetAnimation(14, true);
     }
 
     public void Collision(List<ICollisionObject> colliderList)
     {
         amountToMove = negAmountToMove = Vector2.Zero;
-        testCollider.Width = colliderSize.X;
-        testCollider.Height = colliderSize.Y;
+        testCollider.Width = standardCollider.Width;
+        testCollider.Height = standardCollider.Height;
 
         foreach (ICollisionObject s in colliderList)
         {
@@ -1612,8 +1647,8 @@ class LizardGuy : IEnemy
         }
 
         bool pass = true;
-        testCollider.X = (int)testPos.X + colliderOffset.X;
-        testCollider.Y = (int)testPos.Y + colliderOffset.Y;
+        testCollider.X = (int)testPos.X + standardCollider.X;
+        testCollider.Y = (int)testPos.Y + standardCollider.Y;
 
         pass = !(collided.Intersects(testCollider));
 
@@ -1636,8 +1671,8 @@ class LizardGuy : IEnemy
                 testPos.X = (int)Math.Round((double)position.X);
                 testPos.Y = position.Y;
                 testPos.X += amountToMove.X;
-                testCollider.X = (int)testPos.X + colliderOffset.X;
-                testCollider.Y = (int)testPos.Y + colliderOffset.Y;
+                testCollider.X = (int)testPos.X + standardCollider.X;
+                testCollider.Y = (int)testPos.Y + standardCollider.Y;
 
                 pass = !(collided.Intersects(testCollider));
 
@@ -1651,8 +1686,8 @@ class LizardGuy : IEnemy
                 testPos.Y = (int)Math.Round((double)position.Y);
                 testPos.X = position.X;
                 testPos.Y += amountToMove.Y;
-                testCollider.X = (int)testPos.X + colliderOffset.X;
-                testCollider.Y = (int)testPos.Y + colliderOffset.Y;
+                testCollider.X = (int)testPos.X + standardCollider.X;
+                testCollider.Y = (int)testPos.Y + standardCollider.Y;
 
                 pass = !(collided.Intersects(testCollider));
 
@@ -1741,9 +1776,7 @@ class LizardGuy : IEnemy
     }
 
     public override string ToString()
-    {
-        return name;
-    }
+    { return name + " bossState:" + bossState + "(" + (int)bossState + ") position:" + position + " velocity:" + velocity + " health:" + health; }
 
     public void Draw(SpriteBatch sb)
     {
@@ -1756,60 +1789,63 @@ class LizardGuy : IEnemy
             case 3:
                 RectangleBorder.Draw(sb, bossArena, Color.Red, true);
                 if (attackCollider != Rectangle.Empty)
-                { RectangleBorder.Draw(sb, attackCollider, Color.Red, true); }
+                { RectangleBorder.Draw(sb, attackCollider, Color.Magenta, true); }
                 goto case 2;
             case 2:
                 animationFrame.Update(currentFrame.ToString(), true);
-                animationFrame.Draw(sb, ((position + (colliderOffset - new Point(24)).ToVector2()) * Irbis.Irbis.screenScale).ToPoint());
+                animationFrame.Draw(sb, ((position + (standardCollider.Location - new Point(24)).ToVector2()) * Irbis.Irbis.screenScale).ToPoint());
                 RectangleBorder.Draw(sb, collider, Color.Magenta, true);
                 goto case 1;
             case 1:
                 goto default;
             default:
-                if (state[4] == 5)
+                if (bossState > 0)
                 {
-                    switch (buryStrikeSide)
+                    if (state[4] == 5)
                     {
-                        case Side.Bottom:
-                            sb.Draw(tex, (buryStrikeLocation - new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
-                        case Side.Left:
-                            sb.Draw(tex, (buryStrikeLocation - new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, (float)(Math.PI / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
-                        case Side.Right:
-                            sb.Draw(tex, (buryStrikeLocation + new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, (float)((3 * Math.PI) / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
-                        case Side.Top:
-                            sb.Draw(tex, (buryStrikeLocation + new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, (float)(Math.PI), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
+                        switch (buryStrikeSide)
+                        {
+                            case Side.Bottom:
+                                sb.Draw(tex, (buryStrikeLocation - new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                            case Side.Left:
+                                sb.Draw(tex, (buryStrikeLocation - new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, (float)(Math.PI / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                            case Side.Right:
+                                sb.Draw(tex, (buryStrikeLocation + new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, (float)((3 * Math.PI) / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                            case Side.Top:
+                                sb.Draw(tex, (buryStrikeLocation + new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryRumbleFrame * 128, 4992), new Point(128)), Color.White, (float)(Math.PI), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                        }
                     }
-                }
-                else if (buryStrikeFrame <= animationFrames[38])
-                {
-                    buryStrikeFrameTimer += Irbis.Irbis.DeltaTime;
-                    if (buryStrikeFrameTimer >= animationSpeed[38])
+                    else if (buryStrikeFrame <= animationFrames[38])
                     {
-                        buryStrikeFrame++;
-                        buryStrikeFrameTimer -= animationSpeed[38];
+                        buryStrikeFrameTimer += Irbis.Irbis.DeltaTime;
+                        if (buryStrikeFrameTimer >= animationSpeed[38])
+                        {
+                            buryStrikeFrame++;
+                            buryStrikeFrameTimer -= animationSpeed[38];
+                        }
+                        switch (buryStrikeSide)
+                        {
+                            case Side.Bottom:
+                                sb.Draw(tex, (buryStrikeLocation - new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                            case Side.Left:
+                                sb.Draw(tex, (buryStrikeLocation - new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, (float)(Math.PI / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                            case Side.Right:
+                                sb.Draw(tex, (buryStrikeLocation + new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, (float)((3 * Math.PI) / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                            case Side.Top:
+                                sb.Draw(tex, (buryStrikeLocation + new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, (float)(Math.PI), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                                break;
+                        }
                     }
-                    switch (buryStrikeSide)
-                    {
-                        case Side.Bottom:
-                            sb.Draw(tex, (buryStrikeLocation - new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
-                        case Side.Left:
-                            sb.Draw(tex, (buryStrikeLocation - new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, (float)(Math.PI / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
-                        case Side.Right:
-                            sb.Draw(tex, (buryStrikeLocation + new Vector2(-128, 64)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, (float)((3 * Math.PI) / 2), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
-                        case Side.Top:
-                            sb.Draw(tex, (buryStrikeLocation + new Vector2(64, 128)) * Irbis.Irbis.screenScale, new Rectangle(new Point(buryStrikeFrame * 128, 4864), new Point(128)), Color.White, (float)(Math.PI), Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
-                            break;
-                    }
-                }
 
-                sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                    sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                }
                 break;
         }
     }

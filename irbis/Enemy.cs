@@ -394,16 +394,12 @@ public class Enemy : IEnemy
         {
             Update();
             if (health <= 0 || position.Y > 5000f)
-            {
-                Irbis.Irbis.KillEnemy(this);
-            }
+            { Irbis.Irbis.KillEnemy(this); }
         }
         finally
         {
             if (Interlocked.Decrement(ref Irbis.Irbis.pendingThreads) <= 0)
-            {
-                Irbis.Irbis.doneEvent.Set();
-            }
+            { Irbis.Irbis.doneEvent.Set(); }
         }
     }
 

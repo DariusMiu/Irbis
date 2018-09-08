@@ -96,7 +96,7 @@ public class Square : ICollisionObject
     public void Draw(SpriteBatch sb)
     {
         if (Irbis.Irbis.debug > 1)
-        { RectangleBorder.Draw(sb, Collider, Color.Green, true); }
+        { RectangleBorder.Draw(sb, Collider, Color.SaddleBrown, true); }
         if (draw)
         { sb.Draw(texture, position * scale, null, color, rotation, origin, scale, SpriteEffects.None, depth); }
     }
