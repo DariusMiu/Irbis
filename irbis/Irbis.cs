@@ -782,7 +782,7 @@ namespace Irbis
         private Vector2 bossSpawn;
         private string bossName;
         public List<Vector2> enemySpawnPoints;
-        public static List<IEnemy> killList;
+        public static List<IEnemy> killQueue;
 
                                                                                                     // UI
         public static Font font;
@@ -976,7 +976,7 @@ namespace Irbis
             backgroundSquareList = new List<Square>();
             buttonList = new List<Button>();
             enemyList = new List<IEnemy>();
-            killList = new List<IEnemy>();
+            killQueue = new List<IEnemy>();
             printList = new List<Print>();
             sliderList = new List<UIElementSlider>();
             doneEvent = new ManualResetEvent(false);
@@ -1853,8 +1853,11 @@ namespace Irbis
             doneEvent.WaitOne();
 
             // must be sure that all enemies have finished updating to avoid conflicts
-            for (int i = killList.Count - 1; i >= 0; i--)
-            { RemoveEnemy(killList[i]); }
+            for (int i = killQueue.Count - 1; i >= 0; i--)
+            {
+                if (RemoveEnemy(killQueue[i]))
+                { killQueue.RemoveAt(i); }
+            }
 
             base.Update(gameTime);
         }
@@ -2612,29 +2615,29 @@ namespace Irbis
         {
             try
             {
+                if (Irbis.game.boss != null && Irbis.game.boss.AIenabled)
+                {
+                    displayEnemyHealth = jamie.combat = true;
+                    jamie.Combat();
+                    Bars.enemyHealthBar.maxValue = Irbis.game.boss.MaxHealth;
+                    Bars.enemyHealthBar.UpdateValue(Irbis.game.boss.Health);
+                    Bars.name.Update(Irbis.game.boss.Name, true);
+                    cameraLockonLocation = Irbis.game.boss.Position;
+                }
                 if (enemyList.Count > 0)
                 {
                     IEnemy closest = enemyList[0];
 
                     float closestSqrDistance = float.MaxValue;
                     float thisEnemysSqrDistance = 0f;
-                    try
+                    for (int i = enemyList.Count - 1; i >= 0; i--)
                     {
-                        foreach (IEnemy e in enemyList)
+                        thisEnemysSqrDistance = DistanceSquared(jamie.Collider, enemyList[i].Collider);
+                        if (thisEnemysSqrDistance < closestSqrDistance && enemyList[i].AIenabled)
                         {
-                            thisEnemysSqrDistance = DistanceSquared(jamie.Collider, e.Collider);
-                            if (thisEnemysSqrDistance < closestSqrDistance && e.AIenabled)
-                            {
-                                closestSqrDistance = thisEnemysSqrDistance;
-                                closest = e;
-                            }
+                            closestSqrDistance = thisEnemysSqrDistance;
+                            closest = enemyList[i];
                         }
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        WriteLine("caught: InvalidOperationException");
-                        Console.WriteLine("caught: InvalidOperationException");
-                        //just continue as normal
                     }
                     if (closestSqrDistance <= minSqrDetectDistance)
                     {
@@ -2673,7 +2676,7 @@ namespace Irbis
                 ClearUI();
                 levelEditor = sceneIsMenu = true;
                 enemyList.Clear();
-                killList.Clear();
+                killQueue.Clear();
                 texturePanel = new Rectangle((int)((float)resolution.X * 0.8f), 0, (int)((float)resolution.X * 0.2f), resolution.Y);
                 buttonList.Add(new Button(new Rectangle(texturePanel.X + 10, 10, 30 * textScale, 16 * textScale), Direction.Forward, "01", ">01",
                     new Color(223, 227, 236), nullTex, font, Color.Magenta, false, true, 0.9f));
@@ -2980,7 +2983,7 @@ namespace Irbis
             //printList.Add(infoText);
             //eList.Clear();
             enemyList.Clear();
-            killList.Clear();
+            killQueue.Clear();
             squareList.Clear();
             collisionObjects.Clear();
             backgroundSquareList.Clear();
@@ -3658,7 +3661,7 @@ namespace Irbis
                 jamie.Respawn(initialPos);
                 CameraShake(0, 0);
                 enemyList.Clear();
-                killList.Clear();
+                killQueue.Clear();
                 if (onslaughtMode)
                 { onslaughtSpawner = new OnslaughtSpawner(); }
                 else
@@ -3675,7 +3678,7 @@ namespace Irbis
             if (enemySpawnPoints.Count > 0)
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
-                Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), enemy0Tex, enemySpawnPoints[spawnpoint], 100f, 10f, 200f, 0.4f);
+                Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), LoadTexture("enemy0"), enemySpawnPoints[spawnpoint], 100f, 10f, 200f, 0.4f);
                 //eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
@@ -3692,7 +3695,7 @@ namespace Irbis
             if (enemySpawnPoints.Count > 0)
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
-                Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), enemy0Tex, enemySpawnPoints[spawnpoint], health, damage, speed, 0.4f);
+                Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), LoadTexture("enemy0"), enemySpawnPoints[spawnpoint], health, damage, speed, 0.4f);
                 //eList.Add(tempEnemy);
                 enemyList.Add(tempEnemy);
                 //collisionObjects.Add(tempEnemy);
@@ -3742,7 +3745,7 @@ namespace Irbis
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
-        private static void RemoveEnemy(IEnemy KillMe)
+        private static bool RemoveEnemy(IEnemy KillMe)
         {
             if (enemyList.Contains(KillMe))
             {
@@ -3761,13 +3764,14 @@ namespace Irbis
             }
             if (onslaughtMode) { onslaughtSpawner.EnemyKilled(); }
             WriteLine("done.");
+            return true;
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         public static void KillEnemy(IEnemy KillMe)
         {
-            if (!killList.Contains(KillMe))
-            { killList.Add(KillMe); }
+            if (!killQueue.Contains(KillMe))
+            { killQueue.Add(KillMe); }
         }
 
         public void Load(PlayerSettings settings)
