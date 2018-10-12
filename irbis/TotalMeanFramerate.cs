@@ -13,9 +13,7 @@ class TotalMeanFramerate
     public double Framerate
     {
         get
-        {
-            return (frames / currentFrametimes);
-        }
+        { return (frames / currentFrametimes); }
     }
 
     public TotalMeanFramerate(bool create)

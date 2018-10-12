@@ -887,7 +887,6 @@ public struct PlayerSettings
 
         writer.Close();
         Irbis.Irbis.WriteLine("save successful.");
-        Irbis.Irbis.WriteLine();
     }
 
     public static void Save(Irbis.Irbis game, string filename)
@@ -2189,10 +2188,7 @@ public struct PlayerSettings
             }
         }
         else
-        {
-            Irbis.Irbis.WriteLine("load successful.");
-        }
-        Irbis.Irbis.WriteLine();
+        { Irbis.Irbis.WriteLine("load successful."); }
         reader.Close();
     }
 

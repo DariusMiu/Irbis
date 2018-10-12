@@ -432,6 +432,9 @@ public class Enemy : IEnemy
         return true;
     }
 
+    public bool Enemy_OnVictory()
+    { return false; }
+
     public void Death()
     {
         Irbis.Irbis.jamie.OnPlayerAttack -= Enemy_OnPlayerAttack;

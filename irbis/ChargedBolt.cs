@@ -11,10 +11,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 public class ChargedBolt
 {
-    public Rectangle Collider
+    public Point Center
     {
         get
-        { return collider; }
+        { return center; }
     }
 
     DotTail[] tails;
@@ -26,13 +26,13 @@ public class ChargedBolt
     float speed;
     int count;
     public Vector2 position;
-    Rectangle collider;
+    private Texture2D circle;
+    Point center;
     int radius;
 
-
-    public ChargedBolt(Point Center, int Radius, int Count, float Speed, Color RenderColor, Color LightColor)
+    public ChargedBolt(Point Center, int Radius, int TailsCount, float Speed, Color RenderColor, Color LightColor)
     {
-        count = Count;
+        count = TailsCount;
         speed = Speed;
 
         tails = new DotTail[count];
@@ -42,9 +42,10 @@ public class ChargedBolt
         lerptimes = new float[count];
         initialLerptimes = new float[count];
 
+        center = Center;
         position = Center.ToVector2();
         radius = Radius;
-        collider = new Rectangle((int)(position.X - radius), (int)(position.Y - radius), 2 * radius, 2 * radius);
+
         for (int i = 0; i < count; i++)
         {
             tails[i] = new DotTail(Irbis.Irbis.RandomPoint(radius).ToPoint(), (int)(5 * Irbis.Irbis.screenScale), RenderColor, LightColor, 0.8f);
@@ -69,7 +70,7 @@ public class ChargedBolt
             }
         }
 
-        collider.Location = new Point ((int)(position.X - radius), (int)(position.Y - radius));
+        center = position.ToPoint();
     }
 
     public void Draw(SpriteBatch sb)
@@ -85,7 +86,10 @@ public class ChargedBolt
             case 2:
                 for (int i = 0; i < count; i++)
                 { sb.Draw(Irbis.Irbis.dottex, (targets[i] + position) * Irbis.Irbis.screenScale, new Rectangle(0, 0, 1, 1), Color.Magenta, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0.9f); }
-                RectangleBorder.Draw(sb, collider, Color.Magenta, true);
+                if (circle != null)
+                { sb.Draw(circle, position * Irbis.Irbis.screenScale, null, Color.White, 0f, new Vector2(radius * Irbis.Irbis.screenScale), 1, SpriteEffects.None, 0.8001f); }
+                else
+                { circle = Irbis.Irbis.GenerateCircle((int)(radius * Irbis.Irbis.screenScale), Color.Magenta); }
                 goto case 1;
             case 1:
                 goto default;

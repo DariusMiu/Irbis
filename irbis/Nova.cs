@@ -13,14 +13,14 @@ public class Nova
 {
     Fireball[] fireballs;
 
-    public Nova(Rectangle Collider, int Count, float AngleOffset, float Velocity, float Damage)
+    public Nova(Point Position, int Radius, int Count, float AngleOffset, float Velocity, float Damage)
     {
         fireballs = new Fireball[Count];
 
         for (int i = 0; i < Count; i++)
         {
             float angle = (i / (float)Count) * MathHelper.TwoPi + AngleOffset;
-            fireballs[i] = new Fireball(Collider, new Vector2((float)Math.Sin(angle), (float)Math.Cos(angle)) * Velocity, Damage);
+            fireballs[i] = new Fireball(Position, Radius, new Vector2((float)Math.Sin(angle), (float)Math.Cos(angle)) * Velocity, Damage);
         }
     }
 
@@ -59,7 +59,6 @@ public class Nova
             default:
                 for (int i = fireballs.Length - 1; i >= 0; i--)
                 { fireballs[i].Draw(sb); }
-                //sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
                 break;
         }
     }

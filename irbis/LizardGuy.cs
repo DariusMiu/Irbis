@@ -552,6 +552,8 @@ class LizardGuy : IEnemy
                 {
                     cooldown[5] = 0;
                     bossState = BossState.Combat;
+                    Irbis.Irbis.cameraFocus = null;
+                    Irbis.Irbis.jamie.inputEnabled = true;
                     Irbis.Irbis.WriteLine(this.ToString());
                 }
                 break; 
@@ -670,12 +672,72 @@ class LizardGuy : IEnemy
                 else if (collider == Rectangle.Empty && Irbis.Irbis.jamie.invulnerableOnTouch <= 0)
                 { collider = trueCollider; }
 
-                if (health <= 0 || position.Y > 5000f)
-                { Irbis.Irbis.KillEnemy(this); }
+
+                if (stunned > 0)
+                {
+                    velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, stunLerp * Irbis.Irbis.DeltaTime);
+                    stunned -= Irbis.Irbis.DeltaTime;
+                    if (stunned <= 0)
+                    {
+                        stunned = 0;
+                        if (!ActivelyAttacking)
+                        { GetUp(); }
+                    }
+                }
+                else if (ActivelyAttacking)
+                {
+                    if (state[1] > 0)
+                    { RollAttack(); }
+                    if (state[2] > 0)
+                    { SwipeAttack(); }
+                    if (state[3] > 0)
+                    { TailwhipAttack(); }
+                    if (state[4] > 0)
+                    { BuryAttack(); }
+                }
+                else if (cooldown[0] > 0 && walled.Bottom > 0 && activity != LizardActivity.TurningAround && activity != LizardActivity.GettingUp)
+                {
+                    Direction playerDirection = Irbis.Irbis.Directions(trueCollider, Irbis.Irbis.jamie.Collider);
+                    if (playerDirection != direction && playerDirection != Direction.Forward && activity != LizardActivity.WalkLeft && activity != LizardActivity.WalkRight)
+                    { // turn around
+                        Irbis.Irbis.WriteLine(name + " not facing player. turning around...");
+                        direction = playerDirection;
+                        activity = LizardActivity.TurningAround;
+                        meleeActivitiesInARow++;
+                    }
+                    else if (activity != LizardActivity.TurningAround)
+                    {
+                        Wander();
+                        cooldown[0] -= Irbis.Irbis.DeltaTime;
+
+                        if (velocity.X > 0.1f)
+                        { activity = LizardActivity.WalkRight; }
+                        else if (velocity.X < -0.1f)
+                        { activity = LizardActivity.WalkLeft; }
+                        else
+                        { activity = LizardActivity.Idle; }
+                    }
+                }
+
+                if (cooldown[1] > 0)
+                { cooldown[1] -= Irbis.Irbis.DeltaTime; }
+                if (cooldown[2] > 0)
+                { cooldown[2] -= Irbis.Irbis.DeltaTime; }
+                if (cooldown[3] > 0)
+                { cooldown[3] -= Irbis.Irbis.DeltaTime; }
+                if (cooldown[4] > 0)
+                { cooldown[4] -= Irbis.Irbis.DeltaTime; }
                 break;
-            case BossState.Disengage:
+            case BossState.Disengage:   // 4
+                Irbis.Irbis.BossVictory();
+                direction = Irbis.Irbis.Directions(trueCollider, Irbis.Irbis.jamie.Collider);
+                Dying();
+                bossState = BossState.Dying;
                 break;
-            case BossState.Death:
+            case BossState.Dying:       // 5
+                velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpBuildup * Irbis.Irbis.DeltaTime);
+                break;
+            case BossState.Death:       // 6
                 break;
         }
 
@@ -703,12 +765,14 @@ class LizardGuy : IEnemy
     {
         Irbis.Irbis.WriteLine(name + " starting up...");
         bossState = BossState.Spawn;
+        Irbis.Irbis.cameraFocus = new Vector2(bossArena.Center.X, bossArena.Bottom - standardCollider.Height / 2);
+        Irbis.Irbis.jamie.inputEnabled = false;
         Irbis.Irbis.WriteLine(this.ToString());
     }
 
     public bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack, Vector2 Damage)
     {
-        if (AttackCollider.Intersects(collider))
+        if (AttackCollider.Intersects(trueCollider))
         {
             float tempDamage = Irbis.Irbis.RandomFloatInRange(Damage);
             PlayerAttackCollision(tempDamage);
@@ -795,11 +859,18 @@ class LizardGuy : IEnemy
         return true;
     }
 
+    public bool Enemy_OnVictory()
+    {
+        bossState = BossState.Death;
+        return true;
+    }
+
     public void Death()
     {
         Irbis.Irbis.WriteLine(this.ToString());
         Irbis.Irbis.jamie.OnPlayerAttack -= Enemy_OnPlayerAttack;
         Irbis.Irbis.jamie.OnPlayerShockwave -= Enemy_OnPlayerShockwave;
+        Irbis.Irbis.OnVictory -= Enemy_OnVictory;
     }
 
     public bool OnTouch(Rectangle TouchedCollider, Vector2 Knockback)
@@ -830,61 +901,6 @@ class LizardGuy : IEnemy
 
     public void Movement()
     {
-        if (stunned > 0)
-        {
-            velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, stunLerp * Irbis.Irbis.DeltaTime);
-            stunned -= Irbis.Irbis.DeltaTime;
-            if (stunned <= 0)
-            {
-                stunned = 0;
-                if (!ActivelyAttacking)
-                { GetUp(); }
-            }
-        }
-        else if (ActivelyAttacking)
-        {
-            if (state[1] > 0)
-            { RollAttack(); }
-            if (state[2] > 0)
-            { SwipeAttack(); }
-            if (state[3] > 0)
-            { TailwhipAttack(); }
-            if (state[4] > 0)
-            { BuryAttack(); }
-        }
-        else if (cooldown[0] > 0 && walled.Bottom > 0 && activity != LizardActivity.TurningAround && activity != LizardActivity.GettingUp)
-        {
-            Direction playerDirection = Irbis.Irbis.Directions(trueCollider, Irbis.Irbis.jamie.Collider);
-            if (playerDirection != direction && playerDirection != Direction.Forward && activity != LizardActivity.WalkLeft && activity != LizardActivity.WalkRight)
-            { // turn around
-                Irbis.Irbis.WriteLine(name + " not facing player. turning around...");
-                direction = playerDirection;
-                activity = LizardActivity.TurningAround;
-                meleeActivitiesInARow++;
-            }
-            else if (activity != LizardActivity.TurningAround)
-            {
-                Wander();
-                cooldown[0] -= Irbis.Irbis.DeltaTime;
-
-                if (velocity.X > 0.1f)
-                { activity = LizardActivity.WalkRight; }
-                else if (velocity.X < -0.1f)
-                { activity = LizardActivity.WalkLeft; }
-                else
-                { activity = LizardActivity.Idle; }
-            }
-        }
-
-        if (cooldown[1] > 0)
-        { cooldown[1] -= Irbis.Irbis.DeltaTime; }
-        if (cooldown[2] > 0)
-        { cooldown[2] -= Irbis.Irbis.DeltaTime; }
-        if (cooldown[3] > 0)
-        { cooldown[3] -= Irbis.Irbis.DeltaTime; }
-        if (cooldown[4] > 0)
-        { cooldown[4] -= Irbis.Irbis.DeltaTime; }
-
         if (walled.Top > 0 && velocity.Y < 0)
         {
             velocity.Y = 0;
@@ -1505,7 +1521,10 @@ class LizardGuy : IEnemy
         activity = LizardActivity.Dying;
         previousActivity = activity;
         trueCollider.Size = collider.Size = new Point(60, 32);
-        standardCollider.Location = new Point(44, 93);
+        if (direction == Direction.Left)
+        { standardCollider.Location = new Point(44, 93); }
+        else
+        { standardCollider.Location = new Point(30, 93); }
         SetAnimation(14, true);
     }
 
@@ -1766,6 +1785,8 @@ class LizardGuy : IEnemy
     public void Hurt(float damage)
     {
         health -= damage;
+        if (health <= 0)
+        { bossState = BossState.Disengage; }
         Irbis.Irbis.CameraShake(0.075f, 0.05f * damage);
     }
 

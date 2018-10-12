@@ -1,32 +1,50 @@
 ﻿using Irbis;
 using System;
 using System.IO;
+using System.Xml;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 
+[DataContract]
+[Serializable]
+public class LevelRecord
+{
+    [DataMember]
+    public string level;
+    [DataMember]
+    public double time;
+    [DataMember]
+    public uint wins;
+    public bool Win
+    { get { return (wins > 0); } }
+
+    public LevelRecord(string Level, double Time, uint Victories)
+    { level = Level; time = Time; wins = Victories; }
+}
+
+[DataContract]
 [Serializable]
 public struct SaveFile
-{   //start at line 11 to make it easier to count, just subtract 10 from final line
-    public List<string> winList;
-    public List<string> loseList;
+{
+    [DataMember]
+    public List<LevelRecord> winList;
+    [DataMember]
+    public List<LevelRecord> loseList;
+    [DataMember]
     public int enchantSlots;
+    [DataMember]
     public int bestOnslaughtWave;
+    [DataMember]
     public string bestOnslaughtWaveLevel;
+    [DataMember]
     public string lastPlayedLevel;
-    public List<double> timerWinList;
-    public List<double> timerLoseList;
-
-    //start at line 11 to make it easier to count, just subtract 10 from final line
-    //static int numberOfVariables = 03;
 
     public SaveFile(bool LastLevelEmpty)
 	{
-
-              winList = new List<string>();
-             loseList = new List<string>();
-         timerWinList = new List<double>();
-        timerLoseList = new List<double>();
+        winList = new List<LevelRecord>();
+        loseList = new List<LevelRecord>();
         enchantSlots = 0;
         bestOnslaughtWave = 0;
         bestOnslaughtWaveLevel = string.Empty;
@@ -36,27 +54,44 @@ public struct SaveFile
         { lastPlayedLevel = "c1b1"; }
     }
 
+    public int FindWinRecord(string record)
+    {
+        for (int i = 0; i < winList.Count; i++)
+        {
+            if (winList[i].level == record)
+            { return i; }
+        }
+        return -1;
+    }
+
+    public int FindLoseRecord(string record)
+    {
+        for (int i = 0; i < loseList.Count; i++)
+        {
+            if (loseList[i].level == record)
+            { return i; }
+        }
+        return -1;
+    }
+
     public void Load(string filename)
     {
-        SaveFile thisSave = new SaveFile(true);
-        Irbis.Irbis.WriteLine("loading " + filename + "...");
         FileStream stream = new FileStream(filename, FileMode.Open);
+        XmlDictionaryReader reader = XmlDictionaryReader.CreateTextReader(stream, new XmlDictionaryReaderQuotas());
         try
         {
-            BinaryFormatter formatter = new BinaryFormatter();
-            thisSave = (SaveFile)formatter.Deserialize(stream);
-            AssignLocalVariables(thisSave);
-            Irbis.Irbis.WriteLine("load successful.");
+            DataContractSerializer serializer = new DataContractSerializer(typeof(SaveFile));
+            SaveFile thisSave = (SaveFile)serializer.ReadObject(reader, true);
+            this = thisSave;
         }
-        catch (SerializationException e)
+        catch (Exception e)
         {
-            Console.WriteLine("failed.\n" + e.Message);
-            Irbis.Irbis.WriteLine("failed.\n" + e.Message);
-            throw;
+            Console.WriteLine("load failed. " + e.Message);
+            Irbis.Irbis.WriteLine("load failed. " + e.Message);
         }
         finally
         {
-            Irbis.Irbis.WriteLine();
+            reader.Close();
             stream.Close();
         }
     }
@@ -64,82 +99,45 @@ public struct SaveFile
     public void Save(string filename)
     {
         Irbis.Irbis.WriteLine("saving " + filename + "...");
-        BinaryFormatter formatter = new BinaryFormatter();
         FileStream stream = new FileStream(filename, FileMode.Create);
         try
         {
-            formatter.Serialize(stream, this);
-            Irbis.Irbis.WriteLine("save successful.");
+            DataContractSerializer serializer = new DataContractSerializer(typeof(SaveFile));
+            serializer.WriteObject(stream, this);
         }
-        catch (SerializationException e)
+        catch (Exception e)
         {
-            Console.WriteLine("failed.\n" + e.Message);
-            Irbis.Irbis.WriteLine("failed.\n" + e.Message);
-            throw;
+            Console.WriteLine("save failed. " + e.Message);
+            Irbis.Irbis.WriteLine("save failed. " + e.Message);
+            Irbis.Irbis.DisplayInfoText("save failed. " + e.Message, Color.Red);
         }
         finally
-        {
-            Irbis.Irbis.WriteLine();
-            stream.Close();
-        }
+        { stream.Close(); }
     }
 
     private void AssignLocalVariables(SaveFile save)
     {
         winList = save.winList;
-        Irbis.Irbis.WriteLine("          unlocked bosses: " + winList.Count);
+        Irbis.Irbis.WriteLine("winList: " + winList.Count);
         loseList = save.loseList;
-        Irbis.Irbis.WriteLine("          unlocked bosses: " + loseList.Count);
+        Irbis.Irbis.WriteLine("loseList: " + loseList.Count);
         enchantSlots = save.enchantSlots;
-        Irbis.Irbis.WriteLine("   enchant slots (bosses): " + enchantSlots);
+        Irbis.Irbis.WriteLine("enchantSlots: " + enchantSlots);
         bestOnslaughtWave = save.bestOnslaughtWave;
-        Irbis.Irbis.WriteLine("        bestOnslaughtWave: " + bestOnslaughtWave);
+        Irbis.Irbis.WriteLine("bestOnslaughtWave: " + bestOnslaughtWave);
         bestOnslaughtWaveLevel = save.bestOnslaughtWaveLevel;
-        if (string.IsNullOrWhiteSpace(bestOnslaughtWaveLevel)) { Irbis.Irbis.WriteLine("   bestOnslaughtWaveLevel: None"); }
-        else { Irbis.Irbis.WriteLine("   bestOnslaughtWaveLevel: " + bestOnslaughtWaveLevel); }
+        Irbis.Irbis.WriteLine("bestOnslaughtWaveLevel: " + bestOnslaughtWaveLevel);
         lastPlayedLevel = save.lastPlayedLevel;
-        Irbis.Irbis.WriteLine("        last level played: " + lastPlayedLevel);
-        timerWinList = save.timerWinList;
-        Irbis.Irbis.WriteLine("             timerWinList: " + timerWinList.Count);
-        timerLoseList = save.timerLoseList;
-        Irbis.Irbis.WriteLine("            timerLoseList: " + timerLoseList.Count);
-        //for (int i = 0; i < timerList.Count; i++)
-        //{
-        //    Irbis.Irbis.WriteLine("level[" + i + "] best time: " + timerList[i] + "s");
-        //}
+        Irbis.Irbis.WriteLine("lastPlayedLevel: " + lastPlayedLevel);
     }
 
     public void Print(string filename)
     {
-        SaveFile thisSave = new SaveFile(true);
-        Irbis.Irbis.WriteLine("loading " + filename + "...");
-        FileStream stream = new FileStream(filename, FileMode.Open);
-        try
-        {
-            BinaryFormatter formatter = new BinaryFormatter();
-            thisSave = (SaveFile)formatter.Deserialize(stream);
-            Irbis.Irbis.WriteLine("last level played: " + thisSave.lastPlayedLevel);
-            Irbis.Irbis.WriteLine("enchant slots (bosses): " + thisSave.enchantSlots);
-            Irbis.Irbis.WriteLine("best onslaught wave: " + thisSave.bestOnslaughtWave + ", on level: " + thisSave.bestOnslaughtWaveLevel);
-            for (int i = 0; i < thisSave.winList.Count; i++)
-            {
-                Irbis.Irbis.WriteLine(" win list[" + i + "]: " + thisSave.winList[i] + ", best time: " + thisSave.timerWinList[i]);
-            }
-            for (int i = 0; i < thisSave.loseList.Count; i++)
-            {
-                Irbis.Irbis.WriteLine("lose list[" + i + "]: " + thisSave.loseList[i] + ", best time: " + thisSave.timerLoseList[i]);
-            }
-        }
-        catch (SerializationException e)
-        {
-            Console.WriteLine("failed.\n" + e.Message);
-            Irbis.Irbis.WriteLine("failed.\n" + e.Message);
-            throw;
-        }
-        finally
-        {
-            Irbis.Irbis.WriteLine();
-            stream.Close();
-        }
+        this.Load(filename);
+        Irbis.Irbis.WriteLine("last level played: " + lastPlayedLevel);
+        Irbis.Irbis.WriteLine("enchant slots (bosses): " + enchantSlots);
+        Irbis.Irbis.WriteLine("best onslaught wave: " + bestOnslaughtWave + ", on level: " + bestOnslaughtWaveLevel);
+        Irbis.Irbis.WriteLine("winList: " + winList.Count);
+        Irbis.Irbis.WriteLine("loseList: " + loseList.Count);
     }
 }

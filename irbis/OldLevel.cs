@@ -595,7 +595,6 @@ public struct OldLevel
         }
         finally
         {
-            Irbis.Irbis.WriteLine();
             stream.Close();
         }
     }
@@ -618,7 +617,6 @@ public struct OldLevel
         }
         finally
         {
-            Irbis.Irbis.WriteLine();
             stream.Close();
         }
     }

@@ -1,8 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+//using System.Drawing;
 using Microsoft.Win32;
 using System.Threading;
+using System.Reflection;
+using System.Diagnostics;
+using System.Drawing.Imaging;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Input;
@@ -93,12 +97,14 @@ namespace Irbis
     }
     public enum BossState
     {
+        None = -1,
         Spawn = 0,
         Entrance = 1,
         Engage = 2,
         Combat = 3,
         Disengage = 4,
-        Death = 5,
+        Dying = 5,
+        Death = 6,
     }
 
     public interface IDrawableObject : System.IComparable
@@ -163,6 +169,7 @@ namespace Irbis
         void ThreadPoolCallback(Object threadContext);
         bool Enemy_OnPlayerAttack(Rectangle AttackCollider, Attacking Attack, Vector2 Damage);
         bool Enemy_OnPlayerShockwave(Vector2 Origin, float Range, Attacking Attack, float Power);
+        bool Enemy_OnVictory();
         void AddEffect(Enchant effect);
         void UpgradeEffect(int index, float duration);
         void Hurt(float damage);
@@ -180,7 +187,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        public const string versionNo = "0.2.1.4";
+        public const string versionNo = "0.2.1.5";
         public const string versionID = "beta";
         public const string versionTy = "debug";
         /// Different version types: 
@@ -203,6 +210,7 @@ namespace Irbis
         public static bool framebyframe;
         public static bool nextframe;
         private static TotalMeanFramerate meanFPS;
+        //private static TotalMeanFramerate PNGloadTimes = new TotalMeanFramerate(true);
         private static double minFPS;
         private static double minFPStime;
         private static double maxFPS;
@@ -220,10 +228,13 @@ namespace Irbis
         private static int consoleLine;
         private static float consoleLineChangeTimer;
         private static float consoleMoveTimer;
+        private static float consoleMoveTime;
+        private static int consoleMovePixels;
         private static Rectangle consoleRect;
         private static Color consoleRectColor = new Color(31, 29, 37, 255);
         private static Texture2D consoleTex;
         private static object writeLock = new object();
+        private static float consoleHoldTime = 0;
 
                                                                                                     // properties
         public static float DeltaTime
@@ -750,6 +761,7 @@ namespace Irbis
         public static float cameraLockonFactor = 0.1f;
         public static float cameraLockonSpeed = 3;
         public static Vector2 cameraLockonLocation;
+        public static Vector2? cameraFocus;
 
                                                                                                     // menu
         public static Menu menu;
@@ -793,7 +805,7 @@ namespace Irbis
         public static bool displayEnemyHealth;
         public static int vendingMenu;
         public static bool displayUI;
-        public static Texture2D[] fontLogos = new Texture2D[3];
+        public static Texture2D[] fontLogos = new Texture2D[4];
 
                                                                                                     // credits/intro vars
         public static bool rollCredits;
@@ -876,9 +888,11 @@ namespace Irbis
         private static object pngLock = new object();
         private static object uintpngLock = new object();
 
-        // events
+                                                                                                    // events
         public delegate bool AttackEventDelegate(Rectangle AttackCollider, Attacking Attack, Vector2 Damage);
         public delegate bool ShockwaveEventDelegate(Vector2 Origin, float Range, Attacking Attack, float Power);
+        public delegate bool VictoryDelegate();
+        public static event VictoryDelegate OnVictory;
 
 
                                                                                                     // etc
@@ -908,20 +922,24 @@ namespace Irbis
         public static Texture2D explosiontex;
         public static Print infoText;
         private static float infoTextTimer;
-        private static float infoTextTimerMax = 5f;
+        private static float infoTextTimerMax = 7f;
         public static Texture2D originTexture;
         public static float deathscreenTimer;
         public static float deathscreenTimerMax = 5f;
+        public static float victoryScreenTimer;
+        public static float victoryScreenTimerMax = 5f;
         public static float deathBackgroundOpacity = 1;
         public static UIElementSlider loadingBar;
         public static float deathTimeScale;
-        public static Trigger[] Triggers;
-        public static Doodad[] Doodads;
+        public static float victoryTimeScale;
+        private static bool victoryScreen;
+        public static Trigger[] triggers;
+        public static Doodad[] doodads;
         //public static Doodad testdoodad;
         //static Torch torch;
-
-
-
+        
+        
+        
         public static BlendState multiplicativeBlend = new BlendState
         {
             AlphaBlendFunction = BlendFunction.ReverseSubtract,
@@ -1007,7 +1025,7 @@ namespace Irbis
             Window.TextInput += TextEntered;
             onTextEntered += HandleInput;
             acceptTextInput = false;
-            textInputBuffer = "";
+            textInputBuffer = string.Empty;
 
             keyboardState = Keyboard.GetState();
             previousKeyboardState = keyboardState;
@@ -1115,11 +1133,10 @@ namespace Irbis
             topright = new Print(resolution.X, font, Color.White, false, new Point(resolution.X, 4 * textScale), Direction.Right, 0.95f);
             debuginfo = new Print(resolution.X, font2, Color.White, true, new Point(3, 3), Direction.Left, 0.95f);
             consoleWriteline = new Print(resolution.X, font2, Color.White, true, new Point(1, 5), Direction.Left, 1f);
-            infoText = new Print(resolution.X - 32, font, Color.White, false, new Point(resolution.X - 32, resolution.Y - 26), Direction.Right, 0.5f);
+            infoText = new Print(resolution.X - 32, font, Color.White, false, new Point(resolution.X - 32, resolution.Y - 26), Direction.Right, 0.9f);
             WriteLine("" + resolution);
             developerConsole.Update(resolution.X);
             developerConsole.scrollDown = false;
-            consoleMoveTimer = 0f;
             console = false;
 
             //topright.Update("℗Patreon.com/Ln2");
@@ -1368,6 +1385,7 @@ namespace Irbis
             loadingBar.Value += 1;
             ClearLevel();
             initialPos = thisLevel.PlayerSpawn;
+            WriteLine("initialPos:" + initialPos);
 
             //Thread loadSquares = new Thread(new ParameterizedThreadStart(LoadSquares));
             //loadSquares.Start(thisLevel);
@@ -1378,7 +1396,7 @@ namespace Irbis
             LoadBackgrounds(thisLevel);
             //Doodads = new Doodad[1];
             //Doodads[0] = new Doodad(LoadTexture("danger"), new Point(174, 186), "Danger below!", 35, 0.499f);
-            Doodads = thisLevel.Doodads;
+            doodads = thisLevel.Doodads;
 
             if (jamie != null)
             {
@@ -1404,12 +1422,13 @@ namespace Irbis
             {
                 onslaughtSpawner = new OnslaughtSpawner();
 
-                Point[] vendingMachineLocations = thisLevel.VendingMachineLocations;
-                VendingType[] vendingMachineTypes = thisLevel.VendingMachineTypes;
-                string[] vendingMachineTextures = thisLevel.VendingMachineTextures;
-                for (int i = 0; i < vendingMachineTextures.Length; i++)
-                { onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, vendingMachineTypes[i], new Rectangle(vendingMachineLocations[i], new Point(64, 64)), LoadTexture(vendingMachineTextures[i]), 0.35f)); }
-
+                if (thisLevel.VendingMachineLocations == null)
+                { onslaughtSpawner.vendingMachineList = new List<VendingMachine>(thisLevel.vendingMachines); }
+                else
+                {
+                    for (int i = 0; i < thisLevel.VendingMachineTextures.Length; i++)
+                    { onslaughtSpawner.vendingMachineList.Add(new VendingMachine(200, thisLevel.VendingMachineTypes[i], new Rectangle(thisLevel.VendingMachineLocations[i], new Point(64, 64)), LoadTexture(thisLevel.VendingMachineTextures[i]), 0.35f)); }
+                }
                 onslaughtDisplay = new Print(resolution.Y / 2, font, Color.White, true, new Point(2, 7), Direction.Left, 0.6f);
                 onslaughtDisplay.Update("Onslaught Wave " + onslaughtSpawner.wave, true);
                 onslaughtMode = true;
@@ -1430,7 +1449,10 @@ namespace Irbis
             particleSystems = new List<ParticleSystem>(thisLevel.ParticleSystems);
             loadingBar.Value += 1;
             Grass.spriteBatch = new SpriteBatch(GraphicsDevice);
-            grassList = new List<Grass>(thisLevel.Grasses);
+            if (thisLevel.Grasses == null)
+            { grassList = new List<Grass>(thisLevel.grasses); }
+            else
+            { grassList = new List<Grass>(thisLevel.Grasses); }
             backgroundColor = thisLevel.BackgroundColor;
             //backgroundColor = new Color(69, 61, 54);
             loadingBar.Value += 1;
@@ -1470,16 +1492,27 @@ namespace Irbis
             //loadBoss.Start(thisLevel);
             LoadBoss(thisLevel);
 
-            Triggers = thisLevel.Triggers;
+            triggers = thisLevel.triggers;
+            //triggers = new Trigger[1];
+            //triggers[0] = new Trigger(typeof(LizardGuy).GetMethod("StartUp"), "boss", new Rectangle(0, 779, 600, 1), 1);
 
-            if (Triggers != null)
+            if (triggers != null)
             {
-                foreach (Trigger t in Triggers)
+                WriteLine("checking triggers...");
+                for (int i = 0; i < triggers.Length; i++)
                 {
-                    if (!t.Check())
-                    { WriteLine(t.ToString()); }
+                    if (triggers[i] == null)
+                    {
+                        WriteLine("triggers[" + i + "] is null!");
+                        DisplayInfoText("triggers[" + i + "] is null!", Color.Red);
+                    }
+                    else if (!triggers[i].Check())
+                    { WriteLine(triggers[i].ToString()); }
                 }
+                WriteLine("done.");
             }
+            else
+            { WriteLine("no triggers loaded."); }
 
             justLeftMenu = true;
             if (loadingThreads <= 0) { loadEvent.Set(); }
@@ -1491,28 +1524,47 @@ namespace Irbis
         {
             Level thisLevel = (Level)data;
 
-            Vector2[] squareOrigins = thisLevel.SquareOrigins;
-            loadingBar.Value += 1;
-            Point[] squareSpawns = thisLevel.SquareSpawnPoints;
-            loadingBar.Value += 1;
-            Rectangle?[] squareColliders = thisLevel.SquareColliders;
-            loadingBar.Value += 1;
-            float[] squareDepths = thisLevel.squareDepths.ToArray();
-            loadingBar.Value += 1;
-
-            float baradd = 57f / thisLevel.squareTextures.Count;
-            for (int i = 0; i < thisLevel.squareTextures.Count; i++)
+            if (thisLevel.squareDepths == null)
             {
-                Square tempSquare;
-                if (thisLevel.squareDepths[i] > 0)     // has collider, is displayed (usually debug)       // squareOrigins[i]
-                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], squareOrigins[i], screenScale, thisLevel.squareDepths[i]); }
-                else                                   // has collider, is not displayed (this is generally used after backgrounds are added)
-                { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], squareOrigins[i], screenScale, null); }
-                collisionObjects.Add(tempSquare);
-                squareList.Add(tempSquare);
-                loadingBar.Value += baradd;
-            }/**/
+                Square[] tempSquares = thisLevel.squares;
 
+                loadingBar.Value += 4;
+
+                float baradd = 57f / tempSquares.Length;
+                for (int i = 0; i < tempSquares.Length; i++)
+                {
+                    Square tempSquare;
+                    tempSquare = new Square(tempSquares[i].texture, tempSquares[i].color, tempSquares[i].InitialPosition, tempSquares[i].InitialCollider,
+                        tempSquares[i].Origin, tempSquares[i].scale, tempSquares[i].depth);
+                    collisionObjects.Add(tempSquare);
+                    squareList.Add(tempSquare);
+                    loadingBar.Value += baradd;
+                } /**/
+            }
+            else
+            {
+                Vector2[] squareOrigins = thisLevel.SquareOrigins;
+                loadingBar.Value += 1;
+                Point[] squareSpawns = thisLevel.SquareSpawnPoints;
+                loadingBar.Value += 1;
+                Rectangle?[] squareColliders = thisLevel.SquareColliders;
+                loadingBar.Value += 1;
+                float[] squareDepths = thisLevel.squareDepths.ToArray();
+                loadingBar.Value += 1; /**/
+
+                float baradd = 57f / thisLevel.squareTextures.Count;
+                for (int i = 0; i < thisLevel.squareTextures.Count; i++)
+                {
+                    Square tempSquare;
+                    if (thisLevel.squareDepths[i] > 0)     // has collider, is displayed (usually debug)       // squareOrigins[i]
+                    { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], squareOrigins[i], screenScale, thisLevel.squareDepths[i]); }
+                    else                                   // has collider, is not displayed (this is generally used after backgrounds are added)
+                    { tempSquare = new Square(LoadTexture(thisLevel.squareTextures[i]), Color.White, squareSpawns[i], squareColliders[i], squareOrigins[i], screenScale, null); }
+                    collisionObjects.Add(tempSquare);
+                    squareList.Add(tempSquare);
+                    loadingBar.Value += baradd;
+                }/**/
+            }
 
             /*Square
             tempSquare = new Square(LoadPNG("environment//wizardground"), Color.White, new Point(-160, 260), null, Vector2.Zero, screenScale, 0.15f);
@@ -1552,29 +1604,47 @@ namespace Irbis
         {
             Level thisLevel = (Level)data;
 
-            Point[] BackgroundSquares = thisLevel.BackgroundSquares;
-            loadingBar.Value += 1;
-
-            float baradd = 18f / thisLevel.backgroundTextures.Count;
-            for (int i = 0; i < thisLevel.backgroundTextures.Count; i++)                                                                                              //backgrounds
+            if (thisLevel.BackgroundSquares == null)
             {
-                Texture2D squareTex; Square tempSquare;
-                if (thisLevel.backgroundTextures[i] == "centerTexture")
+                Square[] backgroundSquares = thisLevel.backgroundSquares;
+                loadingBar.Value += 1;
+
+                float baradd = 18f / backgroundSquares.Length;
+                for (int i = 0; i < backgroundSquares.Length; i++)                                                                                              //backgrounds
                 {
-                    squareTex = LoadTexture(thisLevel.backgroundTextures[i]);
-                    tempSquare = new Square(squareTex, Color.White, (halfResolution.ToVector2() / screenScale).ToPoint(),
-                        null, squareTex.Bounds.Size.ToVector2() / 2, screenScale, thisLevel.backgroundSquareDepths[i]);
+                    Square tempSquare;
+                    tempSquare = new Square(backgroundSquares[i].texture, backgroundSquares[i].color, backgroundSquares[i].InitialPosition,
+                        backgroundSquares[i].InitialCollider, backgroundSquares[i].Origin, backgroundSquares[i].scale, backgroundSquares[i].depth);
+                    backgroundSquareList.Add(tempSquare);
+                    loadingBar.Value += baradd;
                 }
-                else
+            }
+            else
+            {
+                Point[] BackgroundSquares = thisLevel.BackgroundSquares;
+                loadingBar.Value += 1;
+
+                float baradd = 18f / thisLevel.backgroundTextures.Count;
+                for (int i = 0; i < thisLevel.backgroundTextures.Count; i++)                                                                                              //backgrounds
                 {
-                    squareTex = LoadTexture(thisLevel.backgroundTextures[i]);
-                    tempSquare = new Square(squareTex, Color.White,
-                        //(BackgroundSquares[i].ToVector2() + squareTex.Bounds.Size.ToVector2() / 2).ToPoint(),
-                        BackgroundSquares[i],
-                        null, squareTex.Bounds.Size.ToVector2() / 2, screenScale, thisLevel.backgroundSquareDepths[i]);
+                    Texture2D squareTex; Square tempSquare;
+                    if (thisLevel.backgroundTextures[i] == "centerTexture")
+                    {
+                        squareTex = LoadTexture(thisLevel.backgroundTextures[i]);
+                        tempSquare = new Square(squareTex, Color.White, (halfResolution.ToVector2() / screenScale).ToPoint(),
+                            null, squareTex.Bounds.Size.ToVector2() / 2, screenScale, thisLevel.backgroundSquareDepths[i]);
+                    }
+                    else
+                    {
+                        squareTex = LoadTexture(thisLevel.backgroundTextures[i]);
+                        tempSquare = new Square(squareTex, Color.White,
+                            //(BackgroundSquares[i].ToVector2() + squareTex.Bounds.Size.ToVector2() / 2).ToPoint(),
+                            BackgroundSquares[i],
+                            null, squareTex.Bounds.Size.ToVector2() / 2, screenScale, thisLevel.backgroundSquareDepths[i]);
+                    }
+                    backgroundSquareList.Add(tempSquare);
+                    loadingBar.Value += baradd;
                 }
-                backgroundSquareList.Add(tempSquare);
-                loadingBar.Value += baradd;
             }
             //squareTex = LoadPNG("environment//wizardbgground");
 
@@ -1609,9 +1679,8 @@ namespace Irbis
             bossName = thisLevel.bossName;
             loadingBar.Value += 1;
 
-            SummonBoss(bossName, bossSpawn);
-
-            //Triggers = new Trigger[1]; Triggers[0] = new Trigger(typeof(LizardGuy).GetMethod("StartUp"), "boss", new Rectangle(20, 779, 579, 1), 1);
+            if (SummonBoss(bossName, bossSpawn))
+            { OnVictory = boss.Enemy_OnVictory; }
 
             if (Interlocked.Decrement(ref loadingThreads) <= 0)
             { loadEvent.Set(); }
@@ -1655,7 +1724,7 @@ namespace Irbis
         {
             lock (pngLock)
             {
-                WriteLine("loading .png: " + TextureFile);
+                WriteLine("loading PNG: " + TextureFile + ".png");
 
                 if (TextureFile.Length >= 4 && TextureFile.Substring(TextureFile.Length - 4, 4).ToLower().Equals(".png"))
                 { TextureFile = TextureFile.Substring(TextureFile.Length - 4, 4); }
@@ -1663,12 +1732,26 @@ namespace Irbis
                 if (string.IsNullOrWhiteSpace(TextureFile) || !File.Exists(@".\content\textures\" + TextureFile + ".png"))
                 { Write(" failed. (" + TextureFile + ")"); return defaultTex; }
                 else
-                {
+                { /*
+                    Stopwatch stopwatch = new Stopwatch();
+                    double texturetime, bitmaptime;
+                    stopwatch.Start();
                     FileStream fileStream = new FileStream(@".\content\textures\" + TextureFile + ".png", FileMode.Open);
                     Texture2D spriteAtlas = Texture2D.FromStream(graphics.GraphicsDevice, fileStream);
                     fileStream.Dispose();
                     spriteAtlas.Name = TextureFile;
-                    WriteLine();
+                    stopwatch.Stop();
+                    texturetime = stopwatch.Elapsed.TotalMilliseconds;
+                    stopwatch.Start(); /**/
+
+                    uint[][] pixelArray = LoadPNGasArray(TextureFile);
+                    Texture2D spriteAtlas = new Texture2D(Irbis.game.GraphicsDevice, (int)pixelArray[1][0], (int)pixelArray[1][1]);
+                    spriteAtlas.SetData(pixelArray[0]);
+
+                    /*stopwatch.Stop();
+                    bitmaptime = stopwatch.Elapsed.TotalMilliseconds;
+                    PNGloadTimes.Update(texturetime/bitmaptime); /**/
+                    spriteAtlas.Name = TextureFile;
                     return spriteAtlas;
                 }
             }
@@ -1679,29 +1762,62 @@ namespace Irbis
         /// </summary>
         public static uint[][] LoadPNGasArray(string TextureFile)
         {
-            lock (uintpngLock)
+            // huge props to this dude for a bunch of this code.
+            // https://stackoverflow.com/questions/1563038/fast-work-with-bitmaps-in-c-sharp
+
+            System.Drawing.Bitmap image = new System.Drawing.Bitmap(@".\content\textures\" + TextureFile + ".png");
+            BitmapData bData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadWrite, image.PixelFormat);
+
+            /* GetBitsPerPixel just does a switch on the PixelFormat and returns the number */
+            if (GetBitsPerPixel(bData.PixelFormat) < 32) // if it's less than 32bit, we don't want it.
+            { return new uint[2][]; }
+
+            uint[][] returnArray = new uint[2][];
+            returnArray[0] = new uint[image.Width * image.Height];
+            returnArray[1] = new uint[2];
+
+            /*the size of the image in bytes */
+            int size = bData.Stride * bData.Height;
+
+            /*Allocate buffer for image*/
+            byte[] data = new byte[size];
+
+            /*This overload copies data of /size/ into /data/ from location specified (/Scan0/)*/
+            System.Runtime.InteropServices.Marshal.Copy(bData.Scan0, data, 0, size);
+            int pixel = 0;
+            for (int i = 0; i < size; i += 4) // 4 = 32 / 8, so 32 bits per pixel, 8 bits per channel
             {
-                WriteLine("loading .png: " + TextureFile);
-
-                if (TextureFile.Length >= 4 && TextureFile.Substring(TextureFile.Length - 4, 4).ToLower().Equals(".png"))
-                { TextureFile = TextureFile.Substring(TextureFile.Length - 4, 4); }
-
-                if (string.IsNullOrWhiteSpace(TextureFile) || !File.Exists(@".\content\textures\" + TextureFile + ".png"))
-                { Write(" failed. (" + TextureFile + ")"); return null; }
+                //data[i] is the first of 3 or 4 bytes of color (depending on 24 or 32 bit color)
+                //                                   A                   B                     G                  R
+                //pixelArray[pixel] = (uint)((data[i + 3] << 24) | (data[i] << 16) | (data[i + 1] << 8) | (data[i + 2] << 0));
+                if (data[i + 3] == 0)
+                { returnArray[0][pixel] = (uint)(0); }
                 else
-                {
-                    FileStream fileStream = new FileStream(@".\content\textures\" + TextureFile + ".png", FileMode.Open);
-                    Texture2D spriteAtlas = Texture2D.FromStream(graphics.GraphicsDevice, fileStream);
-                    fileStream.Dispose();
-                    uint[][] returnArray = new uint[2][];
-                    returnArray[0] = new uint[spriteAtlas.Width * spriteAtlas.Height];
-                    returnArray[1] = new uint[2];
-                    spriteAtlas.GetData(returnArray[0]);
-                    returnArray[1][0] = (uint)spriteAtlas.Width;
-                    returnArray[1][1] = (uint)spriteAtlas.Height;
-                    WriteLine();
-                    return returnArray;
-                }
+                { returnArray[0][pixel] = (uint)((data[i + 3] << 24) | (data[i] << 16) | (data[i + 1] << 8) | (data[i + 2] << 0)); }
+                pixel++;
+            }
+
+            returnArray[1][0] = (uint)image.Width;
+            returnArray[1][1] = (uint)image.Height;
+            image.UnlockBits(bData);
+            image.Dispose();
+
+            return returnArray;
+        }
+
+        private static byte GetBitsPerPixel(PixelFormat pixelFormat)
+        {
+            switch (pixelFormat)
+            {
+                case PixelFormat.Format24bppRgb:
+                    return 24;
+                case PixelFormat.Format32bppArgb:
+                case PixelFormat.Format32bppPArgb:
+                case PixelFormat.Format32bppRgb:
+                    return 32;
+                default:
+                    //throw new ArgumentException("Only 24 and 32 bit images are supported");
+                    return 0;
             }
         }
 
@@ -1790,8 +1906,18 @@ namespace Irbis
                 { MenuUpdate(); }
             }
 
-            if (GetKeyDown(Keys.OemTilde))
-            { OpenConsole(); }
+            if (GetKey(Keys.OemTilde) && !console)
+            {
+                consoleHoldTime += realTime;
+                if (consoleHoldTime > 0.2f)
+                { OpenConsole(36 * textScale); }
+            }
+            else if (GetKeyUp(Keys.OemTilde))
+            {
+                if (consoleHoldTime <= 0.2f)
+                { OpenConsole(0.5f); }
+                consoleHoldTime = 0;
+            }
             if (consoleMoveTimer > 0)
             { MoveConsole(); }
             if (acceptTextInput && console)
@@ -1897,6 +2023,8 @@ namespace Irbis
                     QueueThread(jamie.ThreadPoolCallback);
                     for (int i = enemyList.Count - 1; i >= 0; i--)
                     { QueueThread(enemyList[i].ThreadPoolCallback); }
+                    if (victoryScreen)
+                    { VictoryScreen(); }
                     QueueThread(new WaitCallback(UpdateEnemyHealthBar));
                     if (jamie.Health <= 0)
                     { DeathScreen(); }
@@ -1907,9 +2035,9 @@ namespace Irbis
                         { deathBackgroundOpacity -= RealTime; }
                     }
 
-                    if (Triggers != null)
+                    if (triggers != null)
                     {
-                        foreach (Trigger t in Triggers)
+                        foreach (Trigger t in triggers)
                         { t.Update(jamie); }
                     }
                 }
@@ -1926,22 +2054,20 @@ namespace Irbis
                     }
 
                     for (int i = enemyList.Count - 1; i >= 0; i--)
-                    {
-                        enemyList[i].Update();
-                        //if (enemyList[i].Health <= 0 || enemyList[i].Position.Y > 5000f)
-                        //{ KillEnemy(enemyList[i]); }
-                    }
+                    { enemyList[i].Update(); }
+                    if (victoryScreen)
+                    { VictoryScreen(); }
                     UpdateEnemyHealthBar(null);
 
-                    if (Triggers != null)
+                    if (triggers != null)
                     {
-                        foreach (Trigger t in Triggers)
+                        foreach (Trigger t in triggers)
                         { t.Update(jamie); }
                     }
                 }
 
-                for (int i = Doodads.Length - 1; i >= 0; i--)
-                { Doodads[i].Update(jamie); }
+                for (int i = doodads.Length - 1; i >= 0; i--)
+                { doodads[i].Update(jamie); }
                 
 
                 if (timerDisplay != null) { timerDisplay.Update(TimerText(timer), true); }
@@ -2076,13 +2202,13 @@ namespace Irbis
         {
 
             switch (e.Character)
-            {
+            { /*
                 case '\u0008':
                     if (textInputBuffer.Length > 0)
                     {
                         textInputBuffer = textInputBuffer.Remove(textInputBuffer.Length - 1);
                     }
-                    break;
+                    break; /**/
                 case '\u0009':
                     textInputBuffer += "    ";
                     break;
@@ -2104,69 +2230,86 @@ namespace Irbis
                 else if (cameraShakeLerpTime > 0)
                 { ReturnCamera(); }
 
-                if (smartCamera)
+                if (cameraFocus != null)
                 {
-                    if (jamie.direction == Direction.Left)
-                    {
-                        mainCamera.X = Lerp(mainCamera.X, (jamie.TrueCenter.X * screenScale) - halfBoundingBox.X,
-                            (cameraLerpXSpeed + (cameraLerpXSpeed * (-jamie.Velocity.X / jamie.speed) * 0.5f)) * DeltaTime);
-                    }
-                    else //if (jamie.direction == Direction.Right)
-                    {
-                        mainCamera.X = Lerp(mainCamera.X, (jamie.TrueCenter.X * screenScale) + halfBoundingBox.X,
-                            (cameraLerpXSpeed + (cameraLerpXSpeed * (jamie.Velocity.X / jamie.speed) * 0.5f)) * DeltaTime);
-                    }
+                    mainCamera = Lerp(mainCamera, (Vector2)cameraFocus * screenScale, (cameraLerpXSpeed) * DeltaTime);
 
-                    if (GetDownKey && jamie.attacking != Attacking.Slam)
-                    { mainCamera.Y = Lerp(mainCamera.Y, (jamie.TrueCenter.Y * screenScale) + halfBoundingBox.Y, cameraLerpYSpeed * DeltaTime); }
-                    else if (GetUpKey)
-                    { mainCamera.Y = Lerp(mainCamera.Y, (jamie.TrueCenter.Y * screenScale) - halfBoundingBox.Y, cameraLerpYSpeed * DeltaTime); }
-                    else
-                    {
-                        if (boundingBox.Bottom > screenSpacePlayerPos.Y - cameraLerpYSpeed * screenScale)
-                        { mainCamera.Y = Lerp(mainCamera.Y, jamie.TrueCenter.Y * screenScale, cameraLerpYSpeed * DeltaTime); }
-                        else
-                        {
-                            mainCamera.Y = Lerp(mainCamera.Y, jamie.TrueCenter.Y * screenScale,
-                                ((screenSpacePlayerPos.Y - boundingBox.Bottom) / screenScale) * DeltaTime);
-                        }
-                    }
-
-                    if (jamie.combat)
-                    { cameraLockon = Lerp(cameraLockon, (cameraLockonLocation - mainCamera / screenScale) * cameraLockonFactor, cameraLockonSpeed * DeltaTime); }
-                    else
-                    { cameraLockon = Lerp(cameraLockon, Vector2.Zero, cameraLockonSpeed * DeltaTime); }
+                    cameraLockon = Lerp(cameraLockon, Vector2.Zero, cameraLockonSpeed * DeltaTime);
 
                     background.M31 = foreground.M41 = boundingBox.Center.X - (mainCamera.X + camera.X + cameraLockon.X);
                     background.M32 = foreground.M42 = boundingBox.Center.Y - (mainCamera.Y + camera.Y + cameraLockon.Y);
                 }
                 else
                 {
-                    if (cameraLerpSetting)
+                    if (smartCamera)
                     {
-                        if (boundingBox.Right <= screenSpacePlayerPos.X)
-                        { mainCamera.X += Lerp(boundingBox.Right, screenSpacePlayerPos.X, cameraLerpXSpeed * DeltaTime) - boundingBox.Right; }
-                        else if (boundingBox.Left >= screenSpacePlayerPos.X)
-                        { mainCamera.X += Lerp(boundingBox.Left, screenSpacePlayerPos.X, cameraLerpXSpeed * DeltaTime) - boundingBox.Left; }
-                        if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
-                        { mainCamera.Y += Lerp(boundingBox.Bottom, screenSpacePlayerPos.Y, cameraLerpYSpeed * DeltaTime) - boundingBox.Bottom; }
-                        else if (boundingBox.Top >= screenSpacePlayerPos.Y)
-                        { mainCamera.Y += Lerp(boundingBox.Top, screenSpacePlayerPos.Y, cameraLerpYSpeed * DeltaTime) - boundingBox.Top; }
+                        if (jamie.direction == Direction.Left)
+                        {
+                            mainCamera.X = Lerp(mainCamera.X, (jamie.TrueCenter.X * screenScale) - halfBoundingBox.X,
+                                (cameraLerpXSpeed + (cameraLerpXSpeed * (-jamie.Velocity.X / jamie.speed) * 0.5f)) * DeltaTime);
+                        }
+                        else if (jamie.direction == Direction.Right)
+                        {
+                            mainCamera.X = Lerp(mainCamera.X, (jamie.TrueCenter.X * screenScale) + halfBoundingBox.X,
+                                (cameraLerpXSpeed + (cameraLerpXSpeed * (jamie.Velocity.X / jamie.speed) * 0.5f)) * DeltaTime);
+                        }
+                        else // if (jamie.direction == Direction.Forward)
+                        {
+                            mainCamera.X = Lerp(mainCamera.X, jamie.TrueCenter.X * screenScale,
+                                (cameraLerpXSpeed + (cameraLerpXSpeed * (jamie.Velocity.X / jamie.speed) * 0.5f)) * DeltaTime);
+                        }
+
+                        if (GetDownKey && jamie.attacking != Attacking.Slam)
+                        { mainCamera.Y = Lerp(mainCamera.Y, (jamie.TrueCenter.Y * screenScale) + halfBoundingBox.Y, cameraLerpYSpeed * DeltaTime); }
+                        else if (GetUpKey)
+                        { mainCamera.Y = Lerp(mainCamera.Y, (jamie.TrueCenter.Y * screenScale) - halfBoundingBox.Y, cameraLerpYSpeed * DeltaTime); }
+                        else
+                        {
+                            if (boundingBox.Bottom > screenSpacePlayerPos.Y - cameraLerpYSpeed * screenScale)
+                            { mainCamera.Y = Lerp(mainCamera.Y, jamie.TrueCenter.Y * screenScale, cameraLerpYSpeed * DeltaTime); }
+                            else
+                            {
+                                mainCamera.Y = Lerp(mainCamera.Y, jamie.TrueCenter.Y * screenScale,
+                                    ((screenSpacePlayerPos.Y - boundingBox.Bottom) / screenScale) * DeltaTime);
+                            }
+                        }
+
+                        if (jamie.combat)
+                        { cameraLockon = Lerp(cameraLockon, (cameraLockonLocation - mainCamera / screenScale) * cameraLockonFactor, cameraLockonSpeed * DeltaTime); }
+                        else
+                        { cameraLockon = Lerp(cameraLockon, Vector2.Zero, cameraLockonSpeed * DeltaTime); }
+
+                        background.M31 = foreground.M41 = boundingBox.Center.X - (mainCamera.X + camera.X + cameraLockon.X);
+                        background.M32 = foreground.M42 = boundingBox.Center.Y - (mainCamera.Y + camera.Y + cameraLockon.Y);
                     }
                     else
                     {
-                        if (boundingBox.Right <= screenSpacePlayerPos.X)
-                        { mainCamera.X += screenSpacePlayerPos.X - boundingBox.Right; }
-                        else if (boundingBox.Left >= screenSpacePlayerPos.X)
-                        { mainCamera.X += screenSpacePlayerPos.X - boundingBox.Left; }
-                        if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
-                        { mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Bottom; }
-                        else if (boundingBox.Top >= screenSpacePlayerPos.Y)
-                        { mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Top; }
-                    }
+                        if (cameraLerpSetting)
+                        {
+                            if (boundingBox.Right <= screenSpacePlayerPos.X)
+                            { mainCamera.X += Lerp(boundingBox.Right, screenSpacePlayerPos.X, cameraLerpXSpeed * DeltaTime) - boundingBox.Right; }
+                            else if (boundingBox.Left >= screenSpacePlayerPos.X)
+                            { mainCamera.X += Lerp(boundingBox.Left, screenSpacePlayerPos.X, cameraLerpXSpeed * DeltaTime) - boundingBox.Left; }
+                            if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
+                            { mainCamera.Y += Lerp(boundingBox.Bottom, screenSpacePlayerPos.Y, cameraLerpYSpeed * DeltaTime) - boundingBox.Bottom; }
+                            else if (boundingBox.Top >= screenSpacePlayerPos.Y)
+                            { mainCamera.Y += Lerp(boundingBox.Top, screenSpacePlayerPos.Y, cameraLerpYSpeed * DeltaTime) - boundingBox.Top; }
+                        }
+                        else
+                        {
+                            if (boundingBox.Right <= screenSpacePlayerPos.X)
+                            { mainCamera.X += screenSpacePlayerPos.X - boundingBox.Right; }
+                            else if (boundingBox.Left >= screenSpacePlayerPos.X)
+                            { mainCamera.X += screenSpacePlayerPos.X - boundingBox.Left; }
+                            if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
+                            { mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Bottom; }
+                            else if (boundingBox.Top >= screenSpacePlayerPos.Y)
+                            { mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Top; }
+                        }
 
-                    background.M31 = foreground.M41 = halfResolution.X - (mainCamera.X + camera.X);
-                    background.M32 = foreground.M42 = halfResolution.Y - (mainCamera.Y + camera.Y);
+                        background.M31 = foreground.M41 = halfResolution.X - (mainCamera.X + camera.X);
+                        background.M32 = foreground.M42 = halfResolution.Y - (mainCamera.Y + camera.Y);
+                    }
                 }
 
                 screenSpacePlayerPos = (jamie.TrueCenter * screenScale) + boundingBox.Center.ToVector2() - mainCamera;
@@ -2353,7 +2496,7 @@ namespace Irbis
         {
             try
             {
-                if (!console && consoleMoveTimer <= 0 && (RealTime) < (elapsedTime / framedropfactor))
+                if (!console && consoleMoveTimer <= 0 && Timer > 0 && (RealTime) < (elapsedTime / framedropfactor))
                 {
                     WriteLine("recording framedrop (1/" + framedropfactor +
                         ")\nold fps:" + (1 / RealTime) + " new fps:" + (1 / elapsedTime) + " timer: " + Timer);
@@ -2428,21 +2571,31 @@ namespace Irbis
                 smoothUpdate = 0;
                 smoothDisplay = smoothFPS.Framerate.ToString("0000.0");
                 smoothFPS = new SmoothFramerate((int)smoothFPS.Framerate);
-                medianDisplay = ((minFPS + maxFPS) / 2d).ToString("0000.0");
                 minDisplay = minFPS.ToString("0000.0");
                 maxDisplay = maxFPS.ToString("0000.0");
-                maxFPS = double.MinValue;
+                medianDisplay = (minFPS / maxFPS).ToString("0.00000");
+                medianDisplay = medianDisplay.Remove(1, 1);
                 minFPS = double.MaxValue;
+                maxFPS = double.MinValue;
             }
             debuginfo.Update("\n   meanFPS:" + smoothDisplay);
-            debuginfo.Update("\n medianFPS:" + medianDisplay);
             debuginfo.Update("\n    minFPS:" + minDisplay);
             debuginfo.Update("\n    maxFPS:" + maxDisplay);
+            debuginfo.Update("\n FPS ratio:" + medianDisplay);
+            debuginfo.Update("\n");
             if (intro > 0)
-            { debuginfo.Update("\n\nintro:" + intro); }
+            { debuginfo.Update("\nintro:" + intro); }
             debuginfo.Update("\n\nmouse location:" + GetMouseState.Position);
-            debuginfo.Update("\n\nworld space mouse location:" + WorldSpaceMouseLocation);
-            debuginfo.Update("\ntimer:" + TimerText(timer));
+            debuginfo.Update("\nworld space mouse location:" + WorldSpaceMouseLocation);
+            debuginfo.Update("\n\ntimer:" + TimerText(timer));
+            debuginfo.Update("\ntimeScale:" + timeScale);
+            if (framebyframe)
+            { debuginfo.Update("\nFrame-by-frame mode:" + framebyframe); }
+            debuginfo.Update("\n");
+
+            debuginfo.Update("\nconsoleMoveTimer:" + consoleMoveTimer);
+            debuginfo.Update("\n consoleMoveTime:" + consoleMoveTime);
+            /*
             if (jamie != null)
             {
                 debuginfo.Update("\n     input:" + jamie.input + "  isRunning:" + jamie.isRunning);
@@ -2477,7 +2630,7 @@ namespace Irbis
                 debuginfo.Update("\n       currentFrame:" + jamie.CurrentFrame);
                 debuginfo.Update("\nanimationSourceRect:" + jamie.animationSourceRect);
                 debuginfo.Update("\n    animationNoLoop:" + jamie.animationNoLoop);
-            }
+            } /**/
             debuginfo.Update("\nThumbSticks.Left:" + GetGamePadState.ThumbSticks.Left);
             debuginfo.Update("\n\ncurrentLevel:" + currentLevel);
             debuginfo.Update("\n onslaught:" + onslaughtMode);
@@ -2489,11 +2642,7 @@ namespace Irbis
                 debuginfo.Update("\nmaxenemies:" + onslaughtSpawner.maxEnemies);
                 debuginfo.Update("\n   ehealth:" + onslaughtSpawner.enemyHealth);
                 debuginfo.Update("\n   edamage:" + onslaughtSpawner.enemyDamage);
-            }
-            if (framebyframe)
-            {
-                debuginfo.Update("\nFrame-by-frame mode:" + framebyframe);
-            }
+            }/**/
             //debuginfo.Update("\n01234567890ABCDEFGHIJKLMNOPQRSTUVWQYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+><~" + '\u001b' + "{}|.`,:;/@'[\\]\"ᴥ");  //every character in print class
             if (enemyList.Count > 0)
             {
@@ -2508,29 +2657,14 @@ namespace Irbis
 
                 if (enemyList[0].GetType() == typeof(LizardGuy))
                 {
-                    //debuginfo.Update("\nXDistance:" + XDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
-                    //debuginfo.Update("\nYDistance:" + YDistance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
-                    //debuginfo.Update("\n Distance:" + Distance(Irbis.jamie.Collider, ((LizardGuy)enemyList[0]).Collider));
-                    //debuginfo.Update("\n Arena side closest:" + SideClosest(((LizardGuy)enemyList[0]).bossArena, Irbis.jamie.Collider));
-                    //debuginfo.Update("\n\n   Lizard Activity:" + ((LizardGuy)enemyList[0]).activity);
-                    //debuginfo.Update("\n  melee activities:" + ((LizardGuy)enemyList[0]).meleeActivitiesInARow);
-                    //debuginfo.Update("\n  proper direction:" + Directions(((LizardGuy)enemyList[0]).TrueCollider, jamie.Collider));
-                    //debuginfo.Update("\n         Direction:" + ((LizardGuy)enemyList[0]).direction);
-                    //debuginfo.Update("\n         Animation:" + ((LizardGuy)enemyList[0]).currentAnimation);
-                    //debuginfo.Update("\n             speed:" + ((LizardGuy)enemyList[0]).animationSpeed[((LizardGuy)enemyList[0]).currentAnimation]);
-                    //debuginfo.Update("\n\n ActivelyAttacking:" + ((LizardGuy)enemyList[0]).ActivelyAttacking);
-                    //debuginfo.Update("\n     ActiveAttacks:" + ((LizardGuy)enemyList[0]).ActiveAttacks);
-                    //debuginfo.Update("\ntimeSinceLastFrame:" + ((LizardGuy)enemyList[0]).timeSinceLastFrame);
-                    //debuginfo.Update("\n            frames:" + ((LizardGuy)enemyList[0]).animationFrames[((LizardGuy)enemyList[0]).currentAnimation]);
-                    debuginfo.Update("\n velocity:" + ((LizardGuy)enemyList[0]).Velocity);
-                    debuginfo.Update("\n Collider:" + ((LizardGuy)enemyList[0]).TrueCollider);
-                    debuginfo.Update("\nbossState:" + ((LizardGuy)enemyList[0]).bossState);
-                    //debuginfo.Update("\n         direction:" + ((LizardGuy)enemyList[0]).direction);
-                    //debuginfo.Update("\n              stun:" + ((LizardGuy)enemyList[0]).stunned);
-                    //debuginfo.Update("\n              roll:" + ((LizardGuy)enemyList[0]).state[1] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[1]);
-                    //debuginfo.Update("\n             swipe:" + ((LizardGuy)enemyList[0]).state[2] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[2]);
-                    //debuginfo.Update("\n              bury:" + ((LizardGuy)enemyList[0]).state[4] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[4]);
-                    //debuginfo.Update("\n            wander:" + ((LizardGuy)enemyList[0]).state[0] + " cooldown:" + ((LizardGuy)enemyList[0]).cooldown[0]);
+                    debuginfo.Update("\n   Lizard Activity:" + ((LizardGuy)enemyList[0]).activity);
+                    debuginfo.Update("\n         Direction:" + ((LizardGuy)enemyList[0]).direction);
+                    debuginfo.Update("\n         Animation:" + ((LizardGuy)enemyList[0]).currentAnimation);
+                    debuginfo.Update("\ntimeSinceLastFrame:" + ((LizardGuy)enemyList[0]).timeSinceLastFrame);
+                    debuginfo.Update("\n            frames:" + ((LizardGuy)enemyList[0]).animationFrames[((LizardGuy)enemyList[0]).currentAnimation]);
+                    debuginfo.Update("\n          velocity:" + ((LizardGuy)enemyList[0]).Velocity);
+                    debuginfo.Update("\n          Collider:" + ((LizardGuy)enemyList[0]).TrueCollider);
+                    debuginfo.Update("\n         bossState:" + ((LizardGuy)enemyList[0]).bossState);
                     debuginfo.Update("\n");
                 }
                 else if (enemyList[0].GetType() == typeof(WizardGuy))
@@ -2538,9 +2672,9 @@ namespace Irbis
                     debuginfo.Update("\n\nWizard state:" + ((WizardGuy)enemyList[0]).bossState);
                     debuginfo.Update("\n      Activity:" + ((WizardGuy)enemyList[0]).activity);
                     debuginfo.Update("\n         phase:" + ((WizardGuy)enemyList[0]).combatPhase);
-                    debuginfo.Update("\n     Animation:" + ((WizardGuy)enemyList[0]).currentAnimation);
+                    debuginfo.Update("\n     Animation:" + (WizardGuy.Animation)(((WizardGuy)enemyList[0]).currentAnimation));
                     debuginfo.Update("\n      Position:" + ((WizardGuy)enemyList[0]).Position);
-                    debuginfo.Update("\n   speed:" + ((WizardGuy)enemyList[0]).animationSpeed[((WizardGuy)enemyList[0]).currentAnimation]);
+                    debuginfo.Update("\n casting:" + ((WizardGuy)enemyList[0]).casting);
                     debuginfo.Update("\n    idle:" + ((WizardGuy)enemyList[0]).timer[0]);
                     debuginfo.Update("\nteleport:" + ((WizardGuy)enemyList[0]).timer[1]);
                     debuginfo.Update("\n    nova:" + ((WizardGuy)enemyList[0]).timer[2]);
@@ -2567,11 +2701,11 @@ namespace Irbis
             //background.M31 = foreground.M41 = halfResolution.X - (mainCamera.X + camera.X);
             //background.M32 = foreground.M42 = halfResolution.Y - (mainCamera.Y + camera.Y);
 
-            debuginfo.Update("\nmainCamera:" + mainCamera);
+            /*debuginfo.Update("\nmainCamera:" + mainCamera);
             debuginfo.Update("\nBG.M31:" + background.M31 + " FG.M41:" + foreground.M41);
             debuginfo.Update("\nBG.M32:" + background.M32 + " FG.M42:" + foreground.M42);
             debuginfo.Update("\n    Camera:" + camera);
-            debuginfo.Update("\n    Lockon:" + cameraLockon);
+            debuginfo.Update("\n    Lockon:" + cameraLockon);/**/
 
         }
 
@@ -2930,7 +3064,7 @@ namespace Irbis
 
                 foreach (VendingMachine v in onslaughtSpawner.vendingMachineList)
                 {
-                    vendingMachineTextures.Add(v.vendingTex.ToString());
+                    vendingMachineTextures.Add(v.texture.ToString());
                     vendingMachineLocations.Add(v.displayLocation.ToPoint());
                     vendingMachineTypes.Add(v.type);
                 }
@@ -2939,9 +3073,7 @@ namespace Irbis
                 thisLevel.VendingMachineTextures = vendingMachineTextures.ToArray();
                 thisLevel.VendingMachineTypes = vendingMachineTypes.ToArray();
 
-                WriteLine("vendingMachineLocations count: " + vendingMachineLocations.Count);
-                WriteLine("vendingMachineTextures count: " + vendingMachineTextures.Count);
-                WriteLine("vendingMachineTypes count: " + vendingMachineTypes.Count);
+                thisLevel.vendingMachines = onslaughtSpawner.vendingMachineList.ToArray();
             }
             else
             {
@@ -2960,13 +3092,21 @@ namespace Irbis
             thisLevel.darkness = darkness;
             thisLevel.Grasses = grassList.ToArray();
 
-            thisLevel.Triggers = Triggers;
-            thisLevel.Doodads = Doodads;
+            thisLevel.triggers = triggers;
+            thisLevel.Doodads = doodads;
 
+
+            thisLevel.squares = squareList.ToArray();
+            thisLevel.backgroundSquares = backgroundSquareList.ToArray();
+            thisLevel.grasses = grassList.ToArray();
+            thisLevel.particleSystems = particleSystems.ToArray();
+            thisLevel.playerSpawn = initialPos;
+            // vendingMachines moved above to onslaught section
+            thisLevel.enemySpawnPoints = enemySpawnPoints.ToArray();
+            thisLevel.bossSpawn = bossSpawn;
+            thisLevel.doodads = doodads;
 
             thisLevel.Save(".\\levels\\" + levelname + ".lvl");
-            WriteLine(".\\levels\\" + levelname + ".lvl saved");
-            Console.WriteLine(".\\levels\\" + levelname + ".lvl saved");
         }
 
         public void ClearLevel()
@@ -2988,11 +3128,22 @@ namespace Irbis
             collisionObjects.Clear();
             backgroundSquareList.Clear();
             CameraShake(0, 0);
-            Doodads = new Doodad[0];
-            Triggers = new Trigger[0];
+            doodads = new Doodad[0];
+            triggers = new Trigger[0];
             boss = null;
+            cameraFocus = null;
             if (jamie != null)
             { jamie.PlayerEventsReset(); }
+            if (victoryScreenTimer < victoryScreenTimerMax)
+            {
+                victoryScreenTimer = 0;
+                timeScale = victoryTimeScale;
+            }
+            if (deathscreenTimer < deathscreenTimerMax)
+            {
+                deathscreenTimer = 0;
+                timeScale = deathTimeScale;
+            }
 
             if (recordFPS)
             {
@@ -3564,6 +3715,14 @@ namespace Irbis
             }
         }
 
+        public bool IsPowerOfTwo(uint data)
+        {
+            if (data == 1) // integer equals one, one is not a power of two
+            { return false; }
+            else
+            { return ((data & (data - 1)) == 0); }
+        }
+
         public static void PlayerDeath()
         {
             deathTimeScale = timeScale;
@@ -3578,17 +3737,14 @@ namespace Irbis
                 }
             }
             //else { }
-            int loselisttimerindex = savefile.loseList.IndexOf(currentLevel);
+            int loselisttimerindex = savefile.FindLoseRecord(currentLevel);
             if (loselisttimerindex >= 0)
             {
-                if (timer > savefile.timerLoseList[loselisttimerindex])
-                { savefile.timerLoseList[loselisttimerindex] = timer; }
+                if (timer > savefile.loseList[loselisttimerindex].time)
+                { savefile.loseList[loselisttimerindex].time = timer; }
             }
             else
-            {
-                savefile.loseList.Add(currentLevel);
-                savefile.timerLoseList.Add(timer);
-            }
+            { savefile.loseList.Add(new LevelRecord(currentLevel, timer, 0)); }
 
             WriteLine("PlayerDeath");
             savefile.Save(autosave);
@@ -3673,26 +3829,85 @@ namespace Irbis
             }
         }
 
-        public void SummonGenericEnemy()
+        public static void BossVictory()
         {
-            if (enemySpawnPoints.Count > 0)
+            victoryTimeScale = timeScale;
+            victoryScreenTimer = 0;
+            victoryScreen = true;
+            jamie.inputEnabled = false;
+            // save ?
+        }
+
+        public void VictoryScreen()
+        {
+            if (victoryScreenTimer < victoryScreenTimerMax)
             {
-                int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
-                Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), LoadTexture("enemy0"), enemySpawnPoints[spawnpoint], 100f, 10f, 200f, 0.4f);
-                //eList.Add(tempEnemy);
-                enemyList.Add(tempEnemy);
-                //collisionObjects.Add(tempEnemy);
-                WriteLine("enemy spawned at " + enemySpawnPoints[spawnpoint] + ". health:100 damage:10 speed:300. timer:" + Timer);
+                victoryScreenTimer += RealTime;
+
+                timeScale = victoryTimeScale * Clamp((victoryScreenTimer / (victoryScreenTimerMax)), 0.25f, 1);
+                if (cameraShakeDuration > 0)
+                { CameraShake(); }
+                else if (cameraShakeLerpTime > 0)
+                { ReturnCamera(); }
+                if (smartCamera)
+                {
+                    mainCamera.X = Lerp(mainCamera.X, jamie.TrueCenter.X * screenScale, cameraLerpXSpeed * DeltaTime);
+                    mainCamera.Y = Lerp(mainCamera.Y, jamie.TrueCenter.Y * screenScale, cameraLerpYSpeed * DeltaTime);
+
+                    cameraLockon = Lerp(cameraLockon, Vector2.Zero, cameraLockonSpeed * DeltaTime);
+
+                    background.M31 = foreground.M41 = boundingBox.Center.X - (mainCamera.X + camera.X + cameraLockon.X);
+                    background.M32 = foreground.M42 = boundingBox.Center.Y - (mainCamera.Y + camera.Y + cameraLockon.Y);
+                }
+                else
+                {
+                    if (cameraLerpSetting)
+                    {
+                        if (boundingBox.Right <= screenSpacePlayerPos.X)
+                        { mainCamera.X += Lerp(boundingBox.Right, screenSpacePlayerPos.X, cameraLerpXSpeed * DeltaTime) - boundingBox.Right; }
+                        else if (boundingBox.Left >= screenSpacePlayerPos.X)
+                        { mainCamera.X += Lerp(boundingBox.Left, screenSpacePlayerPos.X, cameraLerpXSpeed * DeltaTime) - boundingBox.Left; }
+                        if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
+                        { mainCamera.Y += Lerp(boundingBox.Bottom, screenSpacePlayerPos.Y, cameraLerpYSpeed * DeltaTime) - boundingBox.Bottom; }
+                        else if (boundingBox.Top >= screenSpacePlayerPos.Y)
+                        { mainCamera.Y += Lerp(boundingBox.Top, screenSpacePlayerPos.Y, cameraLerpYSpeed * DeltaTime) - boundingBox.Top; }
+                    }
+                    else
+                    {
+                        if (boundingBox.Right <= screenSpacePlayerPos.X)
+                        { mainCamera.X += screenSpacePlayerPos.X - boundingBox.Right; }
+                        else if (boundingBox.Left >= screenSpacePlayerPos.X)
+                        { mainCamera.X += screenSpacePlayerPos.X - boundingBox.Left; }
+                        if (boundingBox.Bottom <= screenSpacePlayerPos.Y)
+                        { mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Bottom; }
+                        else if (boundingBox.Top >= screenSpacePlayerPos.Y)
+                        { mainCamera.Y += screenSpacePlayerPos.Y - boundingBox.Top; }
+                    }
+
+                    background.M31 = foreground.M41 = halfResolution.X - (mainCamera.X + camera.X);
+                    background.M32 = foreground.M42 = halfResolution.Y - (mainCamera.Y + camera.Y);
+                }
             }
             else
             {
-                Console.WriteLine("Error, no spawn points");
+                //if (Interlocked.Decrement(ref Irbis.pendingThreads) <= 0)
+                //{ Irbis.doneEvent.Set(); }
+                //doneEvent.WaitOne();
+                CameraShake(0, 0);
+                timeScale = victoryTimeScale;
+                OnVictory();
+                victoryScreen = false;
+                //LoadMenu(0, 0, false);
+                jamie.inputEnabled = true;
             }
         }
 
+        public void SummonGenericEnemy()
+        { SummonGenericEnemy(100f, 10f, 200f); }
+
         public void SummonGenericEnemy(float health, float damage, float speed)
         {
-            if (enemySpawnPoints.Count > 0)
+            try
             {
                 int spawnpoint = (int)(RAND.NextDouble() * enemySpawnPoints.Count);
                 Enemy tempEnemy = new Enemy("Enemy " + (enemyList.Count + 1), LoadTexture("enemy0"), enemySpawnPoints[spawnpoint], health, damage, speed, 0.4f);
@@ -3701,13 +3916,16 @@ namespace Irbis
                 //collisionObjects.Add(tempEnemy);
                 WriteLine("enemy spawned at " + enemySpawnPoints[spawnpoint] + ". health:" + health + " damage:" + damage + " speed:" + speed + ". timer:" + Timer);
             }
-            else
+            catch (Exception e)
             {
-                WriteLine("Error, no spawn points");
+                WriteLine("Error - no spawn points");
+                WriteLine("Exception: " + e.Message);
+                WriteLine("Stacktrace:\n" + e.StackTrace + "\n");
+                DisplayInfoText("Error - no spawn points", Color.Red);
             }
         }
 
-        public void SummonBoss(string Boss, Vector2? Location)
+        public bool SummonBoss(string Boss, Vector2? Location)
         {
             if (!string.IsNullOrEmpty(Boss))
             {
@@ -3724,7 +3942,7 @@ namespace Irbis
                             boss = tempLizardGuy;
                             loadingBar.Value += 1;
                         }
-                        break;
+                        return true;
                     case "wizard":
                         {
                             loadingBar.Value += 1;
@@ -3732,16 +3950,18 @@ namespace Irbis
                             //if (Location != null)
                             //{ tempWizardGuy = new WizardGuy(LoadTexture("wizard"), null, 500, 50, new Vector2[] { (Vector2)Location }, null, 0.45f); }
                             //else
-                            { tempWizardGuy = new WizardGuy(LoadTexture("wizard"), 2, 400, 50, null, new Rectangle(-160, -100, 1780, 360), 0.45f); }
+                            { tempWizardGuy = new WizardGuy(LoadTexture("OtterTilesheet"), 2, 400, 50, null, new Rectangle(-160, -100, 1780, 360), 0.45f); }
                             loadingBar.Value += 8;
                             enemyList.Add(tempWizardGuy);
                             //collisionObjects.Add(tempWizardGuy);
                             boss = tempWizardGuy;
                             loadingBar.Value += 1;
                         }
-                        break;
+                        return true;
                 }
             }
+            loadingBar.Value += 1;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
@@ -4046,9 +4266,37 @@ namespace Irbis
             return level;
         }
 
+        private void OpenConsole(int pixels)
+        {
+            if (!console)
+            {
+                consoleMovePixels = resolution.Y - pixels;
+                consoleMoveTime = (-(consoleMovePixels - (float)resolution.Y) / halfResolution.Y);
+            }
+            if (consoleMoveTimer == 0)
+            { consoleMoveTimer = RealTime; }
+            else
+            { consoleMoveTimer = (consoleMoveTime - consoleMoveTimer) + RealTime; }
+            OpenConsole();
+        }
+
+        private void OpenConsole(float amount)
+        {
+            if (!console)
+            {
+                consoleMovePixels = (int)(resolution.Y * (1 - amount));
+                consoleMoveTime = (-(consoleMovePixels - (float)resolution.Y) / halfResolution.Y);
+            }
+            if (consoleMoveTimer == 0)
+            { consoleMoveTimer = RealTime; }
+            else
+            { consoleMoveTimer = (consoleMoveTime - consoleMoveTimer) + RealTime; }
+            OpenConsole();
+        }
+
         private void OpenConsole()
         {
-            textInputBuffer = string.Empty;
+            consoleWriteline.statement = textInputBuffer = string.Empty;
             acceptTextInput = console = !console;
             if (consoleTex == null)
             {
@@ -4056,13 +4304,9 @@ namespace Irbis
                 float tempScale = 0f;
                 Vector2 tempLocation = Vector2.Zero;
                 if (((float)consoleRect.Width / (float)tempConsoleTex.Bounds.Width) > ((float)consoleRect.Height / (float)tempConsoleTex.Bounds.Height))
-                {
-                    tempScale = (float)consoleRect.Width / (float)tempConsoleTex.Bounds.Width;
-                }
+                { tempScale = (float)consoleRect.Width / (float)tempConsoleTex.Bounds.Width; }
                 else
-                {
-                    tempScale = (float)consoleRect.Height / (float)tempConsoleTex.Bounds.Height;
-                }
+                { tempScale = (float)consoleRect.Height / (float)tempConsoleTex.Bounds.Height; }
                 tempLocation.X = -((((float)tempConsoleTex.Bounds.Width * tempScale) - screenspace.Width) / 2f);
 
                 RenderTarget2D renderTarget = new RenderTarget2D(GraphicsDevice, consoleRect.Width, consoleRect.Height); ;
@@ -4075,52 +4319,52 @@ namespace Irbis
                 consoleTex = (Texture2D)renderTarget;
 
             }
-            if (jamie != null)
+            /*if (jamie != null)
             {
-                //jamie.inputEnabled = !console;
-                //framebyframe = console;
-            }
+                jamie.inputEnabled = !console;
+                framebyframe = console;
+            } /**/
             consoleLine = developerConsole.lines + 1;
-            consoleMoveTimer = 1 - consoleMoveTimer;
         }
 
         private void MoveConsole()
         {
-            consoleMoveTimer -= (float)elapsedTime;
+            consoleMoveTimer += RealTime;
             if (console)
-            {
-                consoleRect.Y = (int)Lerp(-halfResolution.Y, 0, 1 - consoleMoveTimer);
-            }
+            { consoleRect.Y = (int)Lerp(-halfResolution.Y, halfResolution.Y - consoleMovePixels, consoleMoveTimer / consoleMoveTime); }
             else
-            {
-                consoleRect.Y = (int)Lerp(0, -halfResolution.Y, 1 - consoleMoveTimer);
-            }
-            if (consoleMoveTimer <= 0)
-            {
-                consoleMoveTimer = 0;
-            }
-            consoleWriteline.Update(new Point(1, consoleRect.Bottom - (int)(10 * screenScale)));
-            developerConsole.Update(new Point(1, consoleRect.Bottom - (int)(20 * screenScale)));
+            { consoleRect.Y = (int)Lerp(halfResolution.Y - consoleMovePixels, -halfResolution.Y, consoleMoveTimer / consoleMoveTime); }
+            if (consoleMoveTimer > consoleMoveTime)
+            { consoleMoveTimer = 0; }
+            consoleWriteline.Update(new Point(1, consoleRect.Bottom - (10 * textScale)));
+            developerConsole.Update(new Point(1, consoleRect.Bottom - (13 * textScale)));
         }
 
         private void UpdateConsole()
         {
-            consoleWriteline.Update(textInputBuffer, true);
+            foreach (char c in textInputBuffer)
+            {
+                if (c == '\b' && consoleWriteline.statement.Length > 0)
+                { consoleWriteline.statement = consoleWriteline.statement.Substring(0, consoleWriteline.statement.Length - 1); }
+                else if (c != '`')
+                { consoleWriteline.statement += c; }
+            }
+            textInputBuffer = string.Empty;
             if ((GetKey(Keys.LeftControl) || GetKey(Keys.RightControl)) && GetKeyDown(Keys.V) /*&& System.Windows.Forms.Clipboard.ContainsText()*/)
             {
-                textInputBuffer += GetClipboardText();
+                consoleWriteline.Update(GetClipboardText());
             }
             if (GetKeyDown(Keys.Down) && developerConsole.lines >= consoleLine + 1)
             {
                 consoleLineChangeTimer = 0f;
                 consoleLine++;
-                textInputBuffer = developerConsole.GetLine(consoleLine);
+                consoleWriteline.Update(developerConsole.GetLine(consoleLine), true);
             }
             if (GetKeyDown(Keys.Up) && consoleLine - 1 >= 0)
             {
                 consoleLineChangeTimer = 0f;
                 consoleLine--;
-                textInputBuffer = developerConsole.GetLine(consoleLine);
+                consoleWriteline.Update(developerConsole.GetLine(consoleLine), true);
             }
             if (GetKey(Keys.Up) || GetKey(Keys.Down))
             {
@@ -4131,12 +4375,12 @@ namespace Irbis
                 if (keyboardState.IsKeyDown(Keys.Up) && consoleLine - 1 >= 0)
                 {
                     consoleLine--;
-                    textInputBuffer = developerConsole.GetLine(consoleLine);
+                    consoleWriteline.Update(developerConsole.GetLine(consoleLine), true);
                 }
                 if (keyboardState.IsKeyDown(Keys.Down) && developerConsole.lines >= consoleLine + 1)
                 {
                     consoleLine++;
-                    textInputBuffer = developerConsole.GetLine(consoleLine);
+                    consoleWriteline.Update(developerConsole.GetLine(consoleLine), true);
                 }
                 consoleLineChangeTimer -= 0.05f;
             }
@@ -4144,9 +4388,8 @@ namespace Irbis
 
             if (GetKeyDown(Keys.Enter))
             {
+                ConsoleParser(consoleWriteline.statement);
                 consoleWriteline.Update(string.Empty, true);
-                ConsoleParser(textInputBuffer);
-                textInputBuffer = string.Empty;
             }
 
             if (GetPauseKeyDown)
@@ -4189,7 +4432,7 @@ namespace Irbis
             }
 
             lock (writeLock)
-            { ExportString(developerConsole.Konsole); }
+            { ExportString(developerConsole.Konsole, "consoleExport"); }
         }
 
         private void CleanConsole()
@@ -4201,21 +4444,23 @@ namespace Irbis
             }
         }
 
-        public static void ExportString(string stringtoexport)
+        public static void ExportString(string stringtoexport, string filename)
         {
-            string timenow = (DateTime.Now).ToShortDateString() + "." + (DateTime.Now).ToString("HH:mm:ss.fff");
             string nameoffile = ".\\";
-
-            foreach (char c in timenow)
+            if (string.IsNullOrWhiteSpace(filename))
             {
-                if (char.IsDigit(c) || c.Equals('.'))
+                string timenow = (DateTime.Now).ToShortDateString() + "." + (DateTime.Now).ToString("HH:mm:ss.fff");
+
+                foreach (char c in timenow)
                 {
-                    nameoffile += c;
+                    if (char.IsDigit(c) || c.Equals('.'))
+                    { nameoffile += c; }
                 }
+
+                nameoffile += ".txt";
             }
-
-            nameoffile += ".txt";
-
+            else
+            { nameoffile += filename + ".txt"; }
             Console.WriteLine("saving " + nameoffile + "...");
             Irbis.WriteLine("saving " + nameoffile + "...");
 
@@ -4292,12 +4537,15 @@ namespace Irbis
             if (loadingBar != null)
             { loadingBar = new UIElementSlider(Direction.Left, new Rectangle(0, (int)(resolution.Y - (font.charHeight + 1) * textScale), resolution.X, (int)((font.charHeight + 1) * textScale)), Point.Zero, Direction.Forward, 100, new Color(038, 118, 213), null, null, Color.Black, nullTex, null, null, true, font, false, 0.8f, 0.799f, 0.801f, 0.803f); }
 
-            Texture2D temptex = Irbis.LoadTexture("patreon-character");
+            Texture2D temptex;
+            temptex = Irbis.LoadTexture("patreon-character");
             fontLogos[0] = ResizeTexture(temptex, (12f * textScale) / temptex.Width, false);
             temptex = Irbis.LoadTexture("twitter-character");
             fontLogos[1] = ResizeTexture(temptex, (12f * textScale) / temptex.Width, false);
             temptex = Irbis.LoadTexture("furaffinity-character");
             fontLogos[2] = ResizeTexture(temptex, (12f * textScale) / temptex.Width, false);
+            temptex = Irbis.LoadTexture("heart-character");
+            fontLogos[3] = ResizeTexture(temptex, (12f * textScale) / temptex.Width, false);
 
             maxButtonsOnScreen = (int)(resolution.Y / (25f * 2 * textScale));
 
@@ -4371,15 +4619,18 @@ Nelly
 RykerHusky
 ᵵRykerHusky
 
+❤My Dad
+immersivetravel.net
+
+Tailz SnowMew
+ᵵTailzSnowMew
+
+Mekell
+ᵵmekellthetiger
 
 
 ---
 Thank you all so much";
-/*
-
-RykerHusky
-ᵵRykerHusky
-*/
 
             creditsPrint = new Print(resolution.X, font, Color.White, false, Point.Zero, Direction.Right, 0.009f);
             creditsPrint.Write(credits);
@@ -5036,6 +5287,12 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
                         }
                         break;
+                    case "ispoweroftwo":
+                        if (int.TryParse(value, out intResult))
+                        { WriteLine(IsPowerOfTwo((uint)intResult).ToString()); }
+                        else
+                        { WriteLine("error: variable \"" + variable + "\" could not be parsed"); }
+                        break;
 
 
 
@@ -5397,9 +5654,7 @@ Thank you, Ze Frank, for the inspiration.";
                                 WriteLine("wave: " + onslaughtSpawner.wave);
                             }
                             else
-                            {
-                                WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                            }
+                            { WriteLine("error: variable \"" + variable + "\" could not be parsed"); }
                         }
                         break;
                     case "loadlevel":
@@ -5410,9 +5665,17 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("done.");
                         }
                         else
+                        { WriteLine("error: level \"" + value + "\" does not exist"); }
+                        break;
+                    case "reload":
+                        if (File.Exists(".\\levels\\" + currentLevel + ".lvl"))
                         {
-                            //???
+                            LoadLevel(currentLevel, !levelEditor);
+                            if (levelEditor) { sceneIsMenu = true; }
+                            WriteLine("done.");
                         }
+                        else
+                        { WriteLine("error: level \"" + currentLevel + "\" does not exist"); }
                         break;
                     case "newlevel":
                         if (levelEditor && !string.IsNullOrWhiteSpace(value))
@@ -5432,16 +5695,22 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "spawnpoints":
                         for (int i = 0; i < enemySpawnPoints.Count; i++)
-                        {
-                            WriteLine("enemySpawnPoints[" + i + "]: " + enemySpawnPoints[i]);
-                        }
+                        { WriteLine("enemySpawnPoints[" + i + "]: " + enemySpawnPoints[i]); }
                         WriteLine(enemySpawnPoints.Count + " enemy spawn points");
                         break;
+                    case "squares":
+                        goto case "squarelist";
                     case "squarelist":
                         for (int i = 0; i < squareList.Count; i++)
-                        {
-                            WriteLine("squareList[" + i + "] position:" + squareList[i].Position + " collider:" + squareList[i].Collider + " texture:" + squareList[i].texture + " depth:" + squareList[i].depth);
-                        }
+                        { WriteLine("squareList[" + i + "] position:" + squareList[i].Position + " collider:" + squareList[i].Collider + " texture:" + squareList[i].texture + " depth:" + squareList[i].depth); }
+                        WriteLine("squareList.Count:" + squareList.Count);
+                        break;
+                    case "backgrounds":
+                        goto case "backgroundsquarelist";
+                    case "backgroundsquarelist":
+                        for (int i = 0; i < backgroundSquareList.Count; i++)
+                        { WriteLine("backgroundSquareList[" + i + "] position:" + backgroundSquareList[i].Position + " collider:" + backgroundSquareList[i].Collider + " texture:" + backgroundSquareList[i].texture + " depth:" + backgroundSquareList[i].depth); }
+                        WriteLine("backgroundSquareList.Count:" + backgroundSquareList.Count);
                         break;
                     case "addspawn":
                         if (PointParser(value) != Point.Zero)
@@ -5797,6 +6066,17 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         { jamie.invulnerable = float.PositiveInfinity; WriteLine("godmode on"); }
                         break;
+                    case "super":
+                        if (string.IsNullOrWhiteSpace(value))
+                        { WriteLine("change jamie's attack power"); }
+                        else
+                        {
+                            if (float.TryParse(value, out floatResult))
+                            { jamie.attackDamage *= floatResult; }
+                            else
+                            { WriteLine("error: \"" + value + "\" could not be parsed"); }
+                        }
+                        break;
                     case "buddha":
                         jamie.buddha = !jamie.buddha;
                         WriteLine("buddha mode:" + jamie.buddha);
@@ -5811,9 +6091,7 @@ Thank you, Ze Frank, for the inspiration.";
                             }
                         }
                         else
-                        {
-                            WriteLine("use this command to add points to your score");
-                        }
+                        { WriteLine("use this command to add points to your score"); }
                         break;
                     case "resolution":
                         WriteLine("resolution:" + resolution);
@@ -5882,19 +6160,13 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "timescale":
                         if (string.IsNullOrWhiteSpace(value))
-                        {
-                            WriteLine("Sets the timescale");
-                        }
+                        { WriteLine("Sets the timescale"); }
                         else
                         {
                             if (float.TryParse(value, out floatResult))
-                            {
-                                timeScale = floatResult;
-                            }
+                            { timeScale = floatResult; }
                             else
-                            {
-                                WriteLine("error: \"" + value + "\" could not be parsed");
-                            }
+                            { WriteLine("error: \"" + value + "\" could not be parsed"); }
                         }
                         WriteLine("Current timescale: " + timeScale);
                         break;
@@ -5961,11 +6233,23 @@ Thank you, Ze Frank, for the inspiration.";
                         else
                         { throw new Exception(value); }
                     case "triggers":
-                        if (Triggers != null)
+                        if (triggers != null)
                         {
-                            foreach (Trigger t in Triggers)
+                            foreach (Trigger t in triggers)
                             { WriteLine(t.ToString()); }
                         }
+                        break;
+                    case "loadpng":
+                        if (string.IsNullOrWhiteSpace(value))
+                        { value = "test"; }
+
+                        Texture2D temp = LoadPNG(value);
+                        Color[] pixelArray = new Color[temp.Width * temp.Height];
+                        temp.GetData(pixelArray);
+
+                        WriteLine(" color:" + pixelArray[0]);
+                        WriteLine("packed:" + pixelArray[0].PackedValue);
+                        //WriteLine("PNGloadTimes:" + (PNGloadTimes.Framerate * 100).ToString("0") + "%"); // use 1 / framerate since this equation is for framerates, so you need the reciprocal to go back to the true value
                         break;
 
 
@@ -6081,7 +6365,7 @@ Thank you, Ze Frank, for the inspiration.";
                 try
                 { pixels[(int)y * radius * 2 + (int)x] = color; }
                 catch
-                { Irbis.WriteLine("radius:" + radius + " x:" + x + " y:" + y + " y*radius*2+x:" + (y * radius * 2 + x) + " radius*radius*4:" + (radius * radius * 4)); }
+                { /*WriteLine("radius:" + radius + " x:" + x + " y:" + y + " y*radius*2+x:" + (y * radius * 2 + x) + " radius*radius*4:" + (radius * radius * 4)); */ }
                 angle += minAngle;
             }
             Texture2D circle = new Texture2D(Irbis.game.GraphicsDevice, radius * 2, radius * 2);
@@ -6114,16 +6398,16 @@ Thank you, Ze Frank, for the inspiration.";
                     for (int i = enemyList.Count - 1; i >= 0; i--)
                     { if (enemyList[i] != null) { enemyList[i].Draw(spriteBatch); } }
 
-                    for (int i = Doodads.Length - 1; i >= 0; i--)
-                    { Doodads[i].Draw(spriteBatch); }
+                    for (int i = doodads.Length - 1; i >= 0; i--)
+                    { doodads[i].Draw(spriteBatch); }
 
                     for (int i = particleSystems.Count - 1; i >= 0; i--)
                     { particleSystems[i].Draw(spriteBatch); }
                     for (int i = 0; i < grassList.Count; i++)
                     { grassList[i].Draw(spriteBatch); }
-                    if (debug > 2 && Triggers != null)
+                    if (debug > 2 && triggers != null)
                     {
-                        foreach (Trigger t in Triggers)
+                        foreach (Trigger t in triggers)
                         { t.Draw(spriteBatch); }
                     }
                     //torch.Draw(spriteBatch);
@@ -6250,7 +6534,8 @@ Thank you, Ze Frank, for the inspiration.";
                 if (debug > 1)
                 { RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false); }
 
-                infoText.Draw(spriteBatch);
+                if (!sceneIsMenu)
+                { infoText.Draw(spriteBatch); }
                 spriteBatch.End();
             }
             // --------------------------------------------------------------------------------------------------------------------------------
@@ -6363,6 +6648,7 @@ Thank you, Ze Frank, for the inspiration.";
                     // debug stuff
                     debuginfo.Draw(spriteBatch);
                     topright.Draw(spriteBatch);
+                    infoText.Draw(spriteBatch);
 
                     if (lastMenuScene == 3 && menuSelection >= 0 && menuSelection <= 3)
                     { RectangleBorder.Draw(spriteBatch, boundingBox, Color.Magenta, false); }

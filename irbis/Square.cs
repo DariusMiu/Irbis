@@ -1,9 +1,10 @@
 ﻿using Irbis;
 using System;
 using Microsoft.Xna.Framework;
+using System.Runtime.Serialization;
 using Microsoft.Xna.Framework.Graphics;
 
-[Serializable]
+[DataContract]
 public class Square : ICollisionObject
 {
     public Rectangle Collider
@@ -14,14 +15,11 @@ public class Square : ICollisionObject
         { collider = value; }
     }
     private Rectangle collider;
-
     public Rectangle? InitialCollider
     {
         get
         { return initialCollider; }
     }
-    private Rectangle? initialCollider;
-
     public Vector2 Position
     {
         get
@@ -37,7 +35,6 @@ public class Square : ICollisionObject
         }
     }
     private Vector2 position;
-
     public Vector2 Velocity
     {
         get
@@ -46,27 +43,37 @@ public class Square : ICollisionObject
         { velocity = value; }
     }
     private Vector2 velocity;
-
     public float rotation;
-
-    public Texture2D texture;
-    public float depth;
-    public Color color;
-    public float scale;
-    public bool draw = true;
     public Point InitialPosition
     {
         get
         { return initialPosition; }
     }
+
+    public Texture2D texture;
+    [DataMember]
+    private string texname;
+
+    [DataMember]
     private Point initialPosition;
+    [DataMember]
+    private Rectangle? initialCollider;
+    [DataMember]
+    public float depth;
+    [DataMember]
+    public Color color;
+    [DataMember]
+    public float scale;
+    [DataMember]
+    public bool draw = true;
+    [DataMember]
+    private Vector2 origin;
 
     public Vector2 Origin
     {
         get
         { return origin; }
     }
-    private Vector2 origin;
 
     public Square(Texture2D Texture, Color drawColor, Point initialPos, Rectangle? Collider, Vector2 Origin, float Scale, float? DrawDepth)
     {
@@ -91,6 +98,25 @@ public class Square : ICollisionObject
             initialCollider = Collider;
             collider = new Rectangle(initialPos + ((Rectangle)Collider).Location, ((Rectangle)Collider).Size);
         }
+    }
+
+    [OnSerializing]
+    void OnSerializing(StreamingContext c)
+    { texname = texture.Name; }
+
+    [OnSerialized]
+    void OnSerialized(StreamingContext c)
+    { texname = null; }
+
+    [OnDeserializing]
+    void OnDeserializing(StreamingContext c)
+    { }
+
+    [OnDeserialized]
+    void OnDeserialized(StreamingContext c)
+    {
+        texture = Irbis.Irbis.LoadTexture(texname);
+        texname = null;
     }
 
     public void Draw(SpriteBatch sb)

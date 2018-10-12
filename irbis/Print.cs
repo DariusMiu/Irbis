@@ -1,12 +1,13 @@
 ﻿using Irbis;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
-using System.Reflection;
 using System.Text;
+using System.Reflection;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using Microsoft.Xna.Framework.Graphics;
 
+[DataContract]
 public class Print
 {
     public string Konsole
@@ -14,27 +15,43 @@ public class Print
         get
         { return konsole.ToString(); }
     }
-    Texture2D tex;
-    Vector2 displayPosition;
-
-    public Color fontColor;
-    int width;
-    int height;
-    int maxWidth;
-    Rectangle[] fontSourceRect;
-    public string statement;
     StringBuilder konsole;
+    Texture2D tex;
+    private string texname;
+
+    [DataMember]
+    Vector2 displayPosition;
+    [DataMember]
+    public Color fontColor;
+    [DataMember]
+    int width;
+    [DataMember]
+    int height;
+    [DataMember]
+    int maxWidth;
+    [DataMember]
+    Rectangle[] fontSourceRect;
+    [DataMember]
+    public string statement;
+    [DataMember]
+    public float depth;
+    [DataMember]
+    public Point origin;
+    [DataMember]
+    public Direction align;
+    [DataMember]
+    public int characterHeight;
+    [DataMember]
+    bool monoSpace;
+    [DataMember]
+    public bool scrollDown;
+    [DataMember]
+    public int textScale;
+    [DataMember]
+    public int lines;
+
     string printStatement;
     int printLines;
-    public float depth;
-    public Point origin;
-    public Direction align;
-    public int characterHeight;
-    bool monoSpace;
-    public int lines;
-    public float timer;
-    public bool scrollDown;
-    public int textScale;
     public bool isConsole;
 
     public Print(int MaxWidth, Font font, Color colorForFont, bool monospace, Point location, Direction alignSide, float drawDepth)
@@ -48,7 +65,6 @@ public class Print
         maxWidth = MaxWidth;
         fontColor = colorForFont;
         characterHeight = font.charHeight;
-        timer = 0f;
         lines = 0;
         scrollDown = true;
         origin.X = location.X;
@@ -60,20 +76,18 @@ public class Print
 
         statement = printStatement = string.Empty;
 
-        if (debug) { Console.WriteLine("     font: " + font.ToString()); }
-        if (debug) { Console.WriteLine("    align: " + align); }
-        if (debug) { Console.WriteLine("   origin: " + origin); }
-        if (debug) { Console.WriteLine(" maxWidth: " + maxWidth); }
-        if (debug) { Console.WriteLine("fontColor: " + fontColor); }
-        if (debug) { Console.WriteLine("monoSpace: " + monoSpace); }
+        if (debug) { Irbis.Irbis.WriteLine("     font: " + font.ToString()); }
+        if (debug) { Irbis.Irbis.WriteLine("    align: " + align); }
+        if (debug) { Irbis.Irbis.WriteLine("   origin: " + origin); }
+        if (debug) { Irbis.Irbis.WriteLine(" maxWidth: " + maxWidth); }
+        if (debug) { Irbis.Irbis.WriteLine("fontColor: " + fontColor); }
+        if (debug) { Irbis.Irbis.WriteLine("monoSpace: " + monoSpace); }
 
         fontSourceRect = new Rectangle[100];
         for (int i = 0; i < 10; i++)
         {
             for (int j = 0; j < 10; j++)
-            {
-                fontSourceRect[(i * 10) + j] = new Rectangle((j * font.charHeight) + (font.charHeight - font.charWidth[(i * 10) + j]), i * font.charHeight, font.charWidth[(i * 10) + j], font.charHeight);
-            }
+            { fontSourceRect[(i * 10) + j] = new Rectangle((j * font.charHeight) + (font.charHeight - font.charWidth[(i * 10) + j]), i * font.charHeight, font.charWidth[(i * 10) + j], font.charHeight); }
         }
         displayPosition = origin.ToVector2();
     }
@@ -90,7 +104,6 @@ public class Print
         maxWidth = Irbis.Irbis.resolution.X;
         fontColor = Color.White;
         characterHeight = CONSOLE.charHeight;
-        timer = 0f;
         lines = 0;
         scrollDown = monoSpace = true;
         origin.X = 1;
@@ -104,6 +117,25 @@ public class Print
             for (int j = 0; j < 10; j++)
             { fontSourceRect[(i * 10) + j] = new Rectangle((j * CONSOLE.charHeight) + (CONSOLE.charHeight - CONSOLE.charWidth[(i * 10) + j]), i * CONSOLE.charHeight, CONSOLE.charWidth[(i * 10) + j], CONSOLE.charHeight); }
         }
+    }
+
+    [OnSerializing]
+    void OnSerializing(StreamingContext c)
+    { texname = tex.Name; }
+
+    [OnSerialized]
+    void OnSerialized(StreamingContext c)
+    { texname = null; }
+
+    [OnDeserializing]
+    void OnDeserializing(StreamingContext c)
+    { }
+
+    [OnDeserialized]
+    void OnDeserialized(StreamingContext c)
+    {
+        tex = Irbis.Irbis.LoadTexture(texname);
+        texname = null;
     }
 
     public Point PrintSize(string StringToMeasure)
@@ -254,20 +286,14 @@ public class Print
 
     public void Update(string input, bool clear)
     {
-        //fontSourceRect.Clear();
         if (clear)
-        {
-            statement = input;
-        }
+        { statement = input; }
         else
-        {
-            statement += input;
-        }
+        { statement += input; }
     }
 
     public void Update(string input)
     {
-        //fontSourceRect.Clear();
         statement += input;
     }
 
@@ -576,14 +602,17 @@ public class Print
             case '\u007e': //~
                 return 78;
 
-            case '\u1d6e': //ᵮ furaffinity logo
+            case '\u1d6e': // ᵮ furaffinity logo
                 return 102;
 
-            case '\u1d75': //ᵵ twitter logo
+            case '\u1d75': // ᵵ twitter logo
                 return 101;
 
-            case '\u2117': //℗ patreon logo
+            case '\u2117': // ℗ patreon logo
                 return 100;
+
+            case '\u2764': // ❤ heart icon
+                return 103;
 
             default:
                 return 98;
@@ -645,8 +674,8 @@ public class Print
                 printLines++;
             }
         }
-        konsole.Append("\n" + line);
-        printStatement = string.Join(string.Empty, new string[] { printStatement, "\n", line });
+        konsole.Append(line + "\n");
+        printStatement = string.Join(string.Empty, new string[] { printStatement, line, "\n" });
         lines++;
         printLines++;
     }
@@ -662,7 +691,6 @@ public class Print
     public void DeleteLine()
     {
         statement = statement.Substring(statement.IndexOf("\n") + 1);
-        //timer = 0f;
         lines--;
     }
 

@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Input;
 using System.Runtime.Serialization;
 using System.Reflection;
 
+[DataContract]
 [Serializable]
 public class Trigger
 {
@@ -18,25 +19,32 @@ public class Trigger
         get
         { return collider; }
     }
-
-    public int repeat;
-    private string serializedFunction = null;
     private int[] rect;
+
+    [DataMember]
+    public int repeat;
+    [DataMember]
+    private string serializedFunction = null;
+    [DataMember]
     private string inst;
+    [DataMember]
+    private string typename;
     private Type type;
+
+    [NonSerialized]
+    [DataMember]
+    private Rectangle collider;
 
     [NonSerialized]
     private MethodInfo function;
     [NonSerialized]
-    private Rectangle collider;
-    [NonSerialized]
     private object instance;
 
     /// <summary>
-    /// 
+    /// does something when entered by player
     /// </summary>
-    /// <param name="Function">function to run upon triggering (function must accept a passed object)</param>
-    /// <param name="Instance">Instance of the function to invoke. Usually "this"</param>
+    /// <param name="Function">function to run upon triggering. ie: typeof(LizardGuy).GetMethod("StartUp") (function must accept a passed object)</param>
+    /// <param name="Instance">Instance of the function to invoke (relative to Irbis.Irbis.game). ie: "this" = Irbis.Irbis.game</param>
     /// <param name="Area">Collider area</param>
     /// <param name="Count">How many times can this trigger run. Negative for infinte</param>
     public Trigger(MethodInfo Function, string Instance, Rectangle Area, int Count)
@@ -74,7 +82,10 @@ public class Trigger
     public bool Check()
     {
         bool check = true;
-        function = type.GetMethod(serializedFunction);
+        if (!string.IsNullOrWhiteSpace(typename))
+        { function = Type.GetType(typename).GetMethod(serializedFunction); }
+        else if (type != null)
+        { function = type.GetMethod(serializedFunction); }
         if (function == null)
         { check = false; }
         instance = Irbis.Irbis.game.GetType().GetField(inst).GetValue(Irbis.Irbis.game);
@@ -93,33 +104,40 @@ public class Trigger
         rect[2] = collider.Width;
         rect[3] = collider.Height;
         type = function.DeclaringType;
+        typename = function.DeclaringType.FullName;
     }
 
     [OnSerialized]
     internal void OnSerializedMethod(StreamingContext context)
     {
-        serializedFunction = null;
+        /*serializedFunction = null;
         rect = null;
         type = null;
+        typename = null;*/
     }
 
-    /*
-    [OnDeserializing()]
-    internal void OnDeserializingMethod(StreamingContext context)
-    { function = instance.GetType().GetMethod(serializedFunction); }
-    */
+    //[OnDeserializing]
+    //internal void OnDeserializingMethod(StreamingContext context)
+    //{ Irbis.Irbis.WriteLine("deserializing Trigger..."); }
 
     [OnDeserialized]
     internal void OnDeserializedMethod(StreamingContext context)
     {
-        collider = new Rectangle(rect[0], rect[1], rect[2], rect[3]);
+        if (rect != null)
+        {
+            collider = new Rectangle(rect[0], rect[1], rect[2], rect[3]);
+            rect = null;
+        }
         //(T) Convert.ChangeType(input, typeof(T));
         //type = typeof(LizardGuy);
         instance = Irbis.Irbis.game.GetType().GetField(inst).GetValue(Irbis.Irbis.game);
-        function = type.GetMethod(serializedFunction);
-        rect = null;
+        if (!string.IsNullOrWhiteSpace(typename))
+        { function = Type.GetType(typename).GetMethod(serializedFunction); }
+        else if (type != null)
+        { function = type.GetMethod(serializedFunction); }
         //serializedFunction = null;
         //type = null;
+        //Irbis.Irbis.WriteLine("done. " + this.ToString());
     }
 
     public override string ToString()

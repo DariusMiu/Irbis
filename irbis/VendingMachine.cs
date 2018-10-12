@@ -8,31 +8,60 @@ using System.Runtime.Serialization;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 
-[Serializable]
+[DataContract]
 public class VendingMachine
 {
+    [DataMember]
     float drawDepth;
-    public Texture2D vendingTex;
+    [DataMember]
     public Vector2 displayLocation;
+    [DataMember]
     public Rectangle collider;
+    [DataMember]
     public VendingType type;
+    [DataMember]
     Rectangle sourceRect;
+    //[DataMember] // fix this when you finally update vendingmachines, you dingus
     Tooltip tooltip;
+
+    public Texture2D texture;
+    [DataMember]
+    private string texname;
+
     public bool drawMenu;
     public int selection;
     VendingMenu menu;
     ulong[] cost;
     string[] itemDescriptions;
 
-    public VendingMachine(int startingCost, VendingType vendingType, Rectangle displayRectangle, Texture2D texture, float depth)
+    public VendingMachine(int startingCost, VendingType vendingType, Rectangle displayRectangle, Texture2D Texture, float depth)
     {
-        sourceRect = texture.Bounds;
+        sourceRect = Texture.Bounds;
         displayLocation = displayRectangle.Location.ToVector2();
         collider = displayRectangle;
-        vendingTex = texture;
+        texture = Texture;
         drawDepth = depth;
 
         type = vendingType;
+    }
+
+    [OnSerializing]
+    void OnSerializing(StreamingContext c)
+    { texname = texture.Name; }
+
+    [OnSerialized]
+    void OnSerialized(StreamingContext c)
+    { texname = null; }
+
+    [OnDeserializing]
+    void OnDeserializing(StreamingContext c)
+    { }
+
+    [OnDeserialized]
+    void OnDeserialized(StreamingContext c)
+    {
+        texture = Irbis.Irbis.LoadTexture(texname);
+        texname = null;
     }
 
     public void Purchase(int item)
@@ -120,7 +149,6 @@ public class VendingMachine
             tooltip = Irbis.Irbis.tooltipGenerator.CreateTooltip(Irbis.Irbis.useKey + " to use", new Point((int)((displayLocation.X + (sourceRect.Width / 2)) * Irbis.Irbis.screenScale), (int)((displayLocation.Y - (10 / Irbis.Irbis.screenScale)) * Irbis.Irbis.screenScale)), drawDepth);
             Texture2D[] icons;
             string[] itemNames;
-
 
             switch (type)
             {
@@ -227,22 +255,7 @@ public class VendingMachine
 
     public void Draw(SpriteBatch sb)
     {
-        sb.Draw(vendingTex, displayLocation * Irbis.Irbis.screenScale, sourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, drawDepth);
-        //if (Irbis.Irbis.jamie != null)
-        //{
-        //    if (Irbis.Irbis.DistanceSquared(collider.Center, Irbis.Irbis.jamie.Collider.Center) <= Irbis.Irbis.vendingMachineUseDistanceSqr)
-        //    {
-        //        if (!drawMenu)
-        //        {
-        //            tooltip.Draw(sb);
-        //        }
-        //    }
-        //    else if (drawMenu)
-        //    {
-        //        drawMenu = false;
-        //        Irbis.Irbis.vendingMachineMenu = null;
-        //    }
-        //}
+        sb.Draw(texture, displayLocation * Irbis.Irbis.screenScale, sourceRect, Color.White, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, drawDepth);
         if (!drawMenu && Irbis.Irbis.jamie != null && Irbis.Irbis.DistanceSquared(collider.Center, Irbis.Irbis.jamie.Collider.Center) <= Irbis.Irbis.vendingMachineUseDistanceSqr)
         { tooltip.Draw(sb); }
     }

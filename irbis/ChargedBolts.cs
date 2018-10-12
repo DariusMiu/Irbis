@@ -24,15 +24,19 @@ public class ChargedBolts
     float velocity;
     float stunTime;
     Vector2 center;
+    int boltRadius;
+    int boltRadiusSquared;
 
 
-    public ChargedBolts(Vector2 Center, int Count, float AngleOffset, float Randomness, float Velocity, float StunTime, float Damage)
+    public ChargedBolts(Vector2 Center, int Count, float AngleOffset, float Randomness, float Velocity, float StunTime, float Damage, int BoltRadius, int Speed)
     {
         count = Count;
         randomness = Randomness;
         velocity = Velocity;
         center = Center;
         stunTime = StunTime;
+        boltRadius = BoltRadius;
+        boltRadiusSquared = boltRadius * boltRadius;
 
         bolts = new ChargedBolt[Count];
         damage = new float[Count];
@@ -47,7 +51,7 @@ public class ChargedBolts
         {
             lerpCounts[i] = 1;
             damage[i] = Damage;
-            bolts[i] = new ChargedBolt(Center.ToPoint(), 10, 5, 250, Color.LightCyan, Color.LightCyan);
+            bolts[i] = new ChargedBolt(Center.ToPoint(), boltRadius, 5, Speed, Color.LightCyan, Color.LightCyan);
             initialPositions[i] = bolts[i].position;
             float angle = (i / (float)count) * MathHelper.Pi - MathHelper.PiOver2 + AngleOffset;
             directions[i] = new Vector2((float)Math.Sin(angle), (float)Math.Cos(angle)) * 10;
@@ -74,17 +78,17 @@ public class ChargedBolts
                     targets[i] = new Vector2(directions[i].X + randomness * (Irbis.Irbis.RandomFloat - 1), directions[i].Y + randomness * (Irbis.Irbis.RandomFloat - 1)) * lerpCounts[i] + center;
                     initialLerptimes[i] = lerptimes[i] = Vector2.Distance(bolts[i].position, targets[i]) / velocity;
                 }
-                if (Collision(bolts[i].Collider, i))
+                if (Collision(bolts[i].Center, i))
                 { damage[i] = -1; }
             }
         }
     }
 
-    public bool Collision(Rectangle collider, int index)
+    public bool Collision(Point Center, int index)
     {
         foreach (ICollisionObject s in Irbis.Irbis.collisionObjects)
         {
-            if (collider.Intersects(s.Collider))
+            if (Irbis.Irbis.DistanceSquared(s.Collider, Center) <= boltRadiusSquared)
             {
                 if (s.GetType() == typeof(Player))
                 { ((Player)s).Zap(damage[index], stunTime); }

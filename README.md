@@ -1,5 +1,5 @@
 # IRBIS  
-## Build Version: `0.2.1.3` | death  
+## Build Version: `0.2.1.7` | Wizard Update  
 
 
 ### Known Bug List  
@@ -7,14 +7,12 @@
 `01.` ~~Multithreading breaks down when too many enemies are being updated~~  
 `02.` Vending Machine menu still slows the game down a lot (~30%) I think this is due to the transparency  
 `03.` Camera swing causes weird things and has been disabled for the time being  
-`04.` Boss strike attack during bury phase sometimes hits twice  
-`05.` Tailwhip and strike seem to not trigger their knockbacks occasionally  
-`06.` Player death causes freeze with multithreading (multithreading will get completely reworked in the future)  
-`07.` Player sometimes get stuck in the falling animation despite having touched the ground  
-`08.` ~~Standing on the lizard after roll attack makes the player clip through the wall and fall through the floor~~  
-`09.` The player is able to push generic enemies around instead of vice-a-versa  
-`10.` Slam doesn't work on Wizard  
-`11.` Sometimes the stun animation will get stuck on only a single frame (seems to only happen when hit while running)  
+`04.` Player death causes freeze with multithreading (multithreading will get completely reworked in the future)  
+`05.` Player sometimes get stuck in the falling animation despite having touched the ground  
+`06.` ~~Standing on the lizard after roll attack makes the player clip through the wall and fall through the floor~~  
+`07.` The player is able to push generic enemies around instead of vice-a-versa  
+`08.` Slam doesn't work on Wizard  
+`09.` Sometimes the stun animation will get stuck on only a single frame (seems to only happen when hit while running)  
 
 
 ### Controls  
@@ -32,7 +30,7 @@
 
 
 ### Playable Version  
-You can download a playable version of the latest build of the game here: [Ln2.co](https://Ln2.co/#download)  
+You can download a playable version of the latest build of the game here: [irbisgame.com/download](https://irbisgame.com/download)  
 (windows only right now, I'm afraid)  
 
 

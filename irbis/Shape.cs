@@ -259,7 +259,6 @@ public struct Shape
                 Irbis.Irbis.WriteLine("untriangulated vertices:" + vertexList.Count);
                 for (int i = 0; i < vertexList.Count; i++)
                 { Irbis.Irbis.Write(" vertex[" + vertexList[i] + "]:" + vertices[vertexList[i]]); }
-                Irbis.Irbis.WriteLine();
             }
             fail = true;
             return false;

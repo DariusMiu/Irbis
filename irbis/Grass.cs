@@ -5,17 +5,45 @@ using System.Text;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Microsoft.Xna.Framework.Graphics;
 
+[DataContract]
 public class Grass
 {
-    public float rotationTime;
-    float rotationRandomness;
-    public float rotationMin;
-    public float rotationMax;
-    float rotationRange;
-    public Vector2 bladeOrigin;
     public Texture2D bladeTextures;
+    [DataMember]
+    private string texname;
+
+    [DataMember]
+    public float rotationTime;
+    [DataMember]
+    public float rotationMin;
+    [DataMember]
+    public float rotationMax;
+    [DataMember]
+    public Vector2 bladeOrigin;
+    [DataMember]
+    public float initialRotation;
+    [DataMember]
+    public float density;
+    [DataMember]
+    public float depth;
+    [DataMember]
+    public float[] randomness;
+    [DataMember]
+    public Point textureDimentions;
+    [DataMember]
+    public float brushDistanceSqr = 900;
+    [DataMember]
+    int efficiency;
+    [DataMember]
+    private Rectangle initialArea;
+
+
+
+    float rotationRange;
+    float rotationRandomness;
     List<GrassBlade> bladeList;
     public Rectangle area;
     /// <summary>
@@ -26,20 +54,12 @@ public class Grass
         get
         { return initialArea; }
     }
-    private Rectangle initialArea;
     public int Efficiency
     {
         get
         { return efficiency; }
     }
-    int efficiency;
     int bladeCount;
-    public float initialRotation;
-    public float density;
-    public float depth;
-    public float[] randomness;
-    public Point textureDimentions;
-    public float brushDistanceSqr = 900;
 
     public float rotation;
 
@@ -65,7 +85,6 @@ public class Grass
     {
         if (BrushDistanceSqr != null)
         { brushDistanceSqr = (float)BrushDistanceSqr; }
-        Irbis.Irbis.WriteLine("brushDistanceSqr:" + brushDistanceSqr);
         rotationMax = RotationMax;
         textureDimentions = TextureDimentions;
         randomness = Randomness;
@@ -120,6 +139,25 @@ public class Grass
             posList.RemoveAt(next);
         }
         bladeCount = bladeList.Count;
+    }
+
+    [OnSerializing]
+    void OnSerializing(StreamingContext c)
+    { texname = bladeTextures.Name; }
+
+    [OnSerialized]
+    void OnSerialized(StreamingContext c)
+    { texname = null; }
+
+    [OnDeserializing]
+    void OnDeserializing(StreamingContext c)
+    { }
+
+    [OnDeserialized]
+    void OnDeserialized(StreamingContext c)
+    {
+        bladeTextures = Irbis.Irbis.LoadTexture(texname);
+        texname = null;
     }
 
     public void Update()

@@ -324,8 +324,8 @@ public class Player : ICollisionObject
     {
         prevInput = input;
         prevAttacking = attacking;
-        prevWalled = walled;
         input = Vector2.Zero;
+        prevWalled = walled;
         activityChanged = frameInput = false;
 
         if (Irbis.Irbis.easyWalljumpMode) // this controls wall jump reset
@@ -342,6 +342,7 @@ public class Player : ICollisionObject
         }
         if (inputEnabled)
         {
+
             float leftStickX = Irbis.Irbis.GetLeftStickX;
             if (leftStickX < -Irbis.Irbis.analogCutoff)
             { input.X -= leftStickX; }
@@ -425,7 +426,7 @@ public class Player : ICollisionObject
                 }
                 if (rollTime <= 0 && rollCooldown <= 0 && walled.Bottom > 0 && (Irbis.Irbis.GetRollKeyDown))
                 { // roll
-                    inputEnabled = false;
+                    //inputEnabled = false;
                     rollTime = rollTimeMax;
                     if (rollTime > invulnerable)
                     { invulnerable = rollTime * 2 / 3; }
@@ -447,6 +448,8 @@ public class Player : ICollisionObject
                 superShockwave = 0;
             }
         }
+        else if (rollTime > 0)
+        { input = prevInput; }
         else
         {
             input = Vector2.Zero;
@@ -609,8 +612,8 @@ public class Player : ICollisionObject
             rollTime -= Irbis.Irbis.DeltaTime;
             if (rollTime <= 0)
             {
-                inputEnabled = true;
-                rollTime = 0;
+                //inputEnabled = true;
+                rollTime = -1;
             }
         }
         else if (attacking == Attacking.Attack1)
@@ -1096,7 +1099,7 @@ public class Player : ICollisionObject
                 { SetAnimation(15, true); }
                 break;
             case Activity.Rolling:
-                SetAnimation(35, false);
+                SetAnimation(35, true);
                 break;
             case Activity.Slamming:
                 SetAnimation(23, true);

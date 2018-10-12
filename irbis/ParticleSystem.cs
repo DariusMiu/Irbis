@@ -3,32 +3,65 @@ using System;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Microsoft.Xna.Framework.Graphics;
 
+[DataContract]
 public class ParticleSystem
 {
-    List<Particle> particleList = new List<Particle>();
-    public Vector2 initialVelocity;
-    public Vector2 force;
     public Texture2D[] textures;
+    protected List<Particle> particleList = new List<Particle>();
+
+    [DataMember]
+    private string[] texnames;
+    [DataMember]
+    public Vector2 initialVelocity;
+    [DataMember]
+    public Vector2 force;
+    [DataMember]
     public Rectangle spawnArea;
+    [DataMember]
     public float spawnDelay;
+    [DataMember]
     public float depth;
+    [DataMember]
     public float timeSinceLastSpawn;
+    [DataMember]
     public float timeToLive;
-
-    float nextDelay;
-
+    [DataMember]
+    protected Vector2 initialPosition;
+    [DataMember]
     public float[] stateDepths = new float[4];
+    [DataMember]
     public float[] stateTimes = new float[4];
+    [DataMember]
     public float[] stateScales = new float[4];
+    [DataMember]
     public float[] stateLightScales = new float[4];
+    [DataMember]
     public Color[] stateColors = new Color[4];
+    [DataMember]
     public Color[] stateLightColors = new Color[4];
+    [DataMember]
     public int[] animationFrames = new int[4];
+    [DataMember]
     public float animationDelay;
-    int efficiency = 1;
-    int updateIndex;
+    [DataMember]
+    protected int efficiency = 1;
+
+
+    public Vector2 Position
+    {
+        get
+        { return position; }
+        set
+        { position = value; }
+    }
+    protected Vector2 position;
+
+    protected float nextDelay;
+
+    protected int updateIndex;
 
     // random factors
     // 0 initialVelocityRandomness;
@@ -38,6 +71,7 @@ public class ParticleSystem
     // 4 lightRandomness;
     // 5 delayRandomness;
     // 6 depthRandomness;
+    [DataMember]
     public float[] randomness = new float[7];
 
     /// <summary>
@@ -90,6 +124,7 @@ public class ParticleSystem
             { randomness[i] = Randomness[i]; }
         }
         spawnArea = Spawn;
+        initialPosition = Spawn.Center.ToVector2();
         textures = Textures;
         animationFrames = Frames;
         animationDelay = AnimationDelay;
@@ -98,11 +133,38 @@ public class ParticleSystem
         if (Efficiency > 0)
         { efficiency = Efficiency; }
     }
+
+    [OnSerializing]
+    void OnSerializing(StreamingContext c)
+    {
+        texnames = new string[textures.Length];
+        for (int i = 0; i < texnames.Length; i++)
+        { texnames[i] = textures[i].Name; }
+    }
+
+    [OnSerialized]
+    void OnSerialized(StreamingContext c)
+    { texnames = null; }
+
+    [OnDeserializing]
+    void OnDeserializing(StreamingContext c)
+    { }
+
+    [OnDeserialized]
+    void OnDeserialized(StreamingContext c)
+    {
+        textures = new Texture2D[texnames.Length];
+        for (int i = 0; i < texnames.Length; i++)
+        { textures[i] = Irbis.Irbis.LoadTexture(texnames[i]); }
+        texnames = null;
+        particleList = new List<Particle>(); // just in case
+    }
+
     /// <summary>
     /// 
     /// </summary>
     /// <returns>true if particle system should be terminated</returns>
-    public bool Update()
+    public virtual bool Update()
     {
         timeSinceLastSpawn += Irbis.Irbis.DeltaTime;
         if (timeSinceLastSpawn >= nextDelay && timeToLive >= 0)
@@ -151,10 +213,15 @@ public class ParticleSystem
         }
     }
 
+    protected virtual void DebugDraw(SpriteBatch sb)
+    {
+        RectangleBorder.Draw(sb, spawnArea, Color.Magenta, true);
+    }
+
     public void Draw(SpriteBatch sb)
     {
         if (Irbis.Irbis.debug > 1)
-        { RectangleBorder.Draw(sb, spawnArea, Color.Magenta, true); }
+        { DebugDraw(sb); }
         for (int i = particleList.Count - 1; i >= 0; i--)
         { particleList[i].Draw(sb); }
     }

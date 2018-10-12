@@ -83,6 +83,7 @@
     <Compile Include="ChargedBolt.cs" />
     <Compile Include="ChargedBolts.cs" />
     <Compile Include="Circle.cs" />
+    <Compile Include="CircularParticleSystem.cs" />
     <Compile Include="Collided.cs" />
     <Compile Include="Doodad.cs" />
     <Compile Include="DotTail.cs" />
@@ -135,6 +136,7 @@
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\DesktopGL\MonoGame.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -342,9 +344,6 @@
     <Content Include="content\textures\Lizard.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="content\textures\ln2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="content\textures\Main Menu title.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -393,7 +392,7 @@
     <Content Include="content\textures\originTexture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="content\textures\patreon.png">
+    <Content Include="content\textures\OtterTilesheet.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="content\textures\player.png">

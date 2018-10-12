@@ -9,10 +9,23 @@ using System.Runtime.Serialization;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml;
 
+[DataContract]
 [Serializable]
 public struct Level
 {
+    [DataMember]
+    private uint backgroundColor;
+    [DataMember]
+    public string levelName;
+    [DataMember]
+    public bool isOnslaught;
+    [DataMember]
+    public string bossName;
+    [DataMember]
+    public float darkness;
+
     //public List<Square> squareList;
     private List<int> squareSpawnPointsX;
     private List<int> squareSpawnPointsY;
@@ -28,11 +41,9 @@ public struct Level
     private List<int> backgroundSquaresY;
     public List<string> backgroundTextures;
     public List<float> backgroundSquareDepths;
-    private uint backgroundColor;
-    public string levelName;
+
     private List<float> enemySpawnPointsX;
     private List<float> enemySpawnPointsY;
-    public bool isOnslaught;
     private float playerSpawnX;
     private float playerSpawnY;
     private float bossSpawnX;
@@ -43,7 +54,6 @@ public struct Level
     private int[] vendingMachineLocationsX;
     private int[] vendingMachineLocationsY;
 
-    public string bossName;
 
     // Particle Systems
     float[] PSInitialVelocityX;
@@ -66,8 +76,6 @@ public struct Level
     float[][] PSLightScales;
     uint[][] PSLightColors;
     float[] PSTimeToLive;
-    // lighting
-    public float darkness;
     // Grass Systems
     float[] GinitialRotation;
     float[] GrotationTime;
@@ -98,11 +106,11 @@ public struct Level
     {
         get
         {
+            if (vendingMachineLocationsX == null || vendingMachineLocationsY == null)
+            { return null; }
             Point[] vendingMachines = new Point[vendingMachineLocationsX.Length];
             for (int i = 0; i < vendingMachineLocationsX.Length; i ++)
-            {
-                vendingMachines[i] = new Point(vendingMachineLocationsX[i], vendingMachineLocationsY[i]);
-            }
+            { vendingMachines[i] = new Point(vendingMachineLocationsX[i], vendingMachineLocationsY[i]); }
             return vendingMachines;
         }
         set
@@ -119,24 +127,16 @@ public struct Level
     public string[] VendingMachineTextures
     {
         get
-        {
-            return vendingMachineTextures;
-        }
+        { return vendingMachineTextures; }
         set
-        {
-            vendingMachineTextures = value;
-        }
+        { vendingMachineTextures = value; }
     }
     public VendingType[] VendingMachineTypes
     {
         get
-        {
-            return vendingMachineTypes;
-        }
+        { return vendingMachineTypes; }
         set
-        {
-            vendingMachineTypes = value;
-        }
+        { vendingMachineTypes = value; }
     }
     public Point[] SquareSpawnPoints
     {
@@ -146,9 +146,7 @@ public struct Level
             {
                 Point[] squareSpawns = new Point[squareSpawnPointsX.Count];
                 for (int i = 0; i < squareSpawns.Length; i++)
-                {
-                    squareSpawns[i] = new Point(squareSpawnPointsX[i], squareSpawnPointsY[i]);
-                }
+                { squareSpawns[i] = new Point(squareSpawnPointsX[i], squareSpawnPointsY[i]); }
                 return squareSpawns;
             }
             else { throw new ArraysNotSameLengthException(); }
@@ -168,16 +166,20 @@ public struct Level
     {
         get
         {
-            if (backgroundSquaresX.Count == backgroundSquaresY.Count)
+            try
             {
-                Point[] bgSquares = new Point[backgroundSquaresX.Count];
-                for (int i = 0; i < bgSquares.Length; i++)
+                if (backgroundSquaresX.Count == backgroundSquaresY.Count)
                 {
-                    bgSquares[i] = new Point(backgroundSquaresX[i], backgroundSquaresY[i]);
+                    Point[] bgSquares = new Point[backgroundSquaresX.Count];
+                    for (int i = 0; i < bgSquares.Length; i++)
+                    { bgSquares[i] = new Point(backgroundSquaresX[i], backgroundSquaresY[i]); }
+                    return bgSquares;
                 }
-                return bgSquares;
+                else { throw new ArraysNotSameLengthException(); }
             }
-            else { throw new ArraysNotSameLengthException(); }
+            catch (Exception e)
+            { /*Irbis.Irbis.WriteLine("exception caught during BackgroundSquares get: " + e.Message + "\nStackTrace:\n" + e.StackTrace);*/ }
+            return null;
         }
         set
         {
@@ -272,6 +274,8 @@ public struct Level
     {
         get
         {
+            if (playerSpawn != null && playerSpawn != Vector2.Zero)
+            { return playerSpawn; }
             return new Vector2(playerSpawnX, playerSpawnY);
         }
         set
@@ -284,6 +288,8 @@ public struct Level
     {
         get
         {
+            if (bossSpawn != null && bossSpawn != Vector2.Zero)
+            { return bossSpawn; }
             return new Vector2(bossSpawnX, bossSpawnY);
         }
         set
@@ -296,7 +302,8 @@ public struct Level
     {
         get
         {
-
+            if (enemySpawnPointsX == null || enemySpawnPointsY == null)
+            { return enemySpawnPoints; }
             if (enemySpawnPointsX.Count == enemySpawnPointsY.Count)
             {
                 Vector2[] enemySpawns = new Vector2[enemySpawnPointsX.Count];
@@ -321,6 +328,8 @@ public struct Level
     {
         get
         {
+            if (PSDepths == null) // not even gonna bother with the rest, it's not worth it
+            { return particleSystems; }
             try
             {
                 int length = PSInitialVelocityX.Length;
@@ -396,23 +405,35 @@ public struct Level
                     GoriginOffsetY.Length == length && GareaX.Length == length && GareaY.Length == length && GareaW.Length == length && GareaH.Length == length &&
                     GbladeTextures.Length == length && GtextureDimentionsX.Length == length && GtextureDimentionsY.Length == length)
                 {
-                    Grass[] grasses = new Grass[length];
+                    Grass[] grassList = new Grass[length];
                     for (int i = 0; i < length; i++)
                     {
-                        grasses[i] = new Grass(GinitialRotation[i], GrotationTime[i], Gdensity[i], Gdepth[i], Grandomness[i], GrotationMin[i], GrotationMax[i],
+                        grassList[i] = new Grass(GinitialRotation[i], GrotationTime[i], Gdensity[i], Gdepth[i], Grandomness[i], GrotationMin[i], GrotationMax[i],
                             new Vector2(GoriginOffsetX[i], GoriginOffsetY[i]), new Rectangle(GareaX[i], GareaY[i], GareaW[i], GareaH[i]),
                             Irbis.Irbis.LoadTexture(GbladeTextures[i]), new Point(GtextureDimentionsX[i], GtextureDimentionsY[i]), 900, Gefficiencies[i]);
                     }
-                    return grasses;
+                    return grassList;
                 }
                 else { throw new ArraysNotSameLengthException(); }
             }
             catch (Exception e)
+            { /*Irbis.Irbis.WriteLine("exception caught during Grass get: " + e.Message + "\nStackTrace:\n" + e.StackTrace);*/ }
+            try
             {
-                Irbis.Irbis.WriteLine("exception caught during Grass get:" + e.Message + "\nStackTrace:\n" + e.StackTrace);
-                Irbis.Irbis.DisplayInfoText("exception caught during Grass get:" + e.Message);
+                for (int i = 0; i < grasses.Length; i++)
+                {
+                    grasses[i] = new Grass(grasses[i].initialRotation, grasses[i].rotationTime, grasses[i].density, grasses[i].depth, grasses[i].randomness,
+                        grasses[i].rotationMin, grasses[i].rotationMax, grasses[i].bladeOrigin, grasses[i].Area, grasses[i].bladeTextures,
+                        grasses[i].textureDimentions, grasses[i].brushDistanceSqr, grasses[i].Efficiency);
+                }
+                return grasses;
             }
-            return new Grass[0];
+            catch (Exception e)
+            {
+                Irbis.Irbis.WriteLine("exception caught during Grass get: " + e.Message + "\nStackTrace:\n" + e.StackTrace);
+                Irbis.Irbis.DisplayInfoText("exception caught during Grass get: " + e.Message);
+            }
+            return null;
         }
         set
         {
@@ -444,6 +465,8 @@ public struct Level
     {
         get
         {
+            if (Dtextures == null) // not worth the rest
+            { return doodads; }
             try
             {
                 if (Dtextures.Length == DPositionsX.Length && DPositionsX.Length == DPositionsY.Length && DPositionsY.Length == Dtexts.Length &&
@@ -452,9 +475,7 @@ public struct Level
                     int length = Dtextures.Length;
                     Doodad[] doodads = new Doodad[length];
                     for (int i = 0; i < length; i++)
-                    {
-                        doodads[i] = new Doodad(Irbis.Irbis.LoadTexture(Dtextures[i]), new Point(DPositionsX[i], DPositionsY[i]), Dtexts[i], Ddistances[i], Ddepths[i]);
-                    }
+                    { doodads[i] = new Doodad(Irbis.Irbis.LoadTexture(Dtextures[i]), new Point(DPositionsX[i], DPositionsY[i]), Dtexts[i], Ddistances[i], Ddepths[i]); }
                     return doodads;
                 }
                 else { throw new ArraysNotSameLengthException(); }
@@ -472,7 +493,7 @@ public struct Level
             InitializeDoodads(length);
             for (int i = 0; i < length; i++)
             {
-                Dtextures[i] = value[i].tex.Name;
+                Dtextures[i] = value[i].texture.Name;
                 DPositionsX[i] = (int)value[i].position.X;
                 DPositionsY[i] = (int)value[i].position.Y;
                 Dtexts[i] = value[i].tooltip.Text.statement;
@@ -482,7 +503,27 @@ public struct Level
         }
     }
 
-    public Trigger[] Triggers;
+    [DataMember]
+    public Trigger[] triggers;
+    [DataMember]
+    public VendingMachine[] vendingMachines;
+    [DataMember]
+    public Doodad[] doodads;
+    [DataMember]
+    public Grass[] grasses;
+    [DataMember]
+    public ParticleSystem[] particleSystems;
+    [DataMember]
+    public Vector2[] enemySpawnPoints;
+    [DataMember]
+    public Vector2 bossSpawn;
+    [DataMember]
+    public Vector2 playerSpawn;
+    [DataMember]
+    public Square[] squares;
+    [DataMember]
+    public Square[] backgroundSquares;
+
 
     public Level(bool construct)
     {
@@ -559,7 +600,7 @@ public struct Level
         GtextureDimentionsY = new int[0];
         Gefficiencies = new int[0];
 
-        Triggers = new Trigger[0];
+        triggers = new Trigger[0];
 
         Dtextures = new string[0];
         DPositionsX = new int[0];
@@ -568,6 +609,15 @@ public struct Level
         Ddistances = new int[0];
         Ddepths = new float[0];
 
+        vendingMachines = new VendingMachine[0];
+        grasses = new Grass[0];
+        doodads = new Doodad[0];
+        particleSystems = new ParticleSystem[0];
+        enemySpawnPoints = new Vector2[0];
+        bossSpawn = Vector2.Zero;
+        playerSpawn = Vector2.Zero;
+        backgroundSquares = new Square[0];
+        squares = new Square[0];
     }
 
     public static uint ColorToUint(Color color)
@@ -650,6 +700,53 @@ public struct Level
 
     public void Load(string filename)
     {
+        FileStream stream = new FileStream(filename, FileMode.Open);
+        XmlDictionaryReader reader = XmlDictionaryReader.CreateTextReader(stream, new XmlDictionaryReaderQuotas());
+        try
+        {
+            DataContractSerializer serializer = new DataContractSerializer(typeof(Level));
+            Level thisLevel = (Level)serializer.ReadObject(reader, true);
+            this = thisLevel;
+        }
+        catch (Exception e)
+        {
+            reader.Close();
+            stream.Close();
+            Console.WriteLine("load failed. " + e.Message);
+            Irbis.Irbis.WriteLine("load failed. " + e.Message);
+            Irbis.Irbis.WriteLine("Stacktrace:\n" + e.StackTrace + "\n");
+            Irbis.Irbis.WriteLine("attempting conversion...");
+            LoadOld(filename);
+        }
+        finally
+        {
+            reader.Close();
+            stream.Close();
+        }
+    }
+
+    public void Save(string filename)
+    {
+        Irbis.Irbis.WriteLine("saving " + filename + "...");
+        FileStream stream = new FileStream(filename, FileMode.Create);
+        try
+        {
+            DataContractSerializer serializer = new DataContractSerializer(typeof(Level));
+            serializer.WriteObject(stream, this);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("save failed. " + e.Message);
+            Irbis.Irbis.WriteLine("save failed. " + e.Message);
+            Irbis.Irbis.WriteLine("Stacktrace:\n" + e.StackTrace + "\n");
+            Irbis.Irbis.DisplayInfoText("save failed. " + e.Message, Color.Red);
+        }
+        finally
+        { stream.Close(); }
+    }
+
+    public void LoadOld(string filename)
+    {
         Level thisLevel = new Level(true);
         Irbis.Irbis.WriteLine("loading " + filename + "...");
         FileStream stream = new FileStream(filename, FileMode.Open);
@@ -657,24 +754,28 @@ public struct Level
         {
             BinaryFormatter formatter = new BinaryFormatter();
             thisLevel = (Level)formatter.Deserialize(stream);
-            AssignLocalVariables(thisLevel);
+            this = thisLevel;
+
+            doodads = Doodads;
+            particleSystems = ParticleSystems;
+            enemySpawnPoints = EnemySpawnPoints;
+            bossSpawn = BossSpawn;
+            playerSpawn = PlayerSpawn;
+            //backgroundSquares = BackgroundSquares;
+            //squares = squares;
+
             Irbis.Irbis.WriteLine("load successful.");
         }
         catch (SerializationException e)
         {
             Console.WriteLine("load failed.\n" + e.Message);
             Irbis.Irbis.WriteLine("load failed.\n" + e.Message);
-            Irbis.Irbis.WriteLine("attempting conversion...");
-            thisLevel = Irbis.Irbis.ConvertOldLevelFileToNew(filename);
         }
         finally
-        {
-            Irbis.Irbis.WriteLine();
-            stream.Close();
-        }
+        { stream.Close(); }
     }
 
-    public void Save(string filename)
+    public void SaveOld(string filename)
     {
         Irbis.Irbis.WriteLine("saving " + filename + "...");
         BinaryFormatter formatter = new BinaryFormatter();
@@ -691,10 +792,7 @@ public struct Level
             throw;
         }
         finally
-        {
-            Irbis.Irbis.WriteLine();
-            stream.Close();
-        }
+        { stream.Close(); }
     }
 
     private void AssignLocalVariables(Level level)
@@ -703,8 +801,8 @@ public struct Level
         Irbis.Irbis.WriteLine("               level name: " + levelName);
         Irbis.Irbis.WriteLine("                  squares: " + squareTextures.Count);
         Irbis.Irbis.WriteLine("       background squares: " + backgroundSquareDepths.Count);
-        if (Triggers != null)
-        { Irbis.Irbis.WriteLine("                 triggers: " + Triggers.Length); }
+        if (triggers != null)
+        { Irbis.Irbis.WriteLine("                 triggers: " + triggers.Length); }
         Irbis.Irbis.WriteLine("       enemy spawn points: " + EnemySpawnPoints.Length);
         Irbis.Irbis.WriteLine("              isOnslaught: " + isOnslaught);
         Irbis.Irbis.WriteLine("             player spawn: " + PlayerSpawn);
