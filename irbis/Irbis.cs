@@ -2332,8 +2332,7 @@ namespace Irbis
             mainCamera.Y = jamie.TrueCenter.Y * screenScale;
         }
 
-        /*
-        public static void CameraSwing(float duration, float magnitude, Vector2 heading)
+        /*public static void CameraSwing(float duration, float magnitude, Vector2 heading)
         {
             if (cameraSwingSetting)
             {
@@ -3829,11 +3828,14 @@ namespace Irbis
 
         public static void BossVictory()
         {
-            victoryTimeScale = timeScale;
-            victoryScreenTimer = 0;
-            victoryScreen = true;
-            jamie.inputEnabled = false;
-            // save ?
+            if (!victoryScreen)
+            {
+                victoryTimeScale = timeScale;
+                victoryScreenTimer = 0;
+                victoryScreen = true;
+                jamie.inputEnabled = false;
+                // save ?
+            }
         }
 
         public void VictoryScreen()
