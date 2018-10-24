@@ -1,4 +1,4 @@
-# ![IRBIS](https://ln2.co/images/Irbis.svg)  
+# IRBIS  
 ###### Build Version: `0.2.1.8` | --  
 
 
@@ -33,7 +33,7 @@
 You can download a playable version of the latest build of the game here: [irbisgame.com/download](https://irbisgame.com/download)  
 (windows only right now, I'm afraid)  
 
-##### Run Requirements  
+#### Run Requirements  
 `1.0` Microsoft .NET framework 4.5 (included in windows 10)  
 `1.5` If you are unsure if your system has .NET 4.5, you can run the [installer](https://www.microsoft.com/en-us/download/details.aspx?id=30653).  
 `2.0` OpenGL 2.0 and support for framebuffers  
