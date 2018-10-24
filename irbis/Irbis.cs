@@ -187,7 +187,7 @@ namespace Irbis
         /// version number key (two types): 
         /// release number . software stage (pre/alpha/beta) . build/version . build iteration
         /// release number . content patch number . software stage . build iteration
-        public const string versionNo = "0.2.1.5";
+        public const string versionNo = "0.2.1.8";
         public const string versionID = "beta";
         public const string versionTy = "debug";
         /// Different version types: 
