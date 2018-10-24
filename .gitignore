@@ -1,5 +1,7 @@
 # Visual Studio 2017 user files
 .vs
+# vscode files
+irbis/.vscode
 
 # Game content and asset folders
 irbis/backup

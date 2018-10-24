@@ -92,7 +92,7 @@ public class Doodad
 
     public void Draw(SpriteBatch sb)
     {
-        if (Irbis.Irbis.debug > 2)
+        if (Irbis.Irbis.debug >= 2)
         { sb.Draw(circle, position * Irbis.Irbis.screenScale, null, Color.White, 0f, new Vector2(ToolTipDistance * Irbis.Irbis.screenScale), 1, SpriteEffects.None, depth + 0.001f); }
         sb.Draw(texture, position * Irbis.Irbis.screenScale, null, Color.White, 0f, origin, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
         if (drawTooltip && tooltip != null)

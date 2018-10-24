@@ -1,12 +1,6 @@
 ﻿using Irbis;
 using System;
-using System.IO;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 
 public class Fireball
@@ -19,7 +13,7 @@ public class Fireball
 
     public ParticleSystem particleSystem;
     public ParticleSystem dottiboy;
-    public Vector2 location;
+    public Vector2 truePosition;
     public Point position;
     public Vector2 velocity;
     public int radiusover2;
@@ -33,7 +27,7 @@ public class Fireball
         radiusSquared = radius * radius;
         damage = Damage;
         position = Position;
-        location = position.ToVector2();
+        truePosition = position.ToVector2();
         velocity = Velocity;
 
         //circle = Irbis.Irbis.GenerateCircle((int)(radius * Irbis.Irbis.screenScale), Color.Purple);
@@ -53,10 +47,10 @@ public class Fireball
 
     public void Update()
     {
-        location += velocity * Irbis.Irbis.DeltaTime;
-        position = location.ToPoint();
-        particleSystem.Position = location;
-        dottiboy.Position = location;
+        truePosition += velocity * Irbis.Irbis.DeltaTime;
+        position = truePosition.ToPoint();
+        particleSystem.Position = truePosition;
+        dottiboy.Position = truePosition;
         particleSystem.Update();
         dottiboy.Update();
         if (damage > 0 && Collision())

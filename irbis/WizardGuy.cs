@@ -284,9 +284,19 @@ class WizardGuy : IEnemy
     float[] castTime = new float[9];
     public float[] timer = new float[9];
     public float[] prevTimer = new float[9];
+    public Vector2[][] castingHands = new Vector2[5][];
+    public Vector2[] previousHands = new Vector2[2];
 
     public WizardGuy(Texture2D t, int? iPos, float enemyHealth, float enemyDamage, Vector2[] TeleportPoints, Rectangle? BossArena, float drawDepth)
     {
+        //                                          left hand          right hand
+        castingHands[0] = new Vector2[] { new Vector2(-34, -2), new Vector2(29,  7) };
+        castingHands[1] = new Vector2[] { new Vector2(-35,  5), new Vector2(35, -4) };
+        castingHands[2] = new Vector2[] { new Vector2(-35, 11), new Vector2(33, -1) };
+        castingHands[3] = new Vector2[] { new Vector2(-33,  1), new Vector2(29,  9) };
+        castingHands[4] = new Vector2[] { new Vector2(-34, -5), new Vector2(27, 11) };
+
+
         castTime[0] = 1; // idle (so unused, I guess?)
         castTime[1] = 1; // teleport
         castTime[2] = 1; // nova (fireballs)
@@ -965,37 +975,41 @@ class WizardGuy : IEnemy
         timeSinceLastFrame += Irbis.Irbis.DeltaTime;
         if (timeSinceLastFrame >= animationSpeed[currentAnimation])
         {
+            if (currentAnimation == 1)
+            { previousHands = castingHands[currentFrame]; }
+
             currentFrame++;
             timeSinceLastFrame -= animationSpeed[currentAnimation];
+
+            if (currentFrame > animationFrames[currentAnimation])
+            {
+                if (animationNoLoop)
+                {
+                    switch (currentAnimation)
+                    {
+                        case 2:
+                            int nextTeleport = Irbis.Irbis.RandomInt(teleportPoints.Length);
+                            while (previousTeleport == nextTeleport)
+                            { nextTeleport = Irbis.Irbis.RandomInt(teleportPoints.Length); }
+                            previousTeleport = nextTeleport;
+                            Explode();
+                            TrueCenter = teleportPoints[previousTeleport];
+                            goto default;
+                        case 3: // Cast - do nothing, use ResetCast();
+                            SetAnimation(Animation.Idle, false);
+                            break;
+                        default:
+                            ResetCast();
+                            break;
+                    }
+                }
+                else
+                { currentFrame = 0; }
+            }
         }
 
         if (previousActivity != activity)
         { SetAnimation(); }
-        else if (currentFrame > animationFrames[currentAnimation])
-        {
-            if (animationNoLoop)
-            {
-                switch (currentAnimation)
-                {
-                    case 2:
-                        int nextTeleport = Irbis.Irbis.RandomInt(teleportPoints.Length);
-                        while (previousTeleport == nextTeleport)
-                        { nextTeleport = Irbis.Irbis.RandomInt(teleportPoints.Length); }
-                        previousTeleport = nextTeleport;
-                        Explode();
-                        TrueCenter = teleportPoints[previousTeleport];
-                        goto default;
-                    case 3: // Cast - do nothing, use ResetCast();
-                        SetAnimation(Animation.Idle, false);
-                        break;
-                    default:
-                        ResetCast();
-                        break;
-                }
-            }
-            else
-            { currentFrame = 0; }
-        }
 
         if (previousAnimation != currentAnimation)
         {
@@ -1120,7 +1134,8 @@ class WizardGuy : IEnemy
         {
             casting = Spell;
             SetAnimation((int)Animation.Charging, false);
-            Irbis.Irbis.WriteLine("casting:" + casting);
+            previousHands = castingHands[0];
+            //Irbis.Irbis.WriteLine("casting:" + casting);
         }
     }
 
@@ -1199,6 +1214,13 @@ class WizardGuy : IEnemy
                 goto case 3;
             case 3:
                 RectangleBorder.Draw(sb, bossArena, Color.Red, true);
+                if (currentAnimation == 1)
+                {
+                    Vector2 left = Irbis.Irbis.Lerp(previousHands[0], castingHands[currentFrame][0], timeSinceLastFrame / animationSpeed[currentAnimation]);
+                    Vector2 right = Irbis.Irbis.Lerp(previousHands[1], castingHands[currentFrame][1], timeSinceLastFrame / animationSpeed[currentAnimation]);
+                    sb.Draw(Irbis.Irbis.nullTex, (left + position) * Irbis.Irbis.screenScale, null, Color.DeepSkyBlue, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0.8f);
+                    sb.Draw(Irbis.Irbis.nullTex, (right + position) * Irbis.Irbis.screenScale, null, Color.DeepSkyBlue, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0.8f);
+                }
                 if (attackCollider != Rectangle.Empty)
                 { RectangleBorder.Draw(sb, attackCollider, Color.Red, true); }
                 goto case 2;

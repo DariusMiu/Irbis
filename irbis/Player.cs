@@ -351,7 +351,8 @@ public class Player : ICollisionObject
                 if (walled.Bottom > 0 || !walled.Horizontal || wallJumpTimer > walljumpHoldtime)
                 {
                     input.X--;
-                    direction = Direction.Left;
+                    if (rollTime <= 0)
+                    { direction = Direction.Left; }
                 }
                 else if (walled.Right > 0)
                 { wallJumpTimer += Irbis.Irbis.DeltaTime; }
@@ -364,7 +365,8 @@ public class Player : ICollisionObject
                 if (walled.Bottom > 0 || !walled.Horizontal || wallJumpTimer > walljumpHoldtime)
                 {
                     input.X++;
-                    direction = Direction.Right;
+                    if (rollTime <= 0)
+                    { direction = Direction.Right; }
                 }
                 else if (walled.Left > 0)
                 { wallJumpTimer += Irbis.Irbis.DeltaTime; }
@@ -598,9 +600,7 @@ public class Player : ICollisionObject
             }
         }
         else if (attacking == Attacking.Slam && activity == Activity.Slamming)
-        {
-            velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpSlowdown * Irbis.Irbis.DeltaTime);
-        }
+        { velocity.X = Irbis.Irbis.Lerp(velocity.X, 0, movementLerpSlowdown * Irbis.Irbis.DeltaTime); }
         else if (rollTime > 0)
         {
             if (direction == Direction.Right)
@@ -611,10 +611,7 @@ public class Player : ICollisionObject
 
             rollTime -= Irbis.Irbis.DeltaTime;
             if (rollTime <= 0)
-            {
-                //inputEnabled = true;
-                rollTime = -1;
-            }
+            { rollTime = -1;  }
         }
         else if (attacking == Attacking.Attack1)
         {

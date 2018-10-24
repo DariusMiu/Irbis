@@ -78,7 +78,7 @@ class CircularParticleSystem : ParticleSystem
         if (circle != null)
         { sb.Draw(circle, position * Irbis.Irbis.screenScale, null, Color.White, 0f, new Vector2(radius * Irbis.Irbis.screenScale), 1, SpriteEffects.None, 0.8001f); }
         else
-        { circle = Irbis.Irbis.GenerateCircle((int)(radius * Irbis.Irbis.screenScale), Color.Magenta); }
+        { circle = Irbis.Irbis.GenerateCircle((int)Math.Round(radius * Irbis.Irbis.screenScale), Color.Magenta); }
     }
 
 }

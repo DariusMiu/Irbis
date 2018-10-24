@@ -1,12 +1,6 @@
 ﻿using Irbis;
 using System;
-using System.IO;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 
 public class Nova

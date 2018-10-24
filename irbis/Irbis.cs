@@ -1015,7 +1015,7 @@ namespace Irbis
             lighting.World = Matrix.Identity;
             lighting.View = Matrix.Identity;/**/
 
-            cameraShakeLerpTimeMax = 0.025f;
+            cameraShakeLerpTimeMax = 0.03f;
             cameraShakeLerpTime = 0f;
             levelLoaded = -1;
 
@@ -1980,7 +1980,7 @@ namespace Irbis
 
             // must be sure that all enemies have finished updating to avoid conflicts
             for (int i = killQueue.Count - 1; i >= 0; i--)
-            {
+            { 
                 if (RemoveEnemy(killQueue[i]))
                 { killQueue.RemoveAt(i); }
             }
@@ -2367,8 +2367,9 @@ namespace Irbis
         {
             if (cameraShakeSetting)
             {
+                if (cameraShakeLerpTime <= 0)
+                { cameraShakePrevLocation = Vector2.Zero; }
                 cameraShakeDuration = duration;
-                cameraShakePrevLocation = Vector2.Zero;
                 cameraShakeMagnitude = magnitude * screenScale;
             }
         }
@@ -2379,13 +2380,10 @@ namespace Irbis
             {
                 cameraShakePrevLocation = cameraShakeTargetLocation;
                 cameraShakeTargetLocation = RandomPoint(cameraShakeMagnitude);
-                if (debug > 0)
-                {
-                    WriteLine("       mainCamera:" + mainCamera +
-                            "\ncameraShakeTarget:" + cameraShakeTargetLocation + '\n');
-                }
+                //if (debug > 0)
+                //{ WriteLine("       mainCamera:" + mainCamera + "\ncameraShakeTarget:" + cameraShakeTargetLocation + '\n'); }
                 cameraShakeLerpTime = cameraShakeLerpTimeMax;
-                cameraShakeDuration -= cameraShakeLerpTime;
+                cameraShakeDuration -= cameraShakeLerpTimeMax;
                 if (cameraShakeDuration <= 0)
                 { return; }
             }
@@ -3251,7 +3249,7 @@ namespace Irbis
             { Radius = Radius * (2 - u); }
             else
             { Radius = Radius * u; }
-            return new Vector2((float)(Radius * Math.Cos(t)), (float)(Radius * Math.Sin(t)));
+            return new Vector2((Radius * (float)Math.Cos(t)), (Radius * (float)Math.Sin(t)));
         }
 
         public static void AddPlayerEnchant(EnchantType enchant)
@@ -3958,9 +3956,12 @@ namespace Irbis
                             loadingBar.Value += 1;
                         }
                         return true;
+                    default:
+                        // check third party bosses
+                        break;
                 }
             }
-            loadingBar.Value += 1;
+            loadingBar.Value += 10;
             return false;
         }
 
@@ -5534,69 +5535,43 @@ Thank you, Ze Frank, for the inspiration.";
 
                     case "cameralerp":                                                                //place new "etc variable" (like vectors and rectangles) above
                         if (bool.TryParse(value, out boolResult))
-                        {
-                            cameraLerpSetting = boolResult;
-                        }
+                        { cameraLerpSetting = boolResult; }
                         else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
+                        { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         break;
                     case "camerashakesetting":
                         if (bool.TryParse(value, out boolResult))
-                        {
-                            cameraShakeSetting = boolResult;
-                        }
+                        { cameraShakeSetting = boolResult; }
                         else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
+                        { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         break;
                     case "fullscreen":
                         if (bool.TryParse(value, out boolResult))
-                        {
-                            graphics.IsFullScreen = boolResult;
-                        }
+                        { graphics.IsFullScreen = boolResult; }
                         else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
+                        { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         break;
                     case "verticalretrace":
                         if (bool.TryParse(value, out boolResult))
-                        {
-                            graphics.SynchronizeWithVerticalRetrace = boolResult;
-                        }
+                        { graphics.SynchronizeWithVerticalRetrace = boolResult; }
                         else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
+                        { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         break;
                     case "Isfixedtimestep":
                         if (bool.TryParse(value, out boolResult))
-                        {
-                            IsFixedTimeStep = boolResult;
-                        }
+                        { IsFixedTimeStep = boolResult; }
                         else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
+                        { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         break;
                     case "summonenemy":
                         if (string.IsNullOrWhiteSpace(value))
-                        {
-                            SummonGenericEnemy();
-                        }
+                        { SummonGenericEnemy(); }
                         else
                         {
                             if (int.TryParse(value, out intResult))
-                            {
-                                SummonGenericEnemy(100f * (intResult / 100f), 10f, 300f);
-                            }
+                            { SummonGenericEnemy(100f * (intResult / 100f), 10f, 300f); }
                             else
-                            {
-                                WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                            }
+                            { WriteLine("error: variable \"" + variable + "\" could not be parsed"); }
                         }
                         //WriteLine("debug: " + debug);
                         break;
@@ -5609,9 +5584,7 @@ Thank you, Ze Frank, for the inspiration.";
                             }
                         }
                         else
-                        {
-                            WriteLine("Use this command to summon X number of enemies: \"summonenemies=X\"");
-                        }
+                        { WriteLine("Use this command to summon X number of enemies: \"summonenemies=X\""); }
                         break;
                     case "summonboss":
                         SummonBoss(value, null);
@@ -5620,9 +5593,7 @@ Thank you, Ze Frank, for the inspiration.";
                     case "notarget":
                         AIenabled = !AIenabled;
                         foreach (IEnemy e in enemyList)
-                        {
-                            e.AIenabled = AIenabled;
-                        }
+                        { e.AIenabled = AIenabled; }
                         break;
                     case "noclip":
                         jamie.Noclip();
@@ -5654,7 +5625,7 @@ Thank you, Ze Frank, for the inspiration.";
                                 WriteLine("wave: " + onslaughtSpawner.wave);
                             }
                             else
-                            { WriteLine("error: variable \"" + variable + "\" could not be parsed"); }
+                            { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         }
                         break;
                     case "loadlevel":
@@ -5730,9 +5701,7 @@ Thank you, Ze Frank, for the inspiration.";
                             }
                         }
                         else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
+                        { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         break;
                     case "removespawns":
                         if (PointParser(value) != Point.Zero)
@@ -5740,9 +5709,7 @@ Thank you, Ze Frank, for the inspiration.";
                             Point tempPoint = PointParser(value);
 
                             for (int i = tempPoint.X; i <= tempPoint.Y; i++)
-                            {
-                                enemySpawnPoints.RemoveAt(tempPoint.X);
-                            }
+                            { enemySpawnPoints.RemoveAt(tempPoint.X); }
                             WriteLine("removed " + ((tempPoint.Y - tempPoint.X) + 1) + " spawn points");
                         }
                         break;
@@ -5782,9 +5749,7 @@ Thank you, Ze Frank, for the inspiration.";
                                 AddPlayerEnchant(enchantResult);
                             }
                             else
-                            {
-                                WriteLine("error: enchant \"" + value + "\" could not be parsed");
-                            }
+                            { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         }
                         break;
                     case "purchaseenchant":
@@ -5818,9 +5783,7 @@ Thank you, Ze Frank, for the inspiration.";
                                 }
                             }
                             else
-                            {
-                                WriteLine("error: enchant \"" + value + "\" could not be parsed");
-                            }
+                            { WriteLine("error: enchant \"" + value + "\" could not be parsed"); }
                         }
                         break;
                     case "disenchant":
@@ -5829,13 +5792,9 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "enchants":
                         if (jamie.enchantList.Count <= 0)
-                        {
-                            WriteLine("no enchants");
-                        }
+                        { WriteLine("no enchants"); }
                         foreach (Enchant e in jamie.enchantList)
-                        {
-                            WriteLine("Enchant: " + e.enchantType + ", str: " + e.strength + ", val: " + e.effectValue + ", dur: " + e.effectDuration + ", maxStack: " + e.maxStack);
-                        }
+                        { WriteLine("Enchant: " + e.enchantType + ", str: " + e.strength + ", val: " + e.effectValue + ", dur: " + e.effectDuration + ", maxStack: " + e.maxStack); }
                         break;
                     case "lines":
                         WriteLine(developerConsole.lines.ToString());
@@ -5888,7 +5847,6 @@ Thank you, Ze Frank, for the inspiration.";
                             Point tempPoint = PointParser(value);
                             jamie.position.X += tempPoint.X;
                             jamie.position.Y += tempPoint.X;
-
                             WriteLine("moved player to " + jamie.position);
                         }
                         break;
@@ -5900,21 +5858,15 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "particles":
                         for (int i = 0; i < particleSystems.Count; i++)
-                        {
-                            Irbis.WriteLine("ParticleSystem[" + i + "].spawnArea:" + particleSystems[i].spawnArea);
-                        }
+                        { WriteLine("ParticleSystem[" + i + "].spawnArea:" + particleSystems[i].spawnArea); }
                         break;
                     case "grass":
                         for (int i = 0; i < grassList.Count; i++)
-                        {
-                            Irbis.WriteLine("grass[" + i + "].area:" + grassList[i].area + " depth:" + grassList[i].depth);
-                        }
+                        { WriteLine("grass[" + i + "].area:" + grassList[i].area + " depth:" + grassList[i].depth); }
                         break;
                     case "random":
                         if (string.IsNullOrWhiteSpace(value))
-                        {
-                            WriteLine("random int between 0 and 100: " + RandomInt(100));
-                        }
+                        { WriteLine("random int between 0 and 100: " + RandomInt(100)); }
                         else
                         {
                             if (PointParser(value) != Point.Zero)
@@ -5945,13 +5897,9 @@ Thank you, Ze Frank, for the inspiration.";
                             else
                             {
                                 if (int.TryParse(value, out intResult))
-                                {
-                                    WriteLine("random int between 0 and " + intResult + ": " + RandomInt(intResult));
-                                }
+                                { WriteLine("random int between 0 and " + intResult + ": " + RandomInt(intResult)); }
                                 else
-                                {
-                                    WriteLine("random int between 0 and 100: " + RandomInt(100));
-                                }
+                                { WriteLine("random int between 0 and 100: " + RandomInt(100)); }
                             }
                         }
                         break;
@@ -6007,9 +5955,7 @@ Thank you, Ze Frank, for the inspiration.";
                                     onslaughtSpawner.vendingMachineList.Add(tempvend);
                                 }
                                 else
-                                {
-                                    WriteLine("error: vending machine \"" + value + "\" could not be parsed");
-                                }
+                                { WriteLine("error: vending machine \"" + value + "\" could not be parsed"); }
                             }
                         }
                         break;
@@ -6024,9 +5970,7 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "vendings":
                         for (int i = 0; i < onslaughtSpawner.vendingMachineList.Count; i++)
-                        {
-                            WriteLine("VendingMachine[" + i + "]: " + onslaughtSpawner.vendingMachineList[i]);
-                        }
+                        { WriteLine("VendingMachine[" + i + "]: " + onslaughtSpawner.vendingMachineList[i]); }
                         break;
                     case "vendingmachines":
                         goto case "vendings";
@@ -6037,9 +5981,7 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("removed vending machine [" + intResult + "]");
                         }
                         else
-                        {
-                            WriteLine("error: variable \"" + variable + "\" could not be parsed");
-                        }
+                        { WriteLine("error: variable \"" + variable + "\" could not be parsed"); }
                         break;
                     case "removevendingmachine":
                         goto case "removevending";
@@ -6048,9 +5990,7 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "debugonslaught":
                         if (onslaughtSpawner != null)
-                        {
-                            WriteLine(onslaughtSpawner.ToString());
-                        }
+                        { WriteLine(onslaughtSpawner.ToString()); }
                         break;
                     case "recordfps":
                         meanFPS = new TotalMeanFramerate(true);
@@ -6102,23 +6042,17 @@ Thank you, Ze Frank, for the inspiration.";
                     case "debuglines":
                         WriteLine("lines: " + debuglines.Length);
                         for (int i = 0; i < debuglines.Length; i++)
-                        {
-                            WriteLine("line[" + i + "]:" + debuglines[i].ToString());
-                        }
+                        { WriteLine("line[" + i + "]:" + debuglines[i].ToString()); }
                         break;
                     case "debugrays":
                         WriteLine("rays: " + debugrays.Length);
                         for (int i = 0; i < debugrays.Length; i++)
-                        {
-                            WriteLine("ray[" + i + "]:" + debugrays[i].ToString());
-                        }
+                        { WriteLine("ray[" + i + "]:" + debugrays[i].ToString()); }
                         break;
                     case "debugshapes":
                         WriteLine("shapes: " + debugshapes.Length);
                         for (int i = 0; i < debugshapes.Length; i++)
-                        {
-                            WriteLine("shape[" + i + "]:\n" + debugshapes[i].Debug(true));
-                        }
+                        { WriteLine("shape[" + i + "]:\n" + debugshapes[i].Debug(true)); }
                         break;
                     case "mt":
                         goto case "multithreading";
@@ -6143,19 +6077,13 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "fizzbuzz":
                         if (string.IsNullOrWhiteSpace(value))
-                        {
-                            FizzBuzz(100);
-                        }
+                        { FizzBuzz(100); }
                         else
                         {
                             if (int.TryParse(value, out intResult))
-                            {
-                                FizzBuzz(intResult);
-                            }
+                            { FizzBuzz(intResult); }
                             else
-                            {
-                                WriteLine("error: rank \"" + value + "\" could not be parsed");
-                            }
+                            { WriteLine("error: \"" + value + "\" could not be parsed"); }
                         }
                         break;
                     case "timescale":
@@ -6198,9 +6126,7 @@ Thank you, Ze Frank, for the inspiration.";
                         break;
                     case "printenemies":
                         for (int i = 0; i < enemyList.Count; i++)
-                        {
-                            WriteLine("enemyList[" + i + "]:" + enemyList[i]);
-                        }
+                        { WriteLine("enemyList[" + i + "]:" + enemyList[i]); }
                         break;
                     case "stunme":
                         if (float.TryParse(value, out floatResult))
@@ -6209,9 +6135,7 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("player stunned for \"" + value + "\" seconds");
                         }
                         else
-                        {
-                            WriteLine("error: \"" + value + "\" could not be parsed");
-                        }
+                        { WriteLine("error: \"" + value + "\" could not be parsed"); }
                         break;
                     case "<3":
                         WriteLine("℗patreon.com/Ln2");
