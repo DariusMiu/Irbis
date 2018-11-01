@@ -147,6 +147,7 @@ class WizardGuy : IEnemy
     }
 
     public int casting;
+    Vector2 leftHand, rightHand;
 
     public bool ActivelyAttacking
     {
@@ -286,6 +287,8 @@ class WizardGuy : IEnemy
     public float[] prevTimer = new float[9];
     public Vector2[][] castingHands = new Vector2[5][];
     public Vector2[] previousHands = new Vector2[2];
+    public List<SpellEffect> hands = new List<SpellEffect>();
+    Texture2D[] LazorHands;
 
     public WizardGuy(Texture2D t, int? iPos, float enemyHealth, float enemyDamage, Vector2[] TeleportPoints, Rectangle? BossArena, float drawDepth)
     {
@@ -301,7 +304,7 @@ class WizardGuy : IEnemy
         castTime[1] = 1; // teleport
         castTime[2] = 1; // nova (fireballs)
         castTime[3] = 1; // bolt
-        castTime[4] = 1; // lazers
+        castTime[4] = float.MaxValue; // lazers
         castTime[5] = 1; // lazer delay 
         castTime[6] = 1; // fireball delay 
         castTime[7] = 1; // bolt delay 
@@ -322,6 +325,8 @@ class WizardGuy : IEnemy
         timer[7] = castTime[3];
 
         Fireball.fireballtex = Irbis.Irbis.LoadTexture("fireball");
+        LazorHands = new Texture2D[] { Irbis.Irbis.LoadTexture("angular1"), Irbis.Irbis.LoadTexture("angular2"), Irbis.Irbis.LoadTexture("angular3") };
+
 
         idleTime = 0f;
 
@@ -888,6 +893,36 @@ class WizardGuy : IEnemy
         //Movement();
         CalculateMovement();
         Animate();
+
+        if (currentAnimation == 1)
+        {
+            //leftHand = Irbis.Irbis.Lerp(previousHands[0], castingHands[currentFrame][0], timeSinceLastFrame / animationSpeed[currentAnimation]);
+            //rightHand = Irbis.Irbis.Lerp(previousHands[1], castingHands[currentFrame][1], timeSinceLastFrame / animationSpeed[currentAnimation]);
+            //leftHand = Irbis.Irbis.Lerp(leftHand, castingHands[currentFrame][0], 25f * Irbis.Irbis.DeltaTime);
+            //rightHand = Irbis.Irbis.Lerp(rightHand, castingHands[currentFrame][1], 25f * Irbis.Irbis.DeltaTime);
+            leftHand = castingHands[currentFrame][0];
+            rightHand = castingHands[currentFrame][1];
+
+            for (int i = hands.Count - 1; i >= 0; i--)
+            {
+                if (i % 2 == 0)
+                { hands[i].Update(leftHand + position, true); }
+                else
+                { hands[i].Update(rightHand + position, true); }
+            }
+        }
+        else
+        {
+            for (int i = hands.Count - 1; i >= 0; i--)
+            {
+                if (i % 2 == 0)
+                { hands[i].Update(leftHand + position, false); }
+                else
+                { hands[i].Update(rightHand + position, false); }
+            }
+        }
+
+
         return true;
     }
 
@@ -1135,6 +1170,15 @@ class WizardGuy : IEnemy
             casting = Spell;
             SetAnimation((int)Animation.Charging, false);
             previousHands = castingHands[0];
+
+            switch (casting)
+            {
+                case 4: // lazers
+                    hands.Add(new LazorSpellEffect(LazorHands));
+                    hands.Add(new LazorSpellEffect(LazorHands));
+                    break;
+            }
+
             //Irbis.Irbis.WriteLine("casting:" + casting);
         }
     }
@@ -1143,6 +1187,7 @@ class WizardGuy : IEnemy
     {
         SetAnimation(Animation.Idle, false);
         casting = 0;
+        hands.Clear();
     }
 
     protected void Explode()
@@ -1216,10 +1261,8 @@ class WizardGuy : IEnemy
                 RectangleBorder.Draw(sb, bossArena, Color.Red, true);
                 if (currentAnimation == 1)
                 {
-                    Vector2 left = Irbis.Irbis.Lerp(previousHands[0], castingHands[currentFrame][0], timeSinceLastFrame / animationSpeed[currentAnimation]);
-                    Vector2 right = Irbis.Irbis.Lerp(previousHands[1], castingHands[currentFrame][1], timeSinceLastFrame / animationSpeed[currentAnimation]);
-                    sb.Draw(Irbis.Irbis.nullTex, (left + position) * Irbis.Irbis.screenScale, null, Color.DeepSkyBlue, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0.8f);
-                    sb.Draw(Irbis.Irbis.nullTex, (right + position) * Irbis.Irbis.screenScale, null, Color.DeepSkyBlue, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0.8f);
+                    sb.Draw(Irbis.Irbis.nullTex, (leftHand + position) * Irbis.Irbis.screenScale, null, Color.DeepSkyBlue, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0.8f);
+                    sb.Draw(Irbis.Irbis.nullTex, (rightHand + position) * Irbis.Irbis.screenScale, null, Color.DeepSkyBlue, 0f, Vector2.Zero, Irbis.Irbis.screenScale, SpriteEffects.None, 0.8f);
                 }
                 if (attackCollider != Rectangle.Empty)
                 { RectangleBorder.Draw(sb, attackCollider, Color.Red, true); }
@@ -1243,6 +1286,8 @@ class WizardGuy : IEnemy
                 if (exploding)
                 { sb.Draw(Irbis.Irbis.explosiontex, explosionLocation * Irbis.Irbis.screenScale, explosionSourceRect, Color.SteelBlue, 0f, new Vector2(64f), Irbis.Irbis.screenScale, SpriteEffects.None, depth); }
                 sb.Draw(tex, position * Irbis.Irbis.screenScale, animationSourceRect, Color.White, 0f, origin, Irbis.Irbis.screenScale, SpriteEffects.None, depth);
+                for (int i = hands.Count - 1; i >= 0; i--)
+                { hands[i].Draw(sb); }
                 break;
         }
     }

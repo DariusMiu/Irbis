@@ -22,13 +22,13 @@ public class Particle
     // 1 = life (loop)
     // 2 = death
     // 3 = light (loop?)
-    ParticleSystem parentSystem;
-    int tex;
-    int texSize;
+    protected ParticleSystem parentSystem;
+    protected int tex;
+    protected int texSize;
 
     // vectors
     Vector2 velocity;
-    Vector2 position;
+    protected Vector2 position;
     Vector2 force;
 
     // floats
@@ -44,14 +44,15 @@ public class Particle
     int currentFrame;
     //int[] animationFrames = new int[4];
     float[] animationSpeed = new float[4];
-    Rectangle animationSourceRect;
-    Rectangle lightSourceRect;
-    Color renderColor;
-    Color lightColor;
-    float renderScale;
-    float lightScale;
-    float depth;
+    protected Rectangle animationSourceRect;
+    protected Rectangle lightSourceRect;
+    protected Color renderColor;
+    protected Color lightColor;
+    protected float renderScale;
+    protected float lightScale;
+    protected float depth;
     float currentStateTime;
+    protected float angle;
 
     // colors
 
@@ -71,9 +72,10 @@ public class Particle
     /// <param name="Times">total time each state will last: [0]=birthTime, [1]=lifeTime, [2]=deathTime</param>
     /// <param name="Scales">[0]=birthSize, [1]=lifeSize, [2]=deathSize</param>
     /// <param name="Colors">[0]=birthColor, [1]=lifeColor, [2]=deathColor</param>
-    public Particle(ParticleSystem ParentSystem, int Texture, Vector2 InitialPosition, Vector2 InitialVelocity, Vector2 Force,
+    public Particle(ParticleSystem ParentSystem, int Texture, Vector2 InitialPosition, Vector2 InitialVelocity, Vector2 Force, float Angle,
         float[] Times, float[] Scales, float[] LightScales, float[] Depths)
     {
+        angle = Angle;
         parentSystem = ParentSystem;
         tex = Texture;
         texSize = ParentSystem.textures[tex].Height / 5;
@@ -161,18 +163,18 @@ public class Particle
         }
     }
 
-    public void Draw(SpriteBatch sb)
+    public virtual void Draw(SpriteBatch sb)
     {
-        sb.Draw(parentSystem.textures[tex], position * Irbis.Irbis.screenScale, animationSourceRect, renderColor, 0f, new Vector2(texSize / 2f), Irbis.Irbis.screenScale * renderScale, SpriteEffects.None, depth);
+        sb.Draw(parentSystem.textures[tex], position * Irbis.Irbis.screenScale, animationSourceRect, renderColor, angle, new Vector2(texSize / 2f), Irbis.Irbis.screenScale * renderScale, SpriteEffects.None, depth);
     }
 
-    public void Light(SpriteBatch sb)
+    public virtual void Light(SpriteBatch sb)
     {
-        sb.Draw(parentSystem.textures[tex], (position) * Irbis.Irbis.screenScale, lightSourceRect, new Color(Color.Black, renderColor.A), 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
+        sb.Draw(parentSystem.textures[tex], (position) * Irbis.Irbis.screenScale, lightSourceRect, new Color(Color.Black, renderColor.A), angle, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
     }
 
-    public void ColoredLight(SpriteBatch sb)
+    public virtual void ColoredLight(SpriteBatch sb)
     {
-        sb.Draw(parentSystem.textures[tex], (position) * Irbis.Irbis.screenScale, lightSourceRect, lightColor, 0f, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
+        sb.Draw(parentSystem.textures[tex], (position) * Irbis.Irbis.screenScale, lightSourceRect, lightColor, angle, new Vector2(texSize), Irbis.Irbis.screenScale * lightScale, SpriteEffects.None, depth);
     }
 }

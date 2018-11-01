@@ -167,16 +167,16 @@ public class ParticleSystem
     public virtual bool Update()
     {
         timeSinceLastSpawn += Irbis.Irbis.DeltaTime;
-        if (timeSinceLastSpawn >= nextDelay && timeToLive >= 0)
+        while (timeSinceLastSpawn >= nextDelay && timeToLive >= 0)
         {
             particleList.Add(
                 new Particle(this, Irbis.Irbis.RandomInt(textures.Length),
                 new Vector2(spawnArea.X + (Irbis.Irbis.RandomFloat * spawnArea.Width), spawnArea.Y + (Irbis.Irbis.RandomFloat * spawnArea.Height)),
                 new Vector2((((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[0]) + initialVelocity.X, (((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[0]) + initialVelocity.Y),
-                new Vector2((((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.X, (((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.Y),
+                new Vector2((((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.X, (((Irbis.Irbis.RandomFloat*2f)-1f) * randomness[1]) + force.Y), 0,
                 stateTimes, stateScales, stateLightScales,stateDepths)
             );
-            timeSinceLastSpawn = 0;
+            timeSinceLastSpawn -= nextDelay;
             nextDelay = ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[5]) + spawnDelay;
         }
         for (int i = particleList.Count - 1 - updateIndex; i >= 0; i-=efficiency)

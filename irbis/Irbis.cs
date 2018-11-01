@@ -2542,7 +2542,20 @@ namespace Irbis
                     case 2:
                         goto case 1;
                     case 1:
-                        debuginfo.Update("\n\nᴥ" + smartFPS.Framerate.ToString("0000"), true);
+                        smoothUpdate++;
+                        if (smoothUpdate >= smoothFPS.Samples)
+                        {
+                            smoothUpdate = 0;
+                            smoothDisplay = smoothFPS.Framerate.ToString("0000.0");
+                            smoothFPS = new SmoothFramerate((int)smoothFPS.Framerate);
+                            minDisplay = minFPS.ToString("0000.0");
+                            maxDisplay = maxFPS.ToString("0000.0");
+                            medianDisplay = (minFPS / maxFPS).ToString("0.00000");
+                            medianDisplay = medianDisplay.Remove(1, 1);
+                            minFPS = double.MaxValue;
+                            maxFPS = double.MinValue;
+                        }
+                        debuginfo.Update("\nᴥ" + smoothDisplay + "\n " + medianDisplay, true);
                         break;
                     default:
                         //disable on release
@@ -6435,8 +6448,8 @@ Thank you, Ze Frank, for the inspiration.";
             if (displayUI)
             {
                 spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise, /*Effect*/ null, UIground);
-                if (recordFPS)
-                { spriteBatch.Draw(nullTex, new Rectangle(3, 4, 60, 14), null, Color.Black, 0f, Vector2.Zero, SpriteEffects.None, 1f); } // steam fps
+                //if (recordFPS)
+                //{ spriteBatch.Draw(nullTex, new Rectangle(3, 4, 60, 14), null, Color.Black, 0f, Vector2.Zero, SpriteEffects.None, 1f); } // steam fps
                 if (vendingMachineMenu != null)
                 { vendingMachineMenu.Draw(spriteBatch); }
                 else

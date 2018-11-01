@@ -76,6 +76,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AngularParticle.cs" />
+    <Compile Include="AngularParticleSystem.cs" />
     <Compile Include="ArraysNotSameLengthException.cs" />
     <Compile Include="Bars.cs" />
     <Compile Include="BinaryTree.cs" />
@@ -93,6 +95,7 @@
     <Compile Include="Grass.cs" />
     <Compile Include="GrassBlade.cs" />
     <Compile Include="Lazor.cs" />
+    <Compile Include="LazorSpellEffect.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="LizardGuy.cs" />
     <Compile Include="Node.cs" />
@@ -119,6 +122,7 @@
     <Compile Include="Shape.cs" />
     <Compile Include="SmartFramerate.cs" />
     <Compile Include="SmoothFramerate.cs" />
+    <Compile Include="SpellEffect.cs" />
     <Compile Include="Square.cs" />
     <Compile Include="Tooltip.cs" />
     <Compile Include="TooltipGenerator.cs" />
