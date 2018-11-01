@@ -1955,7 +1955,7 @@ namespace Irbis
             }
 
             // just don't even touch this
-            if (debug > 4) // && GetPreviousMouseState.Position != GetMouseState.Position)
+            if (debug > 4 && zeroScreenspace.Contains(GetMouseState.Position)) // && GetPreviousMouseState.Position != GetMouseState.Position)
             {
                 shadowOrigin = GetMouseState.Position.ToVector2();
                 //for (int i = debugrays.Count - 1; i >= 0; i--)
@@ -1989,12 +1989,13 @@ namespace Irbis
 
                 shadows.Clear();
                 shadows.Add(ConvertShadowOrigin(shadowOrigin));
-                for (int i = debugrays.Count - 1; i >= 0; i--)
-                { shadows.Add(debugrays[i].Intersect(debugshapes)); }
 
-                float[] raykeys = new float[debugrays.Count];
                 for (int i = debugrays.Count - 1; i >= 0; i--)
-                { raykeys[i] = debugrays[i].Angle; }
+                {
+                    Vector2 temp = debugrays[i].Intersect(debugshapes);
+                    if (temp != shadows[0])
+                    { shadows.Add(temp); }
+                }
 
                 shadowShape.vertices = shadows.ToArray();
                 Array.Sort(shadowShape.vertices, delegate (Vector2 ray1, Vector2 ray2) { return AngleTo(shadows[0], ray1).CompareTo(AngleTo(shadows[0], ray2)); });
@@ -2002,7 +2003,7 @@ namespace Irbis
                 //shadowShape.vertices = sortme;
                 shadowShape.triangulated = false;
 
-                PrintDebugShadowInfo(raykeys, shadowShape.Vertices);
+                PrintDebugShadowInfo(shadowShape.Vertices);
             }
 
             previousKeyboardState = keyboardState;
@@ -2768,7 +2769,7 @@ namespace Irbis
 
         }
 
-        public void PrintDebugShadowInfo(float[] keys, Vector2[] values)
+        public void PrintDebugShadowInfo(Vector2[] values)
         {
             debuginfo.Update("      DEBUG MODE. " + versionID.ToUpper() + " v" + versionNo, true);
             debuginfo.Update("\n DeltaTime:" + DeltaTime);
@@ -2793,8 +2794,8 @@ namespace Irbis
             debuginfo.Update("\n FPS ratio:" + medianDisplay);
             debuginfo.Update("\n");
 
-            for (int i = 0; i < keys.Length; i++)
-            { debuginfo.Update("\nangle[" + i + "]:" + keys[i] + " value[" + i + "]:" + values[i] + " calcangle:" + AngleTo(ConvertShadowOrigin(shadowOrigin), values[i]));  }
+            //for (int i = 0; i < values.Length; i++)
+            //{ debuginfo.Update("\nvalue[" + i + "]:" + values[i] + " calcangle:" + AngleTo(ConvertShadowOrigin(shadowOrigin), values[i]) + " raw:" + AngleToRaw(ConvertShadowOrigin(shadowOrigin), values[i]));  }
         }
 
         public void Debug(int rank)
