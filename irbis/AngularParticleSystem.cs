@@ -56,7 +56,19 @@ class AngularParticleSystem : ParticleSystem
             timeSinceLastSpawn -= nextDelay;
             nextDelay = ((Irbis.Irbis.RandomFloat - 0.5f) * randomness[5]) + spawnDelay;
         }
-        for (int i = particleList.Count - 1 - updateIndex; i >= 0; i -= efficiency)
+
+        //Func<Action<Particle>, Action> kernelBuilder = ParticleUpdate => () =>
+        //{
+        //    var start = blockIdx.x * blockDim.x + threadIdx.x;
+        //    var stride = gridDim.x * blockDim.x;
+        //    for (var i = start; i < result.Length; i += stride)
+        //    {
+        //        ParticleUpdate(i);
+        //    }
+        //};
+        //Gpu.Default.Launch(kernelBuilder(i => result[i] = arg1[i] + arg2[i]), lp);
+
+        for (int i = particleList.Count - 1; i >= 0; i--)
         {
             particleList[i].Update(efficiency);
             if (particleList[i].state == Particle.State.Dead)
@@ -70,10 +82,57 @@ class AngularParticleSystem : ParticleSystem
         }
         else if (timeToLive < 0 && particleList.Count <= 0)
         { return true; }
-        updateIndex++;
-        if (updateIndex >= efficiency)
-        { updateIndex = 0; }
         return false;
+    }
+
+    private static void ParticleUpdate(Particle p)
+    {
+        p.velocity -= p.force * Irbis.Irbis.DeltaTime;
+        p.position += p.velocity * Irbis.Irbis.DeltaTime;
+        p.prevState = p.state;
+        if (p.currentStateTime <= p.parentSystem.stateTimes[(int)p.state])
+        {
+            p.currentStateTime += Irbis.Irbis.DeltaTime;
+            if (p.currentStateTime >= p.parentSystem.stateTimes[(int)p.state])
+            {
+                p.currentStateTime -= p.parentSystem.stateTimes[(int)p.state];
+                p.state++;
+                p.currentFrame = 0;
+            }
+        }
+        p.timeSinceLastFrame += Irbis.Irbis.DeltaTime;
+        if (p.prevState != p.state)
+        {
+            p.timeSinceLastFrame -= p.animationSpeed[(int)p.state];
+            //p.animationSourceRect.X = 0;
+            p.animationSourceRect.Y += p.texSize;
+        }
+        else
+        {
+            if (p.timeSinceLastFrame >= p.animationSpeed[(int)p.state])
+            {
+                p.currentFrame++;
+                p.timeSinceLastFrame -= p.animationSpeed[(int)p.state];
+                p.animationSourceRect.X = p.currentFrame * p.texSize;
+            }
+            if (p.currentFrame > p.parentSystem.animationFrames[(int)p.state])
+            {
+                p.currentFrame = 0;
+                p.animationSourceRect.X = 0;
+            }
+        }
+
+        //lightSourceRect.X = currentFrame * texSize * 2;
+        if (p.state != Particle.State.Dead)
+        {
+            float lerppercent = p.currentStateTime / p.parentSystem.stateTimes[(int)p.state];
+            p.renderColor = Color.Lerp(p.parentSystem.stateColors[(int)p.state], p.parentSystem.stateColors[(int)p.state + 1], lerppercent);
+            p.lightColor = Color.Lerp(p.parentSystem.stateLightColors[(int)p.state], p.parentSystem.stateLightColors[(int)p.state + 1], lerppercent);
+            p.renderScale = Irbis.Irbis.Lerp(p.stateScales[(int)p.state], p.stateScales[(int)p.state + 1], lerppercent);
+            p.lightScale = Irbis.Irbis.Lerp(p.stateLightScales[(int)p.state], p.stateLightScales[(int)p.state + 1], lerppercent);
+            p.depth = Irbis.Irbis.Lerp(p.parentSystem.stateDepths[(int)p.state], p.parentSystem.stateDepths[(int)p.state + 1], lerppercent);
+        }
+
     }
 
 }

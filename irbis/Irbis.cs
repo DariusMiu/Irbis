@@ -937,7 +937,7 @@ namespace Irbis
         public static Doodad[] doodads;
         //public static Doodad testdoodad;
         //static Torch torch;
-        
+
         
         
         public static BlendState multiplicativeBlend = new BlendState

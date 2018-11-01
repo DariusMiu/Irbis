@@ -22,43 +22,43 @@ public class Particle
     // 1 = life (loop)
     // 2 = death
     // 3 = light (loop?)
-    protected ParticleSystem parentSystem;
+    public ParticleSystem parentSystem;
     protected int tex;
-    protected int texSize;
+    public int texSize;
 
     // vectors
-    Vector2 velocity;
-    protected Vector2 position;
-    Vector2 force;
+    public Vector2 velocity;
+    public Vector2 position;
+    public Vector2 force;
 
     // floats
     // seconds in each state
-    float[] stateTimes = new float[4];
+    public float[] stateTimes = new float[4];
     // size in each state (beginning of birth is birthsize, end of death is death size)
-    float[] stateScales = new float[4];
-    float[] stateLightScales = new float[4];
+    public float[] stateScales = new float[4];
+    public float[] stateLightScales = new float[4];
     float[] stateDepths = new float[4];
 
     // animation system
-    float timeSinceLastFrame;
-    int currentFrame;
+    public float timeSinceLastFrame;
+    public int currentFrame;
     //int[] animationFrames = new int[4];
-    float[] animationSpeed = new float[4];
-    protected Rectangle animationSourceRect;
-    protected Rectangle lightSourceRect;
-    protected Color renderColor;
-    protected Color lightColor;
-    protected float renderScale;
-    protected float lightScale;
-    protected float depth;
-    float currentStateTime;
+    public float[] animationSpeed = new float[4];
+    public Rectangle animationSourceRect;
+    public Rectangle lightSourceRect;
+    public Color renderColor;
+    public Color lightColor;
+    public float renderScale;
+    public float lightScale;
+    public float depth;
+    public float currentStateTime;
     protected float angle;
 
     // colors
 
     // current state. controls Draw()
     public State state = State.Birth;
-    State prevState = State.Birth;
+    public State prevState = State.Birth;
 
     /// <summary>
     /// 
