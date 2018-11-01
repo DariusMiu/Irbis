@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-class TotalMeanFramerate
+public class TotalMeanFramerate
 {
     long frames;
     double currentFrametimes;
@@ -16,7 +16,7 @@ class TotalMeanFramerate
         { return (frames / currentFrametimes); }
     }
 
-    public TotalMeanFramerate(bool create)
+    public TotalMeanFramerate()
     {
         frames = 0;
         currentFrametimes = 0d;

@@ -377,8 +377,8 @@ public struct PlayerSettings
             int[] eightsCol = { 10, 29, 31, 32, 33, 34, 48, 68, 69, 99 };
             int[] ninesCol = { 64, 79 };
             int[] tensCol = { 22, 58, 66, 89, 95 };
-            int[] elevenCol = { };
-            int[] twelveCol = { 32, 96, 97, 98 };
+            int[] elevenCol = { 98 };
+            int[] twelveCol = { 32, 96, 97 };
             foreach (int i in characterWidth)
             { characterWidth[i] = 12; }
             foreach (int i in twosCol)

@@ -602,6 +602,9 @@ public class Print
             case '\u007e': //~
                 return 78;
 
+            case 'ᴥ':
+                return 95;
+
             case '\u1d6e': // ᵮ furaffinity logo
                 return 102;
 

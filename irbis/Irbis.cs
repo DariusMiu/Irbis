@@ -201,8 +201,8 @@ namespace Irbis
         private static Print debuginfo;
         private static Print topright;
         private static SmartFramerate smartFPS;
-        private static SmoothFramerate smoothFPS;
-        private static int smoothUpdate;
+        private static TotalMeanFramerate smoothFPS;
+        private static float smoothTimer;
         private static string smoothDisplay;
         private static string medianDisplay;
         private static string minDisplay;
@@ -896,7 +896,7 @@ namespace Irbis
 
 
                                                                                                     // etc
-        public static float gravity;
+        public static float gravity = 1125f;
         private static Random RAND;
         public static Texture2D nullTex;
         public static Texture2D largeNullTex;
@@ -970,7 +970,6 @@ namespace Irbis
             IsFixedTimeStep = false;
 
             Content.RootDirectory = ".\\content";
-            gravity = 1125f;
         }
 
         /// <summary>
@@ -1146,7 +1145,7 @@ namespace Irbis
             //torch = new Torch(Point.Zero);
 
             smartFPS = new SmartFramerate(5);
-            smoothFPS = new SmoothFramerate(100);
+            smoothFPS = new TotalMeanFramerate();
 
             basicEffect.View = Matrix.Identity;
             basicEffect.World = Matrix.Identity;
@@ -2542,20 +2541,20 @@ namespace Irbis
                     case 2:
                         goto case 1;
                     case 1:
-                        smoothUpdate++;
-                        if (smoothUpdate >= smoothFPS.Samples)
+                        smoothTimer += DeltaTime;
+                        if (smoothTimer >= 1)
                         {
-                            smoothUpdate = 0;
+                            smoothTimer = 0;
                             smoothDisplay = smoothFPS.Framerate.ToString("0000.0");
-                            smoothFPS = new SmoothFramerate((int)smoothFPS.Framerate);
+                            smoothFPS = new TotalMeanFramerate();
                             minDisplay = minFPS.ToString("0000.0");
                             maxDisplay = maxFPS.ToString("0000.0");
                             medianDisplay = (minFPS / maxFPS).ToString("0.00000");
-                            medianDisplay = medianDisplay.Remove(1, 1);
+                            medianDisplay = medianDisplay[0] + medianDisplay.Substring(2, 5);
                             minFPS = double.MaxValue;
                             maxFPS = double.MinValue;
                         }
-                        debuginfo.Update("\nᴥ" + smoothDisplay + "\n " + medianDisplay, true);
+                        debuginfo.Update("\nᴥ" + smoothDisplay + "\n~" + medianDisplay, true);
                         break;
                     default:
                         //disable on release
@@ -2575,16 +2574,16 @@ namespace Irbis
             debuginfo.Update("\n DeltaTime:" + DeltaTime);
             debuginfo.Update("\n   raw FPS:" + (1 / DeltaTime).ToString("0000.0"));
             debuginfo.Update("\n  smartFPS:" + smartFPS.Framerate.ToString("0000.0"));
-            smoothUpdate++;
-            if (smoothUpdate >= smoothFPS.Samples)
+            smoothTimer += DeltaTime;
+            if (smoothTimer >= 1)
             {
-                smoothUpdate = 0;
+                smoothTimer = 0;
                 smoothDisplay = smoothFPS.Framerate.ToString("0000.0");
-                smoothFPS = new SmoothFramerate((int)smoothFPS.Framerate);
+                smoothFPS = new TotalMeanFramerate();
                 minDisplay = minFPS.ToString("0000.0");
                 maxDisplay = maxFPS.ToString("0000.0");
                 medianDisplay = (minFPS / maxFPS).ToString("0.00000");
-                medianDisplay = medianDisplay.Remove(1, 1);
+                medianDisplay = medianDisplay[0] + medianDisplay.Substring(2, 5);
                 minFPS = double.MaxValue;
                 maxFPS = double.MinValue;
             }
@@ -2725,7 +2724,7 @@ namespace Irbis
             if (debug > 0)
             {
                 this.IsMouseVisible = recordFPS = true;
-                meanFPS = new TotalMeanFramerate(true);
+                meanFPS = new TotalMeanFramerate();
                 maxFPS = double.MinValue;
                 minFPS = double.MaxValue;
                 debuginfo.align = Direction.Left;
@@ -3157,7 +3156,7 @@ namespace Irbis
 
             if (recordFPS)
             {
-                meanFPS = new TotalMeanFramerate(true);
+                meanFPS = new TotalMeanFramerate();
                 maxFPS = double.MinValue;
                 maxFPStime = double.NaN;
                 minFPS = double.MaxValue;
@@ -3263,6 +3262,9 @@ namespace Irbis
             { Radius = Radius * u; }
             return new Vector2((Radius * (float)Math.Cos(t)), (Radius * (float)Math.Sin(t)));
         }
+
+        public static void ResetGravity()
+        { gravity = 1125f; }
 
         public static void AddPlayerEnchant(EnchantType enchant)
         {
@@ -6008,7 +6010,7 @@ Thank you, Ze Frank, for the inspiration.";
                         { WriteLine(onslaughtSpawner.ToString()); }
                         break;
                     case "recordfps":
-                        meanFPS = new TotalMeanFramerate(true);
+                        meanFPS = new TotalMeanFramerate();
                         maxFPS = double.MinValue;
                         minFPS = double.MaxValue;
                         recordFPS = true;
