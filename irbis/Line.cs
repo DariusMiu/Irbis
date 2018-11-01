@@ -47,8 +47,8 @@ public struct Line
     private Vector2 end;
     public Line(Vector2 Origin, Vector2 End)
     {
-        origin = new Vector2(Origin.X - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(Origin.Y - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
-        end = new Vector2(End.X - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(End.Y - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
+        origin = new Vector2(Origin.X - (Irbis.Irbis.halfResolution.X ), -(Origin.Y - (Irbis.Irbis.halfResolution.Y )));
+        end = new Vector2(End.X - (Irbis.Irbis.halfResolution.X ), -(End.Y - (Irbis.Irbis.halfResolution.Y )));
         direction = (end - origin);
         direction.Normalize();
     }
@@ -56,8 +56,8 @@ public struct Line
     {
         if (CorrectWorldCoordinates)
         {
-            origin = new Vector2(Origin.X - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(Origin.Y - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
-            end = new Vector2(End.X - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(End.Y - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
+            origin = new Vector2(Origin.X - (Irbis.Irbis.halfResolution.X ), -(Origin.Y - (Irbis.Irbis.halfResolution.Y )));
+            end = new Vector2(End.X - (Irbis.Irbis.halfResolution.X ), -(End.Y - (Irbis.Irbis.halfResolution.Y )));
             direction = (end - origin);
             direction.Normalize();
         }

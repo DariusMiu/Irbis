@@ -48,7 +48,7 @@ public struct Shape
         vertices = new Vector2[Vertices.Length];
         for (int i = 0; i < Vertices.Length; i++)
         {
-            vertices[i] = new Vector2(Vertices[i].X - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(Vertices[i].Y - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
+            vertices[i] = new Vector2(Vertices[i].X - (Irbis.Irbis.halfResolution.X ), -(Vertices[i].Y - (Irbis.Irbis.halfResolution.Y )));
         }
         color = Color.Black;
         lines = new Line[vertices.Length];
@@ -67,10 +67,10 @@ public struct Shape
     public Shape(Rectangle referenceRectangle)
     {
         vertices = new Vector2[4];
-        vertices[0] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
-        vertices[1] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
-        vertices[2] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
-        vertices[3] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
+        vertices[0] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y )));
+        vertices[1] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y )));
+        vertices[2] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y )));
+        vertices[3] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y )));
         color = Color.Black;
         lines = new Line[vertices.Length];
         for (int i = 0; i < vertices.Length - 1; i++)
@@ -82,6 +82,40 @@ public struct Shape
         vert = new VertexPositionColor[0];
         outlined = true;
         triangulated = fail = false;
+
+    }
+    public void SortVertices()
+    {
+        List<Vector2> tempVerts = new List<Vector2>(vertices);
+        tempVerts.RemoveAt(0);
+        tempVerts.RemoveAt(0);
+
+        float closest = float.MaxValue;
+        int closestIndex = -1;
+        for (int j = 3; j < vertices.Length; j++)
+        {
+            float distanceSquared = Vector2.DistanceSquared(vertices[2], vertices[j]);
+            if (distanceSquared < closest)
+            { closestIndex = j; }
+        }
+        tempVerts[2] = vertices[closestIndex];
+
+        int secondClosestIndex;
+        for (int i = 3; i < vertices.Length - 1; i++)
+        {
+            closest = float.MaxValue;
+            secondClosestIndex = closestIndex = i+1;
+            for (int j = i + 1; j < vertices.Length; j++)
+            {
+                float distanceSquared = Vector2.DistanceSquared(vertices[i], vertices[j]);
+                if (distanceSquared < closest)
+                {
+                    secondClosestIndex = closestIndex;
+                    closestIndex = j;
+                }
+            }
+            tempVerts[i] = vertices[secondClosestIndex];
+        }
     }
     public void CreateLines()
     {
@@ -113,159 +147,30 @@ public struct Shape
     }
     public bool Triangulate()
     {
-        //Console.WriteLine(this.ToString());
+        // vertices[0] = origin;
         vert = new VertexPositionColor[vertices.Length];
+        ind = new int[(vertices.Length - 1) * 3];
+        //Irbis.Irbis.WriteLine("vert.Length:" + vert.Length);
+        //Irbis.Irbis.WriteLine("ind.Length:" + ind.Length);
         for (int i = 0; i < vertices.Length; i++)
         {
             vert[i].Position = new Vector3(vertices[i], 000f);
             vert[i].Color = color;
-        }
-        ind = new int[(vertices.Length - 2) * 3];
-
-        int currentIndex = 0;
-        int currVertex;
-        int lastVertex;
-        int nextVertex;
-        List<int> vertexList = new List<int>();
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            vertexList.Add(i);
-        }
-
-        if (currentIndex >= vertexList.Count)
-        {
-            currentIndex = 0;
-            lastVertex = vertexList[vertexList.Count - 1];
-        }
-        else if (currentIndex == 0)
-        {
-            lastVertex = vertexList[vertexList.Count - 1];
-        }
-        else
-        {
-            lastVertex = vertexList[currentIndex - 1];
-        }
-
-        if (currentIndex >= vertexList.Count - 1)
-        {
-            nextVertex = vertexList[0];
-        }
-        else
-        {
-            nextVertex = vertexList[currentIndex + 1];
-        }
-
-        currVertex = vertexList[currentIndex];
-
-
-
-        int indIndex = 0;
-        int killloop = 0;
-        while (vertexList.Count > 3 && killloop < 100)
-        {
-            //Irbis.Irbis.WriteLine("triangulating... ");
-            bool isEar = true;
-            for (int i = 0; i < vertexList.Count; i++)
+            if (i < vertices.Length - 2)
             {
-                //testing to see if the current vertex is inside the rest of the shape
-                // (by individually testing if it's inside any triangle)
-                // this method is flawed, but it seems to work
-
-
-                //determine if any of the other points in the vertexlist are contained in the potential ear
-                if (TriangleContains(vertices[lastVertex], vertices[currVertex], vertices[nextVertex], vertices[vertexList[i]]))
-                {
-                    isEar = false;
-                    break;
-                }
-            }
-
-            if (isEar)
-            {
-                if (IsClockwise(vertices[lastVertex], vertices[currVertex], vertices[nextVertex]))
-                {
-                    ind[indIndex] = lastVertex;
-                    indIndex++;
-                    ind[indIndex] = currVertex;
-                    indIndex++;
-                    ind[indIndex] = nextVertex;
-                    indIndex++;
-                }
-                else
-                {
-                    ind[indIndex] = nextVertex;
-                    indIndex++;
-                    ind[indIndex] = currVertex;
-                    indIndex++;
-                    ind[indIndex] = lastVertex;
-                    indIndex++;
-                }
-
-                vertexList.RemoveAt(currentIndex);
-                killloop = 0;
-            }
-            else
-            {
-                currentIndex++;
-                killloop++;
-            }
-
-            if (currentIndex >= vertexList.Count)
-            {
-                currentIndex = 0;
-                lastVertex = vertexList[vertexList.Count - 1];
-            }
-            else if (currentIndex == 0)
-            {
-                lastVertex = vertexList[vertexList.Count - 1];
-            }
-            else
-            {
-                lastVertex = vertexList[currentIndex - 1];
-            }
-
-            if (currentIndex >= vertexList.Count - 1)
-            {
-                nextVertex = vertexList[0];
-            }
-            else
-            {
-                nextVertex = vertexList[currentIndex + 1];
-            }
-
-            currVertex = vertexList[currentIndex];
-        }
-
-        if (vertexList.Count == 3)
-        {
-            if (IsClockwise(vertices[lastVertex], vertices[currVertex], vertices[nextVertex]))
-            {
-                ind[ind.Length - 3] = vertexList[0];
-                ind[ind.Length - 2] = vertexList[1];
-                ind[ind.Length - 1] = vertexList[2];
-            }
-            else
-            {
-                ind[ind.Length - 3] = vertexList[2];
-                ind[ind.Length - 2] = vertexList[1];
-                ind[ind.Length - 1] = vertexList[0];
+                ind[i * 3] = 0;
+                ind[i * 3 + 1] = i + 1;
+                ind[i * 3 + 2] = i + 2;
             }
         }
-        else
-        {
-            if (!fail)
-            {
-                Irbis.Irbis.WriteLine("Triangulation failed.");
-                Irbis.Irbis.WriteLine("untriangulated vertices:" + vertexList.Count);
-                for (int i = 0; i < vertexList.Count; i++)
-                { Irbis.Irbis.Write(" vertex[" + vertexList[i] + "]:" + vertices[vertexList[i]]); }
-            }
-            fail = true;
-            return false;
-        }
+        //ind[ind.Length - 3] = 0;
+        //ind[ind.Length - 2] = vertices.Length - 1;
+        //ind[ind.Length - 1] = 1;
+        ind[ind.Length - 3] = 0;
+        ind[ind.Length - 2] = vertices.Length - 1;
+        ind[ind.Length - 1] = 1;
 
-        triangulated = true;
-        return true;
+        return triangulated = true;
     }
     public bool TriangleContains(Vector2 TriangleVertexA, Vector2 TriangleVertexB, Vector2 TriangleVertexC, Vector2 TestableVector)
     {
@@ -344,22 +249,20 @@ public struct Shape
         if (vertices.Length > 2)
         {
             if (!triangulated)
-            {
-                Triangulate();
-            }
+            { Triangulate(); }
             Irbis.Irbis.graphics.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, vert, 0, vert.Length, ind, 0, ind.Length / 3);
         }
+        //DrawLines();
     }
     public override string ToString()
     {
         string returnString = string.Empty;
 
-        returnString = "{vertices: " + vertices.Length;
+        returnString = "vertices: " + vertices.Length;
         for (int i = 0; i < vertices.Length; i++)
         {
-            returnString += " vertex[" + i + "]:" + vertices[i];
+            returnString += "\nvertex[" + i + "]:" + vertices[i];
         }
-        returnString += "}";
         return returnString;
     }
     public string Debug(bool evaluate)

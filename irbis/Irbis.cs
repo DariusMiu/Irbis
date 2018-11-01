@@ -906,10 +906,11 @@ namespace Irbis
         private static BasicEffect basicEffect;
         //private static BasicEffect lighting;
         private static Matrix projection = Matrix.Identity;
-        private static Ray[] debugrays = new Ray[50];
+        private static Ray[] debugrays = new Ray[1011];
         private static Line[] debuglines = new Line[5];
         private static Shape[] debugshapes = new Shape[4];
         private static Shape shadowShape;
+        public static Vector2 shadowOrigin;
         private static List<Vector2> shadows;
         public static TooltipGenerator tooltipGenerator;
         public static List<Song> music;
@@ -1005,7 +1006,9 @@ namespace Irbis
 
             basicEffect = new BasicEffect(graphics.GraphicsDevice);
             basicEffect.TextureEnabled = false;
-            basicEffect.VertexColorEnabled = true;// = Color.Red;
+            basicEffect.VertexColorEnabled = true;
+
+            // = Color.Red;
             /*//lighting.EnableDefaultLighting();
             lighting = new BasicEffect(graphics.GraphicsDevice);
             lighting.LightingEnabled = true;      // red  green  blue
@@ -1147,19 +1150,11 @@ namespace Irbis
             smartFPS = new SmartFramerate(5);
             smoothFPS = new TotalMeanFramerate();
 
-            basicEffect.View = Matrix.Identity;
-            basicEffect.World = Matrix.Identity;
-            basicEffect.Projection = projection;
-
             for (int i = 0; i < debuglines.Length; i++)
             { debuglines[i] = new Line(new Vector2(300f * i, 300f), new Vector2(100f * i, 500f)); }
             //debugrays[0] = new Ray(halfResolution.ToVector2() / screenScale, Vector2.One);
             for (int i = 0; i < debugrays.Length; i++)
-            {
-                float myAngleInRadians = (2f * (float)Math.PI) * ((float)i / 50f);
-                Vector2 angleVector = new Vector2((float)Math.Cos(myAngleInRadians), -(float)Math.Sin(myAngleInRadians));
-                debugrays[i] = new Ray(halfResolution.ToVector2() / screenScale, angleVector);
-            }
+            { debugrays[i] = new Ray(halfResolution.ToVector2(), MathHelper.TwoPi * (i / (float)debugrays.Length)); }
 
             vendingMachineUseDistanceSqr = 2500;
 
@@ -1184,18 +1179,20 @@ namespace Irbis
             largeNullTex = LoadTexture("largeNullTex");
             selectedTexture = defaultTex = LoadTexture("defaultTex");
 
+            debugshapes[0] = new Shape(zeroScreenspace);
+
             Vector2[] debugshapevertices = new Vector2[3];
             debugshapevertices[0] = new Vector2(100f, 200f);
             debugshapevertices[1] = new Vector2(300f, 200f);
             debugshapevertices[2] = new Vector2(400f, 400f);
-            debugshapes[0] = new Shape(debugshapevertices);
+            debugshapes[1] = new Shape(debugshapevertices);
 
             debugshapevertices = new Vector2[4];
-            debugshapevertices[0] = new Vector2(900f, 700f);
+            debugshapevertices[2] = new Vector2(900f, 700f);
             debugshapevertices[1] = new Vector2(600f, 500f);
-            debugshapevertices[2] = new Vector2(600f, 450f);
+            debugshapevertices[0] = new Vector2(600f, 450f);
             debugshapevertices[3] = new Vector2(500f, 600f);
-            debugshapes[1] = new Shape(debugshapevertices);
+            debugshapes[2] = new Shape(debugshapevertices);
 
             debugshapevertices = new Vector2[5];
             debugshapevertices[0] = new Vector2(900f, 100f);
@@ -1203,13 +1200,13 @@ namespace Irbis
             debugshapevertices[2] = new Vector2(700f, 500f);
             debugshapevertices[3] = new Vector2(800f, 200f);
             debugshapevertices[4] = new Vector2(750f, 100f);
-            debugshapes[2] = new Shape(debugshapevertices);
+            debugshapes[3] = new Shape(debugshapevertices);
 
-            debugshapes[3] = new Shape(zeroScreenspace);
 
             shadows = new List<Vector2>();
             WriteLine("creating shadowShape");
             shadowShape = new Shape(shadows.ToArray());
+            shadowShape.ShapeColor = new Color(Color.DarkRed, 0.1f);
 
             //scenes 0-10 are reserved for menus
 
@@ -1950,25 +1947,40 @@ namespace Irbis
             }
 
             // just don't even touch this
-            if (debug > 4)
+            if (debug > 4) // && GetPreviousMouseState.Position != GetMouseState.Position)
             {
+                shadowOrigin = GetMouseState.Position.ToVector2();
                 for (int i = 0; i < debugrays.Length; i++)
-                { debugrays[i] = new Ray(screenSpacePlayerPos / screenScale, debugrays[i].Direction); }
+                { debugrays[i].Origin = shadowOrigin; }
+
+                
+                //sort debugrays by angle
+                //{
+                //    Ray[] tempDebugRays = new Ray[debugrays.Length];
+                //    int index = 0;
+                //    int rayindex = 0;
+                //    for (int i = rayindex; i < debugrays.Length; i++)
+                //    {
+                //        //var angle = Math.Atan2(uniquePoint.y - shadowOrigin.Y, uniquePoint.x - shadowOrigin.X);
+                //    }
+                //}
 
                 shadows.Clear();
+                shadows.Add(new Vector2(shadowOrigin.X - (halfResolution.X), -(shadowOrigin.Y - (halfResolution.Y))));
                 for (int i = 0; i < debugrays.Length; i++)
                 {
                     Vector2 tempvector = debugrays[i].Intersect(debugshapes);
-                    //if (shadows.Count > i && shadows[i] != tempvector && tempvector != Vector2.Zero)
-                    //{
-                    //    shadows[i] = tempvector;
-                    //}
-                    /*else*/
-                    if (/*shadows.Count < i &&*/ tempvector != Vector2.Zero)
-                    { shadows.Add(tempvector); }
+                    shadows.Add(tempvector);
                 }
 
+                float[] raykeys = new float[debugrays.Length];
+                for (int i = 0; i < debugrays.Length; i++)
+                { raykeys[i] = debugrays[i].Angle; }
+
+                //shadowShape.Vertices = shadows.ToArray();
+                //Array.Sort(shadowShape.Vertices, delegate (Vector2 ray1, Vector2 ray2) { return Angle(ray1 - shadowOrigin).CompareTo(Angle(ray2 - shadowOrigin)); });
                 shadowShape.Vertices = shadows.ToArray();
+                Array.Sort(raykeys, shadowShape.Vertices);
             }
 
             previousKeyboardState = keyboardState;
@@ -1986,6 +1998,9 @@ namespace Irbis
 
             base.Update(gameTime);
         }
+
+        protected float Angle(Vector2 temp)
+        { return (float)Math.Atan(temp.Y / temp.X); }
 
         protected void MenuUpdate()
         {
@@ -2514,7 +2529,8 @@ namespace Irbis
                 switch (Irbis.debug)
                 {
                     case 5:
-                        goto case 4;
+                        PrintDebugShadowInfo();
+                        break;
                     case 4:
                         goto case 3;
                     case 3:
@@ -2716,6 +2732,32 @@ namespace Irbis
             debuginfo.Update("\n    Camera:" + camera);
             debuginfo.Update("\n    Lockon:" + cameraLockon);/**/
 
+        }
+
+        public void PrintDebugShadowInfo()
+        {
+            debuginfo.Update("      DEBUG MODE. " + versionID.ToUpper() + " v" + versionNo, true);
+            debuginfo.Update("\n DeltaTime:" + DeltaTime);
+            debuginfo.Update("\n   raw FPS:" + (1 / DeltaTime).ToString("0000.0"));
+            debuginfo.Update("\n  smartFPS:" + smartFPS.Framerate.ToString("0000.0"));
+            smoothTimer += DeltaTime;
+            if (smoothTimer >= 1)
+            {
+                smoothTimer = 0;
+                smoothDisplay = smoothFPS.Framerate.ToString("0000.0");
+                smoothFPS = new TotalMeanFramerate();
+                minDisplay = minFPS.ToString("0000.0");
+                maxDisplay = maxFPS.ToString("0000.0");
+                medianDisplay = (minFPS / maxFPS).ToString("0.00000");
+                medianDisplay = medianDisplay[0] + medianDisplay.Substring(2, 5);
+                minFPS = double.MaxValue;
+                maxFPS = double.MinValue;
+            }
+            debuginfo.Update("\n   meanFPS:" + smoothDisplay);
+            debuginfo.Update("\n    minFPS:" + minDisplay);
+            debuginfo.Update("\n    maxFPS:" + maxDisplay);
+            debuginfo.Update("\n FPS ratio:" + medianDisplay);
+            debuginfo.Update("\n");
         }
 
         public void Debug(int rank)
@@ -6429,20 +6471,20 @@ Thank you, Ze Frank, for the inspiration.";
 
             if (debug > 4)
             {
-                basicEffect.Projection = projection;
+                //basicEffect.Projection = projection;
+                basicEffect.Projection = new Matrix(2f/resolution.X,0,0,0,0,2f/resolution.Y,0,0,0,0,1,0,0,0,0,1);
+
                 foreach (EffectPass effectPass in basicEffect.CurrentTechnique.Passes)
                 {
                     effectPass.Apply();
+                    for (int i = 1; i < debugshapes.Length; i++)
+                    {
+                        debugshapes[i].Draw();
+                        //s.DrawLines();
+                    }
                     shadowShape.Draw();
-                    //foreach (Shape s in debugshapes)
-                    //{
-                    //    s.Draw();
-                    //    //s.DrawLines();
-                    //}
-                    //foreach (Ray r in debugrays)
-                    //{
-                    //    r.Draw(r.Intersect(debugshapes));
-                    //}
+                    //for (int i = 0; i < debugrays.Length; i++)
+                    //{ debugrays[i].Draw(debugrays[i].Intersect(debugshapes)); }
                 }
             }
 

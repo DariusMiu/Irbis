@@ -15,18 +15,23 @@ public struct Ray
         { return origin; }
         set
         {
-            origin = new Vector2(value.X - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(value.Y - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
+            origin = new Vector2(value.X - (Irbis.Irbis.halfResolution.X ), -(value.Y - (Irbis.Irbis.halfResolution.Y )));
         }
     }
     public Vector2 Direction
     {
         get
         { return direction; }
-        set
-        {
-            direction = new Vector2(value.X, -value.Y);
-            direction.Normalize();
-        }
+        //set
+        //{
+        //    direction = new Vector2(value.X, -value.Y);
+        //    direction.Normalize();
+        //}
+    }
+    public float Angle
+    {
+        get
+        { return angle; }
     }
     public static Line Zero
     {
@@ -36,10 +41,13 @@ public struct Ray
     private static Line zero = new Line(Vector2.Zero, Vector2.Zero);
     private Vector2 origin;
     private Vector2 direction;
-    public Ray(Vector2 Origin, Vector2 Direction)
+    private float angle;
+    public Ray(Vector2 Origin, float Angle)
     {
-        origin = new Vector2(Origin.X - (Irbis.Irbis.halfResolution.X / Irbis.Irbis.screenScale), -(Origin.Y - (Irbis.Irbis.halfResolution.Y / Irbis.Irbis.screenScale)));
-        direction = new Vector2(Direction.X, -Direction.Y);
+        angle = Angle;
+        origin = new Vector2(Origin.X - (Irbis.Irbis.halfResolution.X ), -(Origin.Y - (Irbis.Irbis.halfResolution.Y )));
+        direction = new Vector2((float)Math.Cos(angle), -(float)Math.Sin(angle));
+
         //direction = Direction;
         direction.Normalize();
     }
