@@ -54,7 +54,7 @@ public struct Ray
     //public Line Intersects
     public override string ToString()
     {
-        return "{Origin:" + origin + " Direction:" + direction + "}";
+        return "{origin:" + origin + " angle:" + angle + " direction:" + direction + "}";
     }
 
     public void Draw()
@@ -115,13 +115,9 @@ public struct Ray
         //float Ty = (end.Y - origin.Y) / direction.Y;
         //displayEnd = new Vector2(origin.X + direction.X * Tx, origin.Y + direction.Y * Ty);
         if (end != Vector2.Zero && end.X <= Irbis.Irbis.resolution.X && end.Y <= Irbis.Irbis.resolution.Y /*&& Tx <= Ty + 0.0001f && Tx >= Ty - 0.0001f && displayEnd == end*/)
-        {
-            displayEnd = end;
-        }
+        { displayEnd = end; }
         else
-        {
-            displayEnd = new Vector2(origin.X + (direction.X * Irbis.Irbis.resolution.X), origin.Y + (direction.Y * Irbis.Irbis.resolution.X));
-        }
+        { displayEnd = new Vector2(origin.X + (direction.X * Irbis.Irbis.resolution.X), origin.Y + (direction.Y * Irbis.Irbis.resolution.X)); }
 
         VertexPositionColor[] vert = new VertexPositionColor[4];
         Vector2 perp = new Vector2(-direction.Y, direction.X);

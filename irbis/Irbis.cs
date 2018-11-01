@@ -906,7 +906,7 @@ namespace Irbis
         private static BasicEffect basicEffect;
         //private static BasicEffect lighting;
         private static Matrix projection = Matrix.Identity;
-        private static Ray[] debugrays = new Ray[1011];
+        private static List<Ray> debugrays = new List<Ray>();
         private static Line[] debuglines = new Line[5];
         private static Shape[] debugshapes = new Shape[4];
         private static Shape shadowShape;
@@ -1153,8 +1153,16 @@ namespace Irbis
             for (int i = 0; i < debuglines.Length; i++)
             { debuglines[i] = new Line(new Vector2(300f * i, 300f), new Vector2(100f * i, 500f)); }
             //debugrays[0] = new Ray(halfResolution.ToVector2() / screenScale, Vector2.One);
-            for (int i = 0; i < debugrays.Length; i++)
-            { debugrays[i] = new Ray(halfResolution.ToVector2(), MathHelper.TwoPi * (i / (float)debugrays.Length)); }
+            List<float> angles = new List<float>();
+            //for (int i = debugrays.Count - 1; i >= 0; i--)
+            //{ angles.Add(MathHelper.TwoPi * (i / (float)debugrays.Length)); }
+
+            //for (int i = debugrays.Count - 1; i >= 0; i--)
+            //{
+            //    int randomint = RandomInt(angles.Count);
+            //    { debugrays[i] = new Ray(halfResolution.ToVector2(), angles[randomint]); }
+            //    angles.RemoveAt(randomint);
+            //}
 
             vendingMachineUseDistanceSqr = 2500;
 
@@ -1950,10 +1958,10 @@ namespace Irbis
             if (debug > 4) // && GetPreviousMouseState.Position != GetMouseState.Position)
             {
                 shadowOrigin = GetMouseState.Position.ToVector2();
-                for (int i = 0; i < debugrays.Length; i++)
-                { debugrays[i].Origin = shadowOrigin; }
+                //for (int i = debugrays.Count - 1; i >= 0; i--)
+                //{ debugrays[i].Origin = shadowOrigin; }
 
-                
+
                 //sort debugrays by angle
                 //{
                 //    Ray[] tempDebugRays = new Ray[debugrays.Length];
@@ -1965,22 +1973,36 @@ namespace Irbis
                 //    }
                 //}
 
-                shadows.Clear();
-                shadows.Add(new Vector2(shadowOrigin.X - (halfResolution.X), -(shadowOrigin.Y - (halfResolution.Y))));
-                for (int i = 0; i < debugrays.Length; i++)
+                Vector2 converted = ConvertShadowOrigin(shadowOrigin);
+
+                debugrays.Clear();
+                foreach (Shape s in debugshapes)
                 {
-                    Vector2 tempvector = debugrays[i].Intersect(debugshapes);
-                    shadows.Add(tempvector);
+                    foreach (Vector2 v in s.vertices)
+                    {
+                        float angle = AngleTo(converted, v);
+                        debugrays.Add(new Ray(shadowOrigin, angle - 0.001f));
+                        debugrays.Add(new Ray(shadowOrigin, angle));
+                        debugrays.Add(new Ray(shadowOrigin, angle + 0.001f));
+                    }
                 }
 
-                float[] raykeys = new float[debugrays.Length];
-                for (int i = 0; i < debugrays.Length; i++)
+                shadows.Clear();
+                shadows.Add(ConvertShadowOrigin(shadowOrigin));
+                for (int i = debugrays.Count - 1; i >= 0; i--)
+                { shadows.Add(debugrays[i].Intersect(debugshapes)); }
+
+                float[] raykeys = new float[debugrays.Count];
+                for (int i = debugrays.Count - 1; i >= 0; i--)
                 { raykeys[i] = debugrays[i].Angle; }
 
-                //shadowShape.Vertices = shadows.ToArray();
-                //Array.Sort(shadowShape.Vertices, delegate (Vector2 ray1, Vector2 ray2) { return Angle(ray1 - shadowOrigin).CompareTo(Angle(ray2 - shadowOrigin)); });
-                shadowShape.Vertices = shadows.ToArray();
-                Array.Sort(raykeys, shadowShape.Vertices);
+                shadowShape.vertices = shadows.ToArray();
+                Array.Sort(shadowShape.vertices, delegate (Vector2 ray1, Vector2 ray2) { return AngleTo(shadows[0], ray1).CompareTo(AngleTo(shadows[0], ray2)); });
+                //Array.Sort(raykeys, sortme);
+                //shadowShape.vertices = sortme;
+                shadowShape.triangulated = false;
+
+                PrintDebugShadowInfo(raykeys, shadowShape.Vertices);
             }
 
             previousKeyboardState = keyboardState;
@@ -1999,8 +2021,21 @@ namespace Irbis
             base.Update(gameTime);
         }
 
-        protected float Angle(Vector2 temp)
-        { return (float)Math.Atan(temp.Y / temp.X); }
+        protected float AngleTo(Vector2 From, Vector2 To)
+        {
+            float angle = (float)Math.Atan2(To.Y - From.Y, To.X - From.X);
+            if (angle <= 0)
+            { return -angle; }
+            return MathHelper.TwoPi - angle;
+        }
+
+        protected float AngleToRaw(Vector2 From, Vector2 To)
+        {
+            return (float)Math.Atan2(To.Y - From.Y, To.X - From.X);
+        }
+
+        protected Vector2 ConvertShadowOrigin(Vector2 ShadowOrigin)
+        { return new Vector2(ShadowOrigin.X - (halfResolution.X), -(ShadowOrigin.Y - (halfResolution.Y))); }
 
         protected void MenuUpdate()
         {
@@ -2529,7 +2564,6 @@ namespace Irbis
                 switch (Irbis.debug)
                 {
                     case 5:
-                        PrintDebugShadowInfo();
                         break;
                     case 4:
                         goto case 3;
@@ -2734,7 +2768,7 @@ namespace Irbis
 
         }
 
-        public void PrintDebugShadowInfo()
+        public void PrintDebugShadowInfo(float[] keys, Vector2[] values)
         {
             debuginfo.Update("      DEBUG MODE. " + versionID.ToUpper() + " v" + versionNo, true);
             debuginfo.Update("\n DeltaTime:" + DeltaTime);
@@ -2758,6 +2792,9 @@ namespace Irbis
             debuginfo.Update("\n    maxFPS:" + maxDisplay);
             debuginfo.Update("\n FPS ratio:" + medianDisplay);
             debuginfo.Update("\n");
+
+            for (int i = 0; i < keys.Length; i++)
+            { debuginfo.Update("\nangle[" + i + "]:" + keys[i] + " value[" + i + "]:" + values[i] + " calcangle:" + AngleTo(ConvertShadowOrigin(shadowOrigin), values[i]));  }
         }
 
         public void Debug(int rank)
@@ -5286,6 +5323,27 @@ Thank you, Ze Frank, for the inspiration.";
                             WriteLine("error: variable \"" + variable + "\" could not be parsed");
                         }
                         break;
+                    case "calcangle":
+                        if (float.TryParse(value, out floatResult))
+                        {
+
+                            float angle = 0;
+                            while (angle<= MathHelper.TwoPi)
+                            {
+                                Vector2 direction = new Vector2((float)Math.Cos(angle), -(float)Math.Sin(angle));
+                                float calcangle = AngleTo(Vector2.Zero, direction);
+                                float raw = AngleToRaw(Vector2.Zero, direction);
+
+                              WriteLine("\nangle:" + angle);
+                                WriteLine(" calc:" + calcangle);
+                                WriteLine("  raw:" + raw);
+
+                                angle += floatResult;
+                            }
+                        }
+                        else
+                        { WriteLine("calculates a bunch of angles using passed variable as step"); }
+                        break;
 
 
 
@@ -6104,8 +6162,8 @@ Thank you, Ze Frank, for the inspiration.";
                         { WriteLine("line[" + i + "]:" + debuglines[i].ToString()); }
                         break;
                     case "debugrays":
-                        WriteLine("rays: " + debugrays.Length);
-                        for (int i = 0; i < debugrays.Length; i++)
+                        WriteLine("rays: " + debugrays.Count);
+                        for (int i = debugrays.Count - 1; i >= 0; i--)
                         { WriteLine("ray[" + i + "]:" + debugrays[i].ToString()); }
                         break;
                     case "debugshapes":
@@ -6483,7 +6541,7 @@ Thank you, Ze Frank, for the inspiration.";
                         //s.DrawLines();
                     }
                     shadowShape.Draw();
-                    //for (int i = 0; i < debugrays.Length; i++)
+                    //for (int i = debugrays.Count - 1; i >= 0; i--)
                     //{ debugrays[i].Draw(debugrays[i].Intersect(debugshapes)); }
                 }
             }

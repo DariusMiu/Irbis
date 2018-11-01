@@ -37,8 +37,8 @@ public struct Shape
     }
     private Color color;
     private Line[] lines;
-    private Vector2[] vertices;
-    private bool triangulated;
+    public Vector2[] vertices;
+    public bool triangulated;
     private bool fail;
     private bool outlined;
     private int[] ind;
