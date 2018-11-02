@@ -909,6 +909,7 @@ namespace Irbis
         private static List<Ray> debugrays = new List<Ray>();
         private static Line[] debuglines = new Line[5];
         private static Shape[] debugshapes = new Shape[4];
+        public static List<Shape> shadowShapes = new List<Shape>();
         private static Shape shadowShape;
         public static Vector2 shadowOrigin;
         private static List<Vector2> shadows;
@@ -1531,6 +1532,7 @@ namespace Irbis
             if (thisLevel.squareDepths == null)
             {
                 Square[] tempSquares = thisLevel.squares;
+                shadowShapes.Add(new Shape(screenspace));
 
                 loadingBar.Value += 4;
 
@@ -1542,6 +1544,7 @@ namespace Irbis
                         tempSquares[i].Origin, tempSquares[i].scale, tempSquares[i].depth);
                     collisionObjects.Add(tempSquare);
                     squareList.Add(tempSquare);
+
                     loadingBar.Value += baradd;
                 } /**/
             }
@@ -1568,6 +1571,46 @@ namespace Irbis
                     squareList.Add(tempSquare);
                     loadingBar.Value += baradd;
                 }/**/
+
+            }
+
+            List<Rectangle> tempRects = new List<Rectangle>();
+            //Square tempSquare = Square.Empty;
+
+            foreach (Square s in squareList)
+            {
+                if (tempRects.Count > 0)
+                {
+                    bool added = false;
+                    for (int i = 0; i < tempRects.Count; i++) // (Rectangle r in tempRects)
+                    {
+                        if ((IsTouching(tempRects[i], s.Collider, Side.Left) || IsTouching(tempRects[i], s.Collider, Side.Right)) &&
+                            tempRects[i].Y == s.Collider.Y && tempRects[i].Height == s.Collider.Height)
+                        {
+                            tempRects[i] = new Rectangle(Math.Min(s.Collider.X, tempRects[i].X), Math.Min(s.Collider.Y, tempRects[i].Y),
+                                tempRects[i].Width + s.Collider.Width, tempRects[i].Height);
+                            added = true; break;
+                        }
+                        else if ((IsTouching(tempRects[i], s.Collider, Side.Top) || IsTouching(tempRects[i], s.Collider, Side.Bottom)) &&
+                            tempRects[i].X == s.Collider.X && tempRects[i].Width == s.Collider.Width)
+                        {
+                            tempRects[i] = new Rectangle(Math.Min(s.Collider.X, tempRects[i].X), Math.Min(s.Collider.Y, tempRects[i].Y),
+                               tempRects[i].Width, tempRects[i].Height + s.Collider.Height);
+                            added = true; break;
+                        }
+                    }
+
+                    if (!added)
+                    { tempRects.Add(s.Collider); }
+                }
+                else
+                { tempRects.Add(s.Collider); }
+            }
+            foreach (Rectangle r in tempRects)
+            {
+                Shape tempShape = new Shape(r, true);
+                if (!shadowShapes.Contains(tempShape))
+                { shadowShapes.Add(tempShape); }
             }
 
             /*Square
@@ -1955,9 +1998,20 @@ namespace Irbis
             }
 
             // just don't even touch this
-            if (debug > 4 && zeroScreenspace.Contains(GetMouseState.Position)) // && GetPreviousMouseState.Position != GetMouseState.Position)
+            if (debug > 4) // && zeroScreenspace.Contains(GetMouseState.Position)) // && GetPreviousMouseState.Position != GetMouseState.Position)
             {
-                shadowOrigin = GetMouseState.Position.ToVector2();
+                //background.M31 = foreground.M41 = boundingBox.Center.X - (mainCamera.X + camera.X + cameraLockon.X);
+                //background.M32 = foreground.M42 = boundingBox.Center.Y - (mainCamera.Y + camera.Y + cameraLockon.Y);
+
+                debugshapes[0] = shadowShapes[0] = new Shape(screenspace);
+                projection.M41 = foreground.M41 * projection.M11;
+                projection.M42 = foreground.M42 * -projection.M22;
+                basicEffect.Projection = projection;
+
+
+                //shadowOrigin = (GetMouseState.Position.ToVector2() / screenScale) + mainCamera - halfResolution.ToVector2();
+                //shadowOrigin = WorldSpaceMouseLocation.ToVector2();
+                shadowOrigin = jamie.position * screenScale;
                 //for (int i = debugrays.Count - 1; i >= 0; i--)
                 //{ debugrays[i].Origin = shadowOrigin; }
 
@@ -1974,36 +2028,54 @@ namespace Irbis
                 //}
 
                 Vector2 converted = ConvertShadowOrigin(shadowOrigin);
-
-                debugrays.Clear();
-                foreach (Shape s in debugshapes)
+                try
                 {
-                    foreach (Vector2 v in s.vertices)
+                    debugrays.Clear();
+                    foreach (Shape s in shadowShapes)
                     {
-                        float angle = AngleTo(converted, v);
-                        debugrays.Add(new Ray(shadowOrigin, angle - 0.001f));
-                        debugrays.Add(new Ray(shadowOrigin, angle));
-                        debugrays.Add(new Ray(shadowOrigin, angle + 0.001f));
+                        foreach (Line l in s.Lines)
+                        {
+                            float angle = AngleTo(converted, l.Origin);
+                            debugrays.Add(new Ray(shadowOrigin, angle - 0.0001f));
+                            //debugrays.Add(new Ray(shadowOrigin, angle));
+                            debugrays.Add(new Ray(shadowOrigin, angle + 0.0001f));
+                            Vector2[] intersects = l.Intersect(shadowShapes[0]);
+                            if (intersects != null)
+                            {
+                                foreach (Vector2 v in intersects)
+                                {
+                                    angle = AngleTo(converted, v);
+                                    //debugrays.Add(new Ray(shadowOrigin, angle - 0.0001f));
+                                    debugrays.Add(new Ray(shadowOrigin, angle));
+                                    //debugrays.Add(new Ray(shadowOrigin, angle + 0.0001f));
+                                }
+                            }
+                        }
                     }
+
+                    shadows.Clear();
+                    shadows.Add(ConvertShadowOrigin(shadowOrigin));
+
+                    int count = debugrays.Count;
+                    for (int i = 0; i < count; i++)
+                    {
+                        Vector2 temp = debugrays[i].Intersect(shadowShapes);
+                        if (temp != shadows[0])
+                        { shadows.Add(temp); }
+                    }
+
+                    shadowShape.vertices = shadows.ToArray();
+                    Array.Sort(shadowShape.vertices, delegate (Vector2 ray1, Vector2 ray2) { return AngleTo(shadows[0], ray1).CompareTo(AngleTo(shadows[0], ray2)); });
+                    //Array.Sort(raykeys, sortme);
+                    //shadowShape.vertices = sortme;
+                    shadowShape.triangulated = false;
                 }
+                catch (Exception e)
+                { DisplayInfoText("Shadow error caught during level load."); }
+                finally
+                { /* meh */ }
 
-                shadows.Clear();
-                shadows.Add(ConvertShadowOrigin(shadowOrigin));
-
-                for (int i = debugrays.Count - 1; i >= 0; i--)
-                {
-                    Vector2 temp = debugrays[i].Intersect(debugshapes);
-                    if (temp != shadows[0])
-                    { shadows.Add(temp); }
-                }
-
-                shadowShape.vertices = shadows.ToArray();
-                Array.Sort(shadowShape.vertices, delegate (Vector2 ray1, Vector2 ray2) { return AngleTo(shadows[0], ray1).CompareTo(AngleTo(shadows[0], ray2)); });
-                //Array.Sort(raykeys, sortme);
-                //shadowShape.vertices = sortme;
-                shadowShape.triangulated = false;
-
-                PrintDebugShadowInfo(shadowShape.Vertices);
+                PrintDebugShadowInfo(null);
             }
 
             previousKeyboardState = keyboardState;
@@ -2331,6 +2403,8 @@ namespace Irbis
 
                         background.M31 = foreground.M41 = boundingBox.Center.X - (mainCamera.X + camera.X + cameraLockon.X);
                         background.M32 = foreground.M42 = boundingBox.Center.Y - (mainCamera.Y + camera.Y + cameraLockon.Y);
+                        screenspace.X = (int)(mainCamera.X + camera.X + cameraLockon.X - boundingBox.Center.X);
+                        screenspace.Y = (int)(mainCamera.Y + camera.Y + cameraLockon.Y - boundingBox.Center.Y);
                     }
                     else
                     {
@@ -2359,6 +2433,8 @@ namespace Irbis
 
                         background.M31 = foreground.M41 = halfResolution.X - (mainCamera.X + camera.X);
                         background.M32 = foreground.M42 = halfResolution.Y - (mainCamera.Y + camera.Y);
+                        screenspace.X = (int)(mainCamera.X + camera.X - boundingBox.Center.X);
+                        screenspace.Y = (int)(mainCamera.Y + camera.Y - boundingBox.Center.Y);
                     }
                 }
 
@@ -2793,9 +2869,18 @@ namespace Irbis
             debuginfo.Update("\n    maxFPS:" + maxDisplay);
             debuginfo.Update("\n FPS ratio:" + medianDisplay);
             debuginfo.Update("\n");
+            debuginfo.Update("\nscreenspace:" + screenspace);
+            debuginfo.Update("\nshadowOrigin:" + shadowOrigin);
+            debuginfo.Update("\nmouse:" + WorldSpaceMouseLocation);
+            debuginfo.Update("\njamie:" + jamie.position);
+            debuginfo.Update("\nmainCamera:" + mainCamera);
+            debuginfo.Update("\n");
 
-            //for (int i = 0; i < values.Length; i++)
-            //{ debuginfo.Update("\nvalue[" + i + "]:" + values[i] + " calcangle:" + AngleTo(ConvertShadowOrigin(shadowOrigin), values[i]) + " raw:" + AngleToRaw(ConvertShadowOrigin(shadowOrigin), values[i]));  }
+            if (values != null)
+            {
+                for (int i = 0; i < values.Length; i++)
+                { debuginfo.Update("\nvalue[" + i + "]:" + values[i] + " calcangle:" + AngleTo(ConvertShadowOrigin(shadowOrigin), values[i]) + " raw:" + AngleToRaw(ConvertShadowOrigin(shadowOrigin), values[i])); }
+            }
         }
 
         public void Debug(int rank)
@@ -2949,8 +3034,6 @@ namespace Irbis
 
                 //background.M31 = foreground.M41 = halfResolution.X - (mainCamera.X + camera.X);
                 //background.M32 = foreground.M42 = halfResolution.Y - (mainCamera.Y + camera.Y);
-                screenspace.X = (int)(mainCamera.X - halfResolution.X);
-                screenspace.Y = (int)(mainCamera.Y - halfResolution.Y);
 
                 if (mouseState.RightButton == ButtonState.Pressed && previousMouseState.RightButton != ButtonState.Pressed)
                 {
@@ -3216,6 +3299,7 @@ namespace Irbis
             squareList.Clear();
             collisionObjects.Clear();
             backgroundSquareList.Clear();
+            shadowShapes.Clear();
             CameraShake(0, 0);
             doodads = new Doodad[0];
             triggers = new Trigger[0];
@@ -4034,6 +4118,7 @@ namespace Irbis
                             loadingBar.Value += 8;
                             enemyList.Add(tempLizardGuy);
                             collisionObjects.Add(tempLizardGuy);
+                            //debugshapes[0] = new Shape(tempLizardGuy.bossArena);
                             boss = tempLizardGuy;
                             loadingBar.Value += 1;
                         }
@@ -4049,6 +4134,7 @@ namespace Irbis
                             loadingBar.Value += 8;
                             enemyList.Add(tempWizardGuy);
                             //collisionObjects.Add(tempWizardGuy);
+                            //debugshapes[0] = new Shape(tempWizardGuy.bossArena);
                             boss = tempWizardGuy;
                             loadingBar.Value += 1;
                         }
@@ -4167,8 +4253,7 @@ namespace Irbis
 
             SetScreenScale(settings.screenScale);
 
-            projection.M11 = screenScale / (resolution.X);
-            projection.M22 = screenScale / (resolution.Y);
+            SetProjection();
             //projection = Matrix.CreateOrthographicOffCenter(0, graphics.GraphicsDevice.Viewport.Width, graphics.GraphicsDevice.Viewport.Height, 0, 0, 1);
 
             graphics.SynchronizeWithVerticalRetrace = IsFixedTimeStep = settings.vSync;
@@ -4616,6 +4701,12 @@ namespace Irbis
             }
         }
 
+        public static void SetProjection()
+        {
+            projection = new Matrix((2f) / (resolution.X),0,0,0,0, (2f) / (resolution.Y),0,0,0,0,1,0,0,0,0,1);
+            basicEffect.Projection = projection;
+        }
+
         public static void SetScreenScale(float newScale)
         {
             if (newScale > 0)
@@ -4652,6 +4743,8 @@ namespace Irbis
 
             foreach (Square s in backgroundSquareList)
             { s.scale = screenScale; }
+
+            SetProjection();
         }
 
         public static void RollCredits()
@@ -4952,10 +5045,10 @@ Thank you, Ze Frank, for the inspiration.";
         {
             string matrixString = string.Empty;
             matrixString = 
-                ("\n{M11:" + projection.M11 + " M12:" + projection.M12 + " M13:" + projection.M13 + " M14:" + projection.M14 + "} " + " {" + projection.M11 + ":" + projection.M12 + ":" + projection.M13 + ":" + projection.M14 + "}"
-                + "\n{M21:" + projection.M21 + " M22:" + projection.M22 + " M23:" + projection.M23 + " M24:" + projection.M24 + "} " + " {" + projection.M21 + ":" + projection.M22 + ":" + projection.M23 + ":" + projection.M24 + "}"
-                + "\n{M31:" + projection.M31 + " M32:" + projection.M32 + " M33:" + projection.M33 + " M34:" + projection.M34 + "} " + " {" + projection.M31 + ":" + projection.M32 + ":" + projection.M33 + ":" + projection.M34 + "}"
-                + "\n{M41:" + projection.M41 + " M42:" + projection.M42 + " M43:" + projection.M43 + " M44:" + projection.M44 + "} " + " {" + projection.M41 + ":" + projection.M42 + ":" + projection.M43 + ":" + projection.M44 + "}"
+                ( "\n{M11:" + matrix.M11 + " M12:" + matrix.M12 + " M13:" + matrix.M13 + " M14:" + matrix.M14 + "} " + " {" + matrix.M11 + ":" + matrix.M12 + ":" + matrix.M13 + ":" + matrix.M14 + "}"
+                + "\n{M21:" + matrix.M21 + " M22:" + matrix.M22 + " M23:" + matrix.M23 + " M24:" + matrix.M24 + "} " + " {" + matrix.M21 + ":" + matrix.M22 + ":" + matrix.M23 + ":" + matrix.M24 + "}"
+                + "\n{M31:" + matrix.M31 + " M32:" + matrix.M32 + " M33:" + matrix.M33 + " M34:" + matrix.M34 + "} " + " {" + matrix.M31 + ":" + matrix.M32 + ":" + matrix.M33 + ":" + matrix.M34 + "}"
+                + "\n{M41:" + matrix.M41 + " M42:" + matrix.M42 + " M43:" + matrix.M43 + " M44:" + matrix.M44 + "} " + " {" + matrix.M41 + ":" + matrix.M42 + ":" + matrix.M43 + ":" + matrix.M44 + "}"
                 );
             return matrixString;
         }
@@ -5717,7 +5810,7 @@ Thank you, Ze Frank, for the inspiration.";
                         jamie.Noclip();
                         break;
                     case "killall":
-                        foreach (Enemy e in enemyList)
+                        foreach (IEnemy e in enemyList)
                         { KillEnemy(e); }
                         break;
                     case "savelevel":
@@ -6172,6 +6265,11 @@ Thank you, Ze Frank, for the inspiration.";
                         for (int i = 0; i < debugshapes.Length; i++)
                         { WriteLine("shape[" + i + "]:\n" + debugshapes[i].Debug(true)); }
                         break;
+                    case "shapes":
+                        WriteLine("shapes: " + shadowShapes.Count);
+                        for (int i = 0; i < shadowShapes.Count; i++)
+                        { WriteLine("shape[" + i + "]:\n" + shadowShapes[i].Debug(true)); }
+                        break;
                     case "mt":
                         goto case "multithreading";
                     case "multithread":
@@ -6456,7 +6554,7 @@ Thank you, Ze Frank, for the inspiration.";
                     if (jamie != null) { jamie.Draw(spriteBatch); }
                     if (debug > 1)
                     {
-                        RectangleBorder.Draw(spriteBatch, new Rectangle(Point.Zero, screenspace.Size), Color.Magenta, false);
+                        RectangleBorder.Draw(spriteBatch, zeroScreenspace, Color.Magenta, false);
                         //if (levelEditor)
                         //{
                         //    Texture2D squareTex = LoadTexture("originTexture");
@@ -6531,19 +6629,16 @@ Thank you, Ze Frank, for the inspiration.";
             if (debug > 4)
             {
                 //basicEffect.Projection = projection;
-                basicEffect.Projection = new Matrix(2f/resolution.X,0,0,0,0,2f/resolution.Y,0,0,0,0,1,0,0,0,0,1);
+                //basicEffect.Projection = new Matrix(2f/resolution.X,0,0,0,0,2f/resolution.Y,0,0,0,0,1,0,0,0,0,1);
 
                 foreach (EffectPass effectPass in basicEffect.CurrentTechnique.Passes)
                 {
                     effectPass.Apply();
-                    for (int i = 1; i < debugshapes.Length; i++)
-                    {
-                        debugshapes[i].Draw();
-                        //s.DrawLines();
-                    }
+                    //for (int i = shadowShapes.Count - 1; i > 0; i--)
+                    //{ shadowShapes[i].Draw(); }
                     shadowShape.Draw();
-                    //for (int i = debugrays.Count - 1; i >= 0; i--)
-                    //{ debugrays[i].Draw(debugrays[i].Intersect(debugshapes)); }
+                    for (int i = debugrays.Count - 1; i >= 0; i--)
+                    { debugrays[i].Draw(debugrays[i].Intersect(shadowShapes)); }
                 }
             }
 

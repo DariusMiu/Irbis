@@ -107,6 +107,18 @@ public struct Ray
 
         return Intersect(lineArray);
     }
+    public Vector2 Intersect(List<Shape> Shapes)
+    {
+        Line[] lineArray = new Line[Shape.TotalLines(Shapes)];
+        int currentIndex = 0;
+        foreach (Shape s in Shapes)
+        {
+            s.Lines.CopyTo(lineArray, currentIndex);
+            currentIndex += s.NumberOfLines;
+        }
+
+        return Intersect(lineArray);
+    }
     public void Draw(Vector2 end)
     {
         Vector2 displayEnd;

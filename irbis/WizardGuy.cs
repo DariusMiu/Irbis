@@ -256,7 +256,7 @@ class WizardGuy : IEnemy
     float boltsFastTick = 10000;
     float teleportFastTick = 2500;
 
-    Rectangle bossArena;
+    public Rectangle bossArena;
     List<Nova> firenovas = new List<Nova>();
     List<float> firenovaTTL = new List<float>();
     List<Fireball> fireballs = new List<Fireball>();
@@ -497,6 +497,13 @@ class WizardGuy : IEnemy
                     Irbis.Irbis.squareList[1].Position = new Vector2(Irbis.Irbis.squareList[1].InitialPosition.X, newYpos);
                     Irbis.Irbis.squareList[2].Position = new Vector2(Irbis.Irbis.squareList[2].InitialPosition.X, newYpos);
                     Irbis.Irbis.squareList[3].Position = new Vector2(Irbis.Irbis.squareList[3].InitialPosition.X, newYpos);
+
+                    if (Irbis.Irbis.debug > 4)
+                    {
+                        Irbis.Irbis.shadowShapes[2] = new Shape(Irbis.Irbis.squareList[1].Collider, true);
+                        Irbis.Irbis.shadowShapes[3] = new Shape(Irbis.Irbis.squareList[2].Collider, true);
+                        Irbis.Irbis.shadowShapes[4] = new Shape(Irbis.Irbis.squareList[3].Collider, true);
+                    }
 
                     Irbis.Irbis.squareList[4].rotation = newrotation;
                     Irbis.Irbis.squareList[5].rotation = -newrotation;

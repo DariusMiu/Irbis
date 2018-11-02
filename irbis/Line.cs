@@ -112,10 +112,114 @@ public struct Line
         //}
         //return new Vector2(T1, T2);
     }
-    //public void Draw(SpriteBatch sb, Color color, float depth)
-    //{
-    //    sb.Draw(Irbis.Irbis.nullTex, new Rectangle(origin.ToPoint(), new Point(1, (int)magnitude.Length())), null, color, (float)Math.Atan(magnitude.X / -magnitude.Y), Vector2.Zero, SpriteEffects.None, depth);
-    //}
+
+    public Vector2 IntersectAsRay(Line line)
+    {
+        float r_px = line.Origin.X;
+        float r_py = line.Origin.Y;
+        float r_dx = line.Direction.X;
+        float r_dy = line.Direction.Y;
+        // SEGMENT in parametric: Point + Direction*T2
+        float s_px = origin.X;
+        float s_py = origin.Y;
+        float s_dx = end.X - origin.X;
+        float s_dy = end.Y - origin.Y;
+        //// Are they parallel? If so, no intersect
+        //var r_mag = Math.Sqrt(r_dx * r_dx + r_dy * r_dy);
+        //var s_mag = Math.Sqrt(s_dx * s_dx + s_dy * s_dy);
+        //if (r_dx / r_mag == s_dx / s_mag && r_dy / r_mag == s_dy / s_mag)
+        //{ // Directions are the same.
+        //    return Vector2.Zero;
+        //}
+        // SOLVE FOR T1 & T2
+        // r_px+r_dx*T1 = s_px+s_dx*T2 && r_py+r_dy*T1 = s_py+s_dy*T2
+        // ==> T1 = (s_px+s_dx*T2-r_px)/r_dx = (s_py+s_dy*T2-r_py)/r_dy
+        // ==> s_px*r_dy + s_dx*T2*r_dy - r_px*r_dy = s_py*r_dx + s_dy*T2*r_dx - r_py*r_dx
+        // ==> T2 = (r_dx*(s_py-r_py) + r_dy*(r_px-s_px))/(s_dx*r_dy - s_dy*r_dx)
+        float T2 = (r_dx * (s_py - r_py) + r_dy * (r_px - s_px)) / (s_dx * r_dy - s_dy * r_dx);
+        float T1 = (s_px + s_dx * T2 - r_px) / r_dx;
+        // Must be within parametic whatevers for RAY/SEGMENT
+        if (T1 < 0) { return Vector2.Zero; }
+        if (T2 < 0 || T2 > 1) { return Vector2.Zero; }
+        // Return the POINT OF INTERSECTION
+        return new Vector2(r_px + r_dx * T1, r_py + r_dy * T1);
+    }
+
+    public Vector2 Intersect(Line line)
+    {
+        Vector2 intersection;
+
+        Vector2 r = end - origin;
+        Vector2 s = line.End - line.Origin;
+        float rxs = Cross(r, s);
+        float qpxr = Cross((line.Origin - origin), r);
+
+        // If r x s = 0 and (line.Origin - origin) x r = 0, then the two lines are collinear.
+        if (IsZero(rxs) && IsZero(qpxr))
+        {
+            // 1. If either  0 <= (line.Origin - origin) * r <= r * r or 0 <= (origin - line.Origin) * s <= * s
+            // then the two lines are overlapping,
+            //if (false) //(considerCollinearOverlapAsIntersect)
+            //    if ((0 <= Vector2.Dot((line.Origin - origin), r) && Vector2.Dot((line.Origin - origin), r) <= Vector2.Dot(r, r)) ||
+            //        (0 <= Vector2.Dot((origin - line.Origin), s) && Vector2.Dot((origin - line.Origin), s) <= Vector2.Dot(s, s)))
+            //        return intersection;
+
+            // 2. If neither 0 <= (line.Origin - origin) * r = r * r nor 0 <= (origin - line.Origin) * s <= s * s
+            // then the two lines are collinear but disjoint.
+            // No need to implement this expression, as it follows from the expression above.
+            return Vector2.Zero;
+        }
+
+        // 3. If r x s = 0 and (line.Origin - origin) x r != 0, then the two lines are parallel and non-intersecting.
+        if (IsZero(rxs) && !IsZero(qpxr))
+            return Vector2.Zero;
+
+        // t = (line.Origin - origin) x s / (r x s)
+        float t = Cross((line.Origin - origin), s) / rxs;
+
+        // u = (line.Origin - origin) x r / (r x s)
+
+        float u = Cross((line.Origin - origin), r) / rxs;
+
+        // 4. If r x s != 0 and 0 <= t <= 1 and 0 <= u <= 1
+        // the two line segments meet at the point origin + t r = line.Origin + u s.
+        if (!IsZero(rxs) && (0 <= t && t <= 1) && (0 <= u && u <= 1))
+        {
+            // We can calculate the intersection point using either t or u.
+            intersection = origin + t * r;
+
+            // An intersection was found.
+            return intersection;
+        }
+
+        // 5. Otherwise, the two line segments are not parallel but do not intersect.
+        return Vector2.Zero;
+    }
+
+    public static float Cross(Vector2 v1, Vector2 v2)
+    { return v1.X * v2.Y - v1.Y * v2.X; }
+
+    public static bool IsZero(float Float)
+    { return Math.Abs(Float) < 0.0001f; }
+
+    public Vector2[] Intersect(Shape shape)
+    {
+        List<Vector2> returnVectors = new List<Vector2>();
+
+        foreach (Line l in shape.Lines)
+        {
+            Vector2 tempVector = Intersect(l);
+            if (tempVector != Vector2.Zero)
+            { returnVectors.Add(tempVector); }
+        }
+
+        if (returnVectors.Count > 0)
+        { return returnVectors.ToArray(); }
+        return null;
+    }
+
+
+
     public override string ToString()
     {
         return "{Origin:" + origin + " Direction:" + direction + " End:" + end + "}";

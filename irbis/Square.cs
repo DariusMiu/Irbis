@@ -74,6 +74,11 @@ public class Square : ICollisionObject
         get
         { return origin; }
     }
+    public static Square Empty
+    {
+        get
+        { return new Square(Irbis.Irbis.nullTex, Color.Transparent, Point.Zero, null, Vector2.Zero, 0, null); }
+    }
 
     public Square(Texture2D Texture, Color drawColor, Point initialPos, Rectangle? Collider, Vector2 Origin, float Scale, float? DrawDepth)
     {

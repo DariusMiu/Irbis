@@ -67,16 +67,14 @@ public struct Shape
     public Shape(Rectangle referenceRectangle)
     {
         vertices = new Vector2[4];
-        vertices[0] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y )));
-        vertices[1] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y )));
-        vertices[2] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y )));
-        vertices[3] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X ), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y )));
+        vertices[0] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y)));
+        vertices[1] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y)));
+        vertices[2] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y)));
+        vertices[3] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y)));
         color = Color.Black;
         lines = new Line[vertices.Length];
         for (int i = 0; i < vertices.Length - 1; i++)
-        {
-            lines[i] = new Line(vertices[i], vertices[i + 1], false);
-        }
+        { lines[i] = new Line(vertices[i], vertices[i + 1], false); }
         lines[lines.Length - 1] = new Line(vertices[vertices.Length - 1], vertices[0], false);
         ind = new int[0];
         vert = new VertexPositionColor[0];
@@ -84,37 +82,41 @@ public struct Shape
         triangulated = fail = false;
 
     }
-    public void SortVertices()
+    public Shape(Rectangle referenceRectangle, bool Screenscale)
     {
-        List<Vector2> tempVerts = new List<Vector2>(vertices);
-        tempVerts.RemoveAt(0);
-        tempVerts.RemoveAt(0);
-
-        float closest = float.MaxValue;
-        int closestIndex = -1;
-        for (int j = 3; j < vertices.Length; j++)
+        if (Screenscale)
         {
-            float distanceSquared = Vector2.DistanceSquared(vertices[2], vertices[j]);
-            if (distanceSquared < closest)
-            { closestIndex = j; }
+            vertices = new Vector2[4];
+            vertices[0] = new Vector2(referenceRectangle.Left * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Top * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.Y)));
+            vertices[1] = new Vector2(referenceRectangle.Right * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Top * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.Y)));
+            vertices[2] = new Vector2(referenceRectangle.Right * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Bottom * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.Y)));
+            vertices[3] = new Vector2(referenceRectangle.Left * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Bottom * Irbis.Irbis.screenScale - (Irbis.Irbis.halfResolution.Y)));
+            color = Color.Black;
+            lines = new Line[vertices.Length];
+            for (int i = 0; i < vertices.Length - 1; i++)
+            { lines[i] = new Line(vertices[i], vertices[i + 1], false); }
+            lines[lines.Length - 1] = new Line(vertices[vertices.Length - 1], vertices[0], false);
+            ind = new int[0];
+            vert = new VertexPositionColor[0];
+            outlined = true;
+            triangulated = fail = false;
         }
-        tempVerts[2] = vertices[closestIndex];
-
-        int secondClosestIndex;
-        for (int i = 3; i < vertices.Length - 1; i++)
+        else
         {
-            closest = float.MaxValue;
-            secondClosestIndex = closestIndex = i+1;
-            for (int j = i + 1; j < vertices.Length; j++)
-            {
-                float distanceSquared = Vector2.DistanceSquared(vertices[i], vertices[j]);
-                if (distanceSquared < closest)
-                {
-                    secondClosestIndex = closestIndex;
-                    closestIndex = j;
-                }
-            }
-            tempVerts[i] = vertices[secondClosestIndex];
+            vertices = new Vector2[4];
+            vertices[0] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y)));
+            vertices[1] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Top - (Irbis.Irbis.halfResolution.Y)));
+            vertices[2] = new Vector2(referenceRectangle.Right - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y)));
+            vertices[3] = new Vector2(referenceRectangle.Left - (Irbis.Irbis.halfResolution.X), -(referenceRectangle.Bottom - (Irbis.Irbis.halfResolution.Y)));
+            color = Color.Black;
+            lines = new Line[vertices.Length];
+            for (int i = 0; i < vertices.Length - 1; i++)
+            { lines[i] = new Line(vertices[i], vertices[i + 1], false); }
+            lines[lines.Length - 1] = new Line(vertices[vertices.Length - 1], vertices[0], false);
+            ind = new int[0];
+            vert = new VertexPositionColor[0];
+            outlined = true;
+            triangulated = fail = false;
         }
     }
     public void CreateLines()
@@ -252,7 +254,7 @@ public struct Shape
             { Triangulate(); }
             Irbis.Irbis.graphics.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionColor>(PrimitiveType.TriangleList, vert, 0, vert.Length, ind, 0, ind.Length / 3);
         }
-        //DrawLines();
+        DrawLines();
     }
     public override string ToString()
     {
@@ -350,9 +352,14 @@ public struct Shape
     {
         int totalLines = 0;
         foreach (Shape s in Shapes)
-        {
-            totalLines += s.NumberOfLines;
-        }
+        { totalLines += s.NumberOfLines; }
+        return totalLines;
+    }
+    public static int TotalLines(List<Shape> Shapes)
+    {
+        int totalLines = 0;
+        foreach (Shape s in Shapes)
+        { totalLines += s.NumberOfLines; }
         return totalLines;
     }
 }
